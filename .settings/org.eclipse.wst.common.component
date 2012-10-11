@@ -3,6 +3,7 @@
     <wb-module deploy-name="org.openworm.simulationengine.simulation">
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/target/generated-sources/simulationSchema"/>
         <property name="context-root" value="org.openworm.simulationengine.simulation"/>
         <property name="java-output-path" value="/org.openworm.simulationengine.simulation/bin"/>
     </wb-module>

@@ -1,39 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/simulationSchema" xmlns:tns="http://www.example.org/simulationSchema" elementFormDefault="qualified">
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/simulationSchema"
+	xmlns:tns="http://www.example.org/simulationSchema" elementFormDefault="qualified">
 
-    <complexType name="Simulation">
-    	<sequence>
-    		<element name="configuration" type="tns:Configuration"></element>
-    		<sequence>
-    			<element name="aspects" type="tns:Aspect"></element>
-    		</sequence>
-    		<element name="name" type="string"></element>
-    	</sequence>
-    </complexType>
+	<complexType name="Simulation">
+		<sequence>
+			<element name="configuration" type="tns:Configuration"
+				maxOccurs="1" minOccurs="1"></element>
+			<element name="aspects" type="tns:Aspect" maxOccurs="unbounded"
+				minOccurs="1"></element>
+			<element name="name" type="string" maxOccurs="1" minOccurs="1"></element>
+		</sequence>
+	</complexType>
 
-    <complexType name="Configuration">
-    	<sequence>
-    		<element name="outputFormat" type="tns:OutputFormat"></element>
-    	</sequence>
-    </complexType>
+	<complexType name="Configuration">
+		<sequence>
+			<element name="outputFormat" type="tns:OutputFormat"></element>
+		</sequence>
+	</complexType>
 
 
-    <complexType name="Aspect">
-    	<sequence>
-    		<element name="modelInterpreter" type="string" maxOccurs="1" minOccurs="1"></element>
-    		<element name="modelURL" type="string" maxOccurs="1" minOccurs="1"></element>
-    		<element name="simulator" type="string" maxOccurs="1" minOccurs="1"></element>
-    		<element name="id" type="string" maxOccurs="1" minOccurs="1"></element>
-    	</sequence>
-    </complexType>
+	<complexType name="Aspect">
+		<sequence>
+			<element name="modelInterpreter" type="string" maxOccurs="1"
+				minOccurs="1"></element>
+			<element name="modelURL" type="string" maxOccurs="1"
+				minOccurs="1"></element>
+			<element name="simulator" type="string" maxOccurs="1"
+				minOccurs="1"></element>
+			<element name="id" type="string" maxOccurs="1" minOccurs="1"></element>
+		</sequence>
+	</complexType>
 
 	<simpleType name="OutputFormat">
-       <restriction base="string">
-          <enumeration value="RAW" />
-          <enumeration value="THREEJSON" />
-       </restriction>
-    </simpleType>
-    
+		<restriction base="string">
+			<enumeration value="RAW" />
+			<enumeration value="THREEJSON" />
+		</restriction>
+	</simpleType>
+
 
 	<element name="simulation" type="tns:Simulation"></element>
 </schema>

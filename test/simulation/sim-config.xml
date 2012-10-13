@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tns:simulation xmlns:tns="http://www.example.org/simulationSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.example.org/simulationSchema ../../src/main/resources/schema/simulationSchema.xsd ">
+  <tns:configuration>
+    <tns:outputFormat>RAW</tns:outputFormat>
+  </tns:configuration>
+  <tns:aspects>
+    <tns:modelInterpreter>sphModelInterpreter</tns:modelInterpreter>
+    <tns:modelURL>someurl</tns:modelURL>
+    <tns:simulator>sphSimulator</tns:simulator>
+    <tns:id>sph</tns:id>
+  </tns:aspects>
+  <tns:name>sph</tns:name>
+</tns:simulation>

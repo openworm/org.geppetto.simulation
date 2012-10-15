@@ -13,7 +13,7 @@ import org.openworm.simulationengine.simulation.model.Simulation;
 public class TestSimulationConfigReader {
 
 	@Test
-	public void test() throws MalformedURLException {
+	public void testReadConfig() throws MalformedURLException {
 		Simulation sim = SimulationConfigReader.readConfig(new File("./test/simulation/sim-config.xml").toURI().toURL());
 		
 		assertTrue(sim != null);

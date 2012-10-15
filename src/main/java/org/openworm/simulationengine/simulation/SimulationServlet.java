@@ -1,5 +1,6 @@
 package org.openworm.simulationengine.simulation;
 
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -8,10 +9,15 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
+import org.openworm.simulationengine.core.model.IModel;
 import org.openworm.simulationengine.core.model.IModelInterpreter;
+import org.openworm.simulationengine.core.simulation.TimeConfiguration;
 import org.openworm.simulationengine.core.simulator.ISimulator;
 import org.openworm.simulationengine.simulation.model.Aspect;
 import org.openworm.simulationengine.simulation.model.Simulation;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -19,7 +25,7 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 @Configurable
 public class SimulationServlet extends WebSocketServlet {
 	
-	private @Autowired AutowireCapableBeanFactory beanFactory;
+	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 	
 	List<IModelInterpreter> _modelInterpreters;
 	List<ISimulator> _simulators;
@@ -48,21 +54,28 @@ public class SimulationServlet extends WebSocketServlet {
 			String simulatorId = aspect.getSimulator();
 			String modelURL = aspect.getModelURL();
 			
-			//needs to be instantiated dynamically
-			IModelInterpreter modelInterpreter = null;
-			//beanFactory.(obj);
+			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class);
+			ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class);
 			
-			//needs to be instantiated dynamically
-			ISimulator simulator=null;
 			try {
-				modelInterpreter.readModel(new URL(modelURL));
+				List<IModel> models = modelInterpreter.readModel(new URL(modelURL));
 				
-				// send down to the simulator the models that have been read	
-			} catch (MalformedURLException e) {
+				// send down to the simulator the models that have been read
+				//simulator.simulate();
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private <T> T getService(String discoveryId, Type type){
+		T service = null;
 		
+		String filter = String.format("(discoverable-id=%s)", discoveryId);
+		ServiceReference sr  =  _bc.getServiceReference(type.getClass().getName());
+		service = (T) _bc.getService(sr);
+		
+		return service;
 	}
 	
 }

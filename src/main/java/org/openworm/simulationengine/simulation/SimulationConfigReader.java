@@ -10,22 +10,17 @@ import org.openworm.simulationengine.simulation.model.Simulation;
 
 public class SimulationConfigReader {
 
-	public static Simulation readConfig(URL url) 
-	{
-		JAXBContext context;
+	public static Simulation readConfig(URL url) {
+		
 		
 		Simulation sim = null;
-		try 
-		{
-			context = JAXBContext.newInstance(Simulation.class);
-			Unmarshaller um = context.createUnmarshaller();
-			sim = (Simulation) um.unmarshal(url);
-		} 
-		catch (JAXBException e1) 
-		{
+		try {
+			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			sim = (Simulation) unmarshaller.unmarshal(url);
+		} catch (JAXBException e1) {
 			e1.printStackTrace();
 		}
-		
+
 		return sim;
 	}
 }

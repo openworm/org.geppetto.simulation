@@ -20,7 +20,7 @@ public class TestSimulationConfigReader {
 		assertTrue(sim.getName().equals("sph"));
 		assertTrue(sim.getConfiguration().getOutputFormat() == OutputFormat.RAW);
 		assertTrue(sim.getAspects().size() == 1);
-		assertTrue(sim.getAspects().get(0).getModelInterpreter().equals("sphInterpreter"));
+		assertTrue(sim.getAspects().get(0).getModelInterpreter().equals("sphModelInterpreter"));
 		assertTrue(sim.getAspects().get(0).getModelURL().equals("someurl"));
 		assertTrue(sim.getAspects().get(0).getSimulator().equals("sphSimulator"));
 		assertTrue(sim.getAspects().get(0).getId().equals("sph"));

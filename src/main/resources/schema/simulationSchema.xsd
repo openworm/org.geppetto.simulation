@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.openworm.org/simulationSchema"
-	xmlns:tns="http://www.openworm.org/simulationSchema" elementFormDefault="qualified">
+	xmlns:tns="http://www.openworm.org/simulationSchema"
+	elementFormDefault="qualified">
 
-	<complexType name="Simulation">
-		<sequence>
-			<element name="configuration" type="tns:Configuration"
-				maxOccurs="1" minOccurs="1"></element>
-			<element name="aspects" type="tns:Aspect" maxOccurs="unbounded"
-				minOccurs="1"></element>
-			<element name="name" type="string" maxOccurs="1" minOccurs="1"></element>
-		</sequence>
-	</complexType>
+
 
 	<complexType name="Configuration">
 		<sequence>
@@ -37,5 +30,16 @@
 		</restriction>
 	</simpleType>
 
-	<element name="simulation" type="tns:Simulation"></element>
+	<element name="simulation">
+		<complexType>
+			<sequence>
+				<element name="configuration" type="tns:Configuration"
+					maxOccurs="1" minOccurs="1"></element>
+				<element name="aspects" type="tns:Aspect" maxOccurs="unbounded"
+					minOccurs="1"></element>
+				<element name="name" type="string" maxOccurs="1" minOccurs="1"></element>
+			</sequence>
+		</complexType>
+	</element>
+	
 </schema>

@@ -1,13 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.openworm.simulationengine.simulation</groupId>
-	<artifactId>org.openworm.simulationengine.simulation</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<groupId>org.openworm</groupId>
+	<artifactId>simulationengine.simulation</artifactId>
+	<version>1.0.0</version>
+	<packaging>bundle</packaging>
 	<properties>
-		<spring.version>2.5.6.A</spring.version>
-		<security.version>2.0.4.A</security.version>
-		<webflow.version>2.0.5.RELEASE</webflow.version>
+		<spring.version>3.0.0.RELEASE</spring.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -26,16 +25,15 @@
 			<version>1.1.2</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- Gson: Java to Json conversion -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.1</version>
 		</dependency>
-    		<dependency>
-			<groupId>org.openworm.simulationengine.core</groupId>
-			<artifactId>org.openworm.simulationengine.core</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+		<dependency>
+			<groupId>org.openworm</groupId>
+			<artifactId>simulationengine.core</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -46,12 +44,6 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>org.springframework.beans</artifactId>
 			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>org.springframework.aop</artifactId>
-			<version>${spring.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -73,6 +65,11 @@
 			<artifactId>com.springsource.org.junit</artifactId>
 			<version>4.4.0</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
 		</dependency>
 	</dependencies>
 	<repositories>
@@ -98,7 +95,7 @@
 		</repository>
 	</repositories>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
+		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -164,6 +161,36 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<manifestLocation>WebContent/META-INF</manifestLocation>
+					<supportedProjectTypes>
+						<supportedProjectType>war</supportedProjectType>
+						<supportedProjectType>bundle</supportedProjectType>
+					</supportedProjectTypes>
+					<instructions>
+						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-Version>${project.version}</Bundle-Version>
+						<Import-Package>org.eclipse.virgo.web.dm;version="2.1.1.RELEASE",*</Import-Package>
+						<Import-Library>org.springframework.spring;version="${spring.version}"</Import-Library>
+					</instructions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
+					<warName>org.openworm.simulationengine.samplesimulation</warName>
+					<archive>
+						<manifestFile>WebContent/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+				</configuration>
 			</plugin>
 		</plugins>
 		<pluginManagement>

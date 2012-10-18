@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: 
-Bundle-Version: 1.0.0
-Bundle-Name: OpenWorm Simulation
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.openworm.simulationengine.simulation
-

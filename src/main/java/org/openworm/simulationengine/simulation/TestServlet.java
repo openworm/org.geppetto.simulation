@@ -26,12 +26,12 @@ public class TestServlet extends HttpServlet {
 		try {
 			
 			// this code works ok - the service is retrieved dynamically by the interface
-			BundleContext bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+			/*BundleContext bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 			ServiceReference sr = bc.getServiceReference(IModelInterpreter.class.getName());
-			IModelInterpreter modelInterpreter = bc.getService(sr);
+			IModelInterpreter modelInterpreter = bc.getService(sr);*/
 			
-			//IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService("sphModelInterpreter", IModelInterpreter.class);
-			//ISimulator simulator = this.<ISimulator>getService("sphSimulator", ISimulator.class);
+			// this is the same as above but uses a more generic routine to encapsulate bolier-plate code
+			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService("sphModelInterpreter", IModelInterpreter.class.getName());
 			
 			if(modelInterpreter == null){
 				response.getWriter().println("modelInterpreter is null");
@@ -44,13 +44,15 @@ public class TestServlet extends HttpServlet {
 		} 
 	}
 	
-	/*private <T> T getService(String discoveryId, Type type){
+	private <T> T getService(String discoveryId, String type){
+		BundleContext bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+		
 		T service = null;
 		
-		String filter = String.format("(discoverable-id=%s)", discoveryId);
-		ServiceReference sr  =  _bc.getServiceReference(type.getClass().getName());
-		service = (T) _bc.getService(sr);
+		//String filter = String.format("(discoverable-id=%s)", discoveryId);
+		ServiceReference sr  =  bc.getServiceReference(type);
+		service = (T) bc.getService(sr);
 		
 		return service;
-	}*/
+	}
 }

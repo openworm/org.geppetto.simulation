@@ -20,21 +20,31 @@ import org.osgi.framework.ServiceReference;
 public class TestServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
-	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+	//BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
 			
-			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService("sphModelInterpreter", IModelInterpreter.class);
-			ISimulator simulator = this.<ISimulator>getService("sphSimulator", ISimulator.class);
+			// this code works ok - the service is retrieved dynamically by the interface
+			BundleContext bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+			ServiceReference sr = bc.getServiceReference(IModelInterpreter.class.getName());
+			IModelInterpreter modelInterpreter = bc.getService(sr);
 			
-			response.getWriter().println("Looks like it got to the end with no errors!");
+			//IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService("sphModelInterpreter", IModelInterpreter.class);
+			//ISimulator simulator = this.<ISimulator>getService("sphSimulator", ISimulator.class);
+			
+			if(modelInterpreter == null){
+				response.getWriter().println("modelInterpreter is null");
+			}
+			else{
+				response.getWriter().println("modelInterpreter: " + modelInterpreter.toString());
+			}
 		} catch (Exception e) {
 			response.getWriter().println("error: " + e.getMessage());
 		} 
 	}
 	
-	private <T> T getService(String discoveryId, Type type){
+	/*private <T> T getService(String discoveryId, Type type){
 		T service = null;
 		
 		String filter = String.format("(discoverable-id=%s)", discoveryId);
@@ -42,5 +52,5 @@ public class TestServlet extends HttpServlet {
 		service = (T) _bc.getService(sr);
 		
 		return service;
-	}
+	}*/
 }

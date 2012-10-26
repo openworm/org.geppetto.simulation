@@ -15,22 +15,17 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 /**
- * Servlet used to test service wiring
+ * Servlet used to test service wiring.
+ * NOTE: this is throw-away code
  */
 public class TestServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
-	//BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
-			
-			// this code works ok - the service is retrieved dynamically by the interface
-			/*BundleContext bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-			ServiceReference sr = bc.getServiceReference(IModelInterpreter.class.getName());
-			IModelInterpreter modelInterpreter = bc.getService(sr);*/
-			
-			// this is the same as above but uses a more generic routine to encapsulate bolier-plate code
+
 			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService("sphModelInterpreter", IModelInterpreter.class.getName());
 			
 			if(modelInterpreter == null){
@@ -44,14 +39,15 @@ public class TestServlet extends HttpServlet {
 		} 
 	}
 	
+	/*
+	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
+	 */
 	private <T> T getService(String discoveryId, String type){
-		BundleContext bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-		
 		T service = null;
 		
 		//String filter = String.format("(discoverable-id=%s)", discoveryId);
-		ServiceReference sr  =  bc.getServiceReference(type);
-		service = (T) bc.getService(sr);
+		ServiceReference sr  =  _bc.getServiceReference(type);
+		service = (T) _bc.getService(sr);
 		
 		return service;
 	}

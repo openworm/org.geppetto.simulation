@@ -17,6 +17,7 @@ import org.openworm.simulationengine.simulation.model.Aspect;
 import org.openworm.simulationengine.simulation.model.Simulation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -44,36 +45,42 @@ public class SimulationServlet extends WebSocketServlet {
 	
 	private void runSimulation()
 	{	
-		//it's going to be created when we read in the simulation file
-		Simulation sim = SimulationConfigReader.readConfig(_configUrl);
+		try {
+			//it's going to be created when we read in the simulation file
+			Simulation sim = SimulationConfigReader.readConfig(_configUrl);
 		
-		for(Aspect aspect : sim.getAspects())
-		{
-			String id = aspect.getId();
-			String modelInterpreterId = aspect.getModelInterpreter();
-			String simulatorId = aspect.getSimulator();
-			String modelURL = aspect.getModelURL();
-			
-			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class);
-			ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class);
-			
-			try {
-				List<IModel> models = modelInterpreter.readModel(new URL(modelURL));
+			for(Aspect aspect : sim.getAspects())
+			{
+				String id = aspect.getId();
+				String modelInterpreterId = aspect.getModelInterpreter();
+				String simulatorId = aspect.getSimulator();
+				String modelURL = aspect.getModelURL();
 				
+				IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class.getName());
+				ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class.getName());
+				
+				List<IModel> models = modelInterpreter.readModel(new URL(modelURL));
+					
 				// send down to the simulator the models that have been read
-				//simulator.simulate();
-			} catch (Exception e) {
-				e.printStackTrace();
+				// simulator.simulate()
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
-	private <T> T getService(String discoveryId, Type type){
+	/*
+	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
+	 */
+	private <T> T getService(String discoveryId, String type) throws InvalidSyntaxException{
 		T service = null;
 		
-		String filter = String.format("(discoverable-id=%s)", discoveryId);
-		ServiceReference sr  =  _bc.getServiceReference(type.getClass().getName());
-		service = (T) _bc.getService(sr);
+		String filter = String.format("(discoverableID=%s)", discoveryId);
+		ServiceReference[] sr  =  _bc.getServiceReferences(type, filter);
+		if(sr != null && sr.length > 0)
+		{
+			service = (T) _bc.getService(sr[0]);
+		}
 		
 		return service;
 	}

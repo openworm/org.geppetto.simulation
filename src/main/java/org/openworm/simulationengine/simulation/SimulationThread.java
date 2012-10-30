@@ -28,14 +28,11 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 
 	private SessionContext sessionContext = null;
 
-	public ISimulator sampleSimulatorService;
-
 	public Simulation simConfig;
 
-	public SimulationThread(SessionContext context, Simulation config, ISimulator sampleSimulatorService) {
+	public SimulationThread(SessionContext context, Simulation config) {
 		this.sessionContext = context;
 		this.simConfig = config;
-		this.sampleSimulatorService = sampleSimulatorService;
 	}
 
 	private SessionContext getSessionContext() {
@@ -60,35 +57,22 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 	 */
 	private void appendResults(List<IModel> models) {
 		String receivedId = models.get(0).getId();
-		if (getSessionContext()._models == null) {
-			getSessionContext()._models = new HashMap<String, List<IModel>>();
+		if (getSessionContext()._modelsByAspect == null) {
+			getSessionContext()._modelsByAspect = new HashMap<String, List<IModel>>();
 		}
 
-		if (getSessionContext()._models.containsKey(receivedId)) {
-			// check if we have more steps than can be displayed
-			/*if (getSessionContext()._models.get(receivedId).size() >= (config.getViewport() / config.getDt()) / config.getSamplingPeriod()) {
-				// if we have more steps that can be displayed - remove the
-				// difference
-				for (int i = 0; i < models.size(); i++) {
-					// always remove the first - when removing everything gets
-					// shifted
-					getSessionContext()._models.get(receivedId).remove(0);
-				}
-			}*/
-
-			// add all the timesteps for the model
-			getSessionContext()._models.get(receivedId).addAll(models);
+		if (getSessionContext()._modelsByAspect.containsKey(receivedId)) {
+			getSessionContext()._modelsByAspect.get(receivedId).addAll(models);
 		} else {
-			getSessionContext()._models.put(receivedId, models);
+			getSessionContext()._modelsByAspect.put(receivedId, models);
 		}
 
-		getSessionContext()._processedElements = getSessionContext()._processedElements + 1;
+		getSessionContext()._processedAspects = getSessionContext()._processedAspects + 1;
 
-		// NOTE: this needs to be set only when all the elements have been
-		// processed
-		/*if (getSessionContext()._processedElements == config.getElemCount()) {
+		// NOTE: this needs to be set only when all the elements have been processed
+		if (getSessionContext()._processedAspects == simConfig.getAspects().size()) {
 			getSessionContext()._runningCycle = false;
-		}*/
+		}
 	}
 
 	public void run() {
@@ -98,13 +82,9 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 			while (getSessionContext()._runSimulation) {
 				if (!getSessionContext()._runningCycle) {
 					getSessionContext()._runningCycle = true;
-					getSessionContext()._processedElements = 0;
-					
-					// TODO: this needs to be passed in
-					URL configUrl = null;
-					Simulation sim = SimulationConfigReader.readConfig(configUrl);
+					getSessionContext()._processedAspects = 0;
 				
-					for(Aspect aspect : sim.getAspects())
+					for(Aspect aspect : simConfig.getAspects())
 					{
 						String id = aspect.getId();
 						String modelInterpreterId = aspect.getModelInterpreter();

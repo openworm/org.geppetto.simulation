@@ -1,5 +1,6 @@
 package org.openworm.simulationengine.simulation;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
@@ -23,35 +24,21 @@ import org.apache.catalina.websocket.MessageInbound;
 import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
 import org.apache.catalina.websocket.WsOutbound;
-import org.openworm.simulationengine.core.model.IModel;
-import org.openworm.simulationengine.core.model.IModelInterpreter;
-import org.openworm.simulationengine.core.simulation.TimeConfiguration;
-import org.openworm.simulationengine.core.simulator.ISimulator;
-import org.openworm.simulationengine.simulation.model.Aspect;
+import org.openworm.simulationengine.core.visualisation.model.Scene;
 import org.openworm.simulationengine.simulation.model.Simulation;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 @Configurable
+@SuppressWarnings("serial")
 public class SimulationServlet extends WebSocketServlet {
 		
 	// TODO: inject this from a config file local to this bundle
 	private URL _configUrl;
-	
-	private static final long serialVersionUID = 1L;
-
 	private static final long UPDATE_CYCLE = 100;
-
 	private final Timer _simTimer = new Timer(SimulationServlet.class.getSimpleName() + " Timer");
-
 	private final AtomicInteger _connectionIds = new AtomicInteger(0);
-	
-	private final ConcurrentHashMap<Integer, SessionContext> _simulations = new ConcurrentHashMap<Integer, SessionContext>();
-	
+	private final SessionContext _sessionContext = new SessionContext();
 	private final ConcurrentHashMap<Integer, SimDataInbound> _connections = new ConcurrentHashMap<Integer, SimDataInbound>();
 
 	@Override
@@ -73,12 +60,24 @@ public class SimulationServlet extends WebSocketServlet {
 				}
 			}
 		}, UPDATE_CYCLE, UPDATE_CYCLE);
+		
+		// TODO: this is here temporarily - should be set from the client or at least inject from config
+		try {
+			_configUrl = new File("./src/main/resources/config/sph-sim-config.xml").toURI().toURL();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void update() {
 		StringBuilder sb = new StringBuilder();
 		
-		// TODO: build json arrays to push to the clients
+		// TODO: build json data to push to the clients (data is stored in _sessionContext)
+		/*Scene scene = modelInterpreter.getSceneFromModel(model); //model is ÊList<IModel>
+		ObjectMapper mapper = new ObjectMapper();
+
+		mapper.writeValue(sb, scene);*/
 		
 		sendUpdate(sb.toString());
 	}
@@ -97,15 +96,10 @@ public class SimulationServlet extends WebSocketServlet {
 	private Collection<SimDataInbound> getConnections() {
 		return Collections.unmodifiableCollection(_connections.values());
 	}
-
-	private Collection<SessionContext> getSimulations() {
-		return Collections.unmodifiableCollection(_simulations.values());
-	}
 	
 	private final class SimDataInbound extends MessageInbound {
 
 		private final int id;
-		private SessionContext _sessionContext;
 
 		private SimDataInbound(int id) {
 			super();
@@ -114,16 +108,11 @@ public class SimulationServlet extends WebSocketServlet {
 
 		@Override
 		protected void onOpen(WsOutbound outbound) {
-			_sessionContext = new SessionContext();
-			_simulations.put(Integer.valueOf(id), _sessionContext);
 			_connections.put(Integer.valueOf(id), this);
-			// tentative support for multiple connections but we'll have to see
-			// how the osgi services can be instantiated
 		}
 
 		@Override
 		protected void onClose(int status) {
-			_simulations.remove(Integer.valueOf(id));
 			_connections.remove(Integer.valueOf(id));
 		}
 
@@ -136,7 +125,10 @@ public class SimulationServlet extends WebSocketServlet {
 		protected void onTextMessage(CharBuffer message) throws IOException {
 			String msg = message.toString();
 			if (msg.equals("start")) {
-				// TODO: start simulation thread
+				// grab config simulation object
+				Simulation sim = SimulationConfigReader.readConfig(_configUrl);
+				// start simulation thread
+				new SimulationThread(_sessionContext, sim).start();
 			} else if (msg.equals("stop")) {
 				_sessionContext._runSimulation = false;
 				_sessionContext._runningCycle = false;

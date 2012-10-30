@@ -24,14 +24,10 @@ import org.osgi.framework.ServiceReference;
 class SimulationThread extends Thread implements ISimulation, ISimulationCallbackListener {
 
 	private static Log logger = LogFactory.getLog(SimulationThread.class);
-
 	private SessionContext sessionContext = null;
-
-	public Simulation simConfig;
 
 	public SimulationThread(SessionContext context, Simulation config) {
 		this.sessionContext = context;
-		this.simConfig = config;
 	}
 
 	private SessionContext getSessionContext() {
@@ -56,32 +52,32 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 	 */
 	private void appendResults(List<IModel> models) {
 		String receivedId = models.get(0).getId();
-		if (getSessionContext()._modelsByAspect == null) {
-			getSessionContext()._modelsByAspect = new ConcurrentHashMap<String, List<IModel>>();
+		if (getSessionContext().modelsByAspect == null) {
+			getSessionContext().modelsByAspect = new ConcurrentHashMap<String, List<IModel>>();
 		}
 
-		if (getSessionContext()._modelsByAspect.containsKey(receivedId)) {
-			getSessionContext()._modelsByAspect.get(receivedId).addAll(models);
+		if (getSessionContext().modelsByAspect.containsKey(receivedId)) {
+			getSessionContext().modelsByAspect.get(receivedId).addAll(models);
 		} else {
-			getSessionContext()._modelsByAspect.put(receivedId, models);
+			getSessionContext().modelsByAspect.put(receivedId, models);
 		}
 
-		getSessionContext()._processedAspects = getSessionContext()._processedAspects + 1;
+		getSessionContext().processedAspects = getSessionContext().processedAspects + 1;
 
 		// NOTE: this needs to be set only when all the elements have been processed
-		if (getSessionContext()._processedAspects == simConfig.getAspects().size()) {
-			getSessionContext()._runningCycle = false;
+		if (getSessionContext().processedAspects == sessionContext.aspectsSize) {
+			getSessionContext().runningCycle = false;
 		}
 	}
 
 	public void run() {
 		try {
-			getSessionContext()._runSimulation = true;
+			getSessionContext().runSimulation = true;
 	
-			while (getSessionContext()._runSimulation) {
-				if (!getSessionContext()._runningCycle) {
-					getSessionContext()._runningCycle = true;
-					getSessionContext()._processedAspects = 0;
+			while (getSessionContext().runSimulation) {
+				if (!getSessionContext().runningCycle) {
+					getSessionContext().runningCycle = true;
+					getSessionContext().processedAspects = 0;
 				
 					/*for(Aspect aspect : simConfig.getAspects())
 					{

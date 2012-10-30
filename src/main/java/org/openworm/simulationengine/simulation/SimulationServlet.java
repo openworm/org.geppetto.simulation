@@ -143,8 +143,8 @@ public class SimulationServlet extends WebSocketServlet {
 					// start simulation thread
 					new SimulationThread(_sessionContext, sim).start();
 				} else if (msg.equals("stop")) {
-					_sessionContext._runSimulation = false;
-					_sessionContext._runningCycle = false;
+					_sessionContext.runSimulation = false;
+					_sessionContext.runningCycle = false;
 				} else {
 					// NOTE: doesn't necessarily ned to do smt here - could be just start/stop
 				}
@@ -167,10 +167,12 @@ public class SimulationServlet extends WebSocketServlet {
 			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class.getName());
 			ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class.getName());
 			
-			_sessionContext._modelInterpretersByAspect.put(id, modelInterpreter);
-			_sessionContext._simulatorsByAspect.put(id, simulator);
-			_sessionContext._modelURLByAspect.put(id, modelURL);
+			_sessionContext.modelInterpretersByAspect.put(id, modelInterpreter);
+			_sessionContext.simulatorsByAspect.put(id, simulator);
+			_sessionContext.modelURLByAspect.put(id, modelURL);
 		}
+		
+		_sessionContext.aspectsSize = simConfig.getAspects().size();
 	}
 	
 	/*

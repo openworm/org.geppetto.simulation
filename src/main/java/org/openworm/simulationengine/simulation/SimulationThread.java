@@ -30,11 +30,11 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 
 	public ISimulator sampleSimulatorService;
 
-	public Simulation config;
+	public Simulation simConfig;
 
 	public SimulationThread(SessionContext context, Simulation config, ISimulator sampleSimulatorService) {
 		this.sessionContext = context;
-		this.config = config;
+		this.simConfig = config;
 		this.sampleSimulatorService = sampleSimulatorService;
 	}
 
@@ -92,66 +92,36 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 	}
 
 	public void run() {
-		getSessionContext()._runSimulation = true;
-
-		while (getSessionContext()._runSimulation) {
-			if (!getSessionContext()._runningCycle) {
-				getSessionContext()._runningCycle = true;
-				getSessionContext()._processedElements = 0;
-
-				logger.debug("start simulation");
-				//int ELEM_COUNT = config.getElemCount();
-
-				sampleSimulatorService.initialize(this);
-				sampleSimulatorService.startSimulatorCycle();
-
-				//getSessionContext()._timeConfiguration = new TimeConfiguration((float) config.getDt(), config.getSteps(),config.getSamplingPeriod());
-
-				// create the models to be simulated
-				/*for (int j = 0; j < ELEM_COUNT; j++) {
-					HHModel modelToSimulate;
-					if (getSessionContext()._models == null) {
-						// initial condition
-						modelToSimulate = new HHModel(Integer.toString(j),config.getV(), config.getXn(), config.getXm(),config.getXh(),getSessionContext()._externalCurrent);
-					} else {
-						modelToSimulate = (HHModel) getSessionContext()._models.get(Integer.toString(j)).get(getSessionContext()._models.get(Integer.toString(j)).size() - 1);
-						modelToSimulate.setI(getSessionContext()._externalCurrent);
-					}
-
-					// this is where the simulation hooks up with the solver
-					sampleSimulatorService.simulate(modelToSimulate,getSessionContext()._timeConfiguration);
-				}*/
-
-				sampleSimulatorService.endSimulatorCycle();
-				logger.debug("end simulation");
-			}
-		}
-	}
-	
-	/*
-	 * Pseudo-logic for discovering services and start simulations
-	 */
-	private void runSimulation()
-	{	
 		try {
-			// TODO: this needs to be passed in
-			URL configUrl = null;
-			Simulation sim = SimulationConfigReader.readConfig(configUrl);
-		
-			for(Aspect aspect : sim.getAspects())
-			{
-				String id = aspect.getId();
-				String modelInterpreterId = aspect.getModelInterpreter();
-				String simulatorId = aspect.getSimulator();
-				String modelURL = aspect.getModelURL();
-				
-				IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class.getName());
-				ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class.getName());
-				
-				List<IModel> models = modelInterpreter.readModel(new URL(modelURL));
+			getSessionContext()._runSimulation = true;
+	
+			while (getSessionContext()._runSimulation) {
+				if (!getSessionContext()._runningCycle) {
+					getSessionContext()._runningCycle = true;
+					getSessionContext()._processedElements = 0;
 					
-				// send down to the simulator the models that have been read
-				// simulator.simulate()
+					// TODO: this needs to be passed in
+					URL configUrl = null;
+					Simulation sim = SimulationConfigReader.readConfig(configUrl);
+				
+					for(Aspect aspect : sim.getAspects())
+					{
+						String id = aspect.getId();
+						String modelInterpreterId = aspect.getModelInterpreter();
+						String simulatorId = aspect.getSimulator();
+						String modelURL = aspect.getModelURL();
+						
+						IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class.getName());
+						ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class.getName());
+						
+						List<IModel> models = modelInterpreter.readModel(new URL(modelURL));
+						
+						simulator.initialize(this);
+						simulator.startSimulatorCycle();
+						// TODO: add models to simulate
+						simulator.endSimulatorCycle();
+					}
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

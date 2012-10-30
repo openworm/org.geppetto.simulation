@@ -1,5 +1,6 @@
 package org.openworm.simulationengine.simulation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,7 +18,7 @@ public class SessionContext {
 	
 	public ConcurrentHashMap<String, String> modelURLByAspect = new ConcurrentHashMap<String, String>();
 	
-	public int aspectsSize = 0;
+	public List<String> aspectIDs = new ArrayList<String>();
 	
 	public int processedAspects = 0;
 

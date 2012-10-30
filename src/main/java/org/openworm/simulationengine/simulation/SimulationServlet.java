@@ -27,6 +27,7 @@ import org.apache.catalina.websocket.WsOutbound;
 import org.openworm.simulationengine.core.model.IModel;
 import org.openworm.simulationengine.core.model.IModelInterpreter;
 import org.openworm.simulationengine.core.simulator.ISimulator;
+import org.openworm.simulationengine.core.visualisation.model.Scene;
 import org.openworm.simulationengine.simulation.model.Aspect;
 import org.openworm.simulationengine.simulation.model.Simulation;
 import org.osgi.framework.BundleContext;
@@ -35,6 +36,9 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configurable
 @SuppressWarnings("serial")
@@ -64,8 +68,9 @@ public class SimulationServlet extends WebSocketServlet {
 			public void run() {
 				try {
 					update();
-				} catch (RuntimeException e) {
-					// log.error("Caught to prevent timer from shutting down", e);
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		}, UPDATE_CYCLE, UPDATE_CYCLE);
@@ -79,14 +84,18 @@ public class SimulationServlet extends WebSocketServlet {
 		}
 	}
 	
-	private void update() {
+	private void update() throws JsonProcessingException {
 		StringBuilder sb = new StringBuilder();
 		
-		// TODO: build json data to push to the clients (data is stored in _sessionContext)
-		/*Scene scene = modelInterpreter.getSceneFromModel(model); //model is ÊList<IModel>
-		ObjectMapper mapper = new ObjectMapper();
-
-		mapper.writeValue(sb, scene);*/
+		for(String aspectID : _sessionContext.aspectIDs){
+			List<IModel> models = _sessionContext.modelsByAspect.get(aspectID);
+			Scene scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models); 
+			ObjectMapper mapper = new ObjectMapper();
+			
+			mapper.writer().writeValueAsString(scene);
+			
+			// TODO: figure out how to separate aspects
+		}
 		
 		sendUpdate(sb.toString());
 	}
@@ -141,12 +150,12 @@ public class SimulationServlet extends WebSocketServlet {
 					populateDiscoverableServices(sim);
 					
 					// start simulation thread
-					new SimulationThread(_sessionContext, sim).start();
+					new SimulationThread(_sessionContext).start();
 				} else if (msg.equals("stop")) {
 					_sessionContext.runSimulation = false;
 					_sessionContext.runningCycle = false;
 				} else {
-					// NOTE: doesn't necessarily ned to do smt here - could be just start/stop
+					// NOTE: doesn't necessarily need to do smt here - could be just start/stop
 				}
 			} catch (InvalidSyntaxException e) {
 				// TODO Auto-generated catch block
@@ -167,12 +176,11 @@ public class SimulationServlet extends WebSocketServlet {
 			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class.getName());
 			ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class.getName());
 			
+			_sessionContext.aspectIDs.add(id);
 			_sessionContext.modelInterpretersByAspect.put(id, modelInterpreter);
 			_sessionContext.simulatorsByAspect.put(id, simulator);
 			_sessionContext.modelURLByAspect.put(id, modelURL);
 		}
-		
-		_sessionContext.aspectsSize = simConfig.getAspects().size();
 	}
 	
 	/*

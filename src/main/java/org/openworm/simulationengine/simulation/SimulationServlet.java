@@ -24,15 +24,24 @@ import org.apache.catalina.websocket.MessageInbound;
 import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
 import org.apache.catalina.websocket.WsOutbound;
-import org.openworm.simulationengine.core.visualisation.model.Scene;
+import org.openworm.simulationengine.core.model.IModel;
+import org.openworm.simulationengine.core.model.IModelInterpreter;
+import org.openworm.simulationengine.core.simulator.ISimulator;
+import org.openworm.simulationengine.simulation.model.Aspect;
 import org.openworm.simulationengine.simulation.model.Simulation;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 @Configurable
 @SuppressWarnings("serial")
 public class SimulationServlet extends WebSocketServlet {
-		
+	
+	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+	
 	// TODO: inject this from a config file local to this bundle
 	private URL _configUrl;
 	private static final long UPDATE_CYCLE = 100;
@@ -122,20 +131,61 @@ public class SimulationServlet extends WebSocketServlet {
 		}
 
 		@Override
-		protected void onTextMessage(CharBuffer message) throws IOException {
-			String msg = message.toString();
-			if (msg.equals("start")) {
-				// grab config simulation object
-				Simulation sim = SimulationConfigReader.readConfig(_configUrl);
-				// start simulation thread
-				new SimulationThread(_sessionContext, sim).start();
-			} else if (msg.equals("stop")) {
-				_sessionContext._runSimulation = false;
-				_sessionContext._runningCycle = false;
-			} else {
-				// NOTE: doesn't necessarily ned to do smt here - could be just start/stop
+		protected void onTextMessage(CharBuffer message) {
+			try {
+				String msg = message.toString();
+				if (msg.equals("start")) {
+					Simulation sim = SimulationConfigReader.readConfig(_configUrl);
+					
+					// grab config and retrieve model interpreters and simulators
+					populateDiscoverableServices(sim);
+					
+					// start simulation thread
+					new SimulationThread(_sessionContext, sim).start();
+				} else if (msg.equals("stop")) {
+					_sessionContext._runSimulation = false;
+					_sessionContext._runningCycle = false;
+				} else {
+					// NOTE: doesn't necessarily ned to do smt here - could be just start/stop
+				}
+			} catch (InvalidSyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
-
+	
+	private void populateDiscoverableServices(Simulation simConfig) throws InvalidSyntaxException
+	{
+		for(Aspect aspect : simConfig.getAspects())
+		{
+			String id = aspect.getId();
+			String modelInterpreterId = aspect.getModelInterpreter();
+			String simulatorId = aspect.getSimulator();
+			String modelURL = aspect.getModelURL();
+			
+			IModelInterpreter modelInterpreter = this.<IModelInterpreter>getService(modelInterpreterId, IModelInterpreter.class.getName());
+			ISimulator simulator = this.<ISimulator>getService(simulatorId, ISimulator.class.getName());
+			
+			_sessionContext._modelInterpretersByAspect.put(id, modelInterpreter);
+			_sessionContext._simulatorsByAspect.put(id, simulator);
+			_sessionContext._modelURLByAspect.put(id, modelURL);
+		}
+	}
+	
+	/*
+	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
+	 */
+	private <T> T getService(String discoveryId, String type) throws InvalidSyntaxException{
+		T service = null;
+		
+		String filter = String.format("(discoverableID=%s)", discoveryId);
+		ServiceReference[] sr  =  _bc.getServiceReferences(type, filter);
+		if(sr != null && sr.length > 0)
+		{
+			service = (T) _bc.getService(sr[0]);
+		}
+		
+		return service;
+	}
 }

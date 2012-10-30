@@ -3,6 +3,7 @@ package org.openworm.simulationengine.simulation;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,8 +24,6 @@ import org.osgi.framework.ServiceReference;
 class SimulationThread extends Thread implements ISimulation, ISimulationCallbackListener {
 
 	private static Log logger = LogFactory.getLog(SimulationThread.class);
-	
-	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 
 	private SessionContext sessionContext = null;
 
@@ -58,7 +57,7 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 	private void appendResults(List<IModel> models) {
 		String receivedId = models.get(0).getId();
 		if (getSessionContext()._modelsByAspect == null) {
-			getSessionContext()._modelsByAspect = new HashMap<String, List<IModel>>();
+			getSessionContext()._modelsByAspect = new ConcurrentHashMap<String, List<IModel>>();
 		}
 
 		if (getSessionContext()._modelsByAspect.containsKey(receivedId)) {
@@ -84,7 +83,7 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 					getSessionContext()._runningCycle = true;
 					getSessionContext()._processedAspects = 0;
 				
-					for(Aspect aspect : simConfig.getAspects())
+					/*for(Aspect aspect : simConfig.getAspects())
 					{
 						String id = aspect.getId();
 						String modelInterpreterId = aspect.getModelInterpreter();
@@ -100,27 +99,11 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 						simulator.startSimulatorCycle();
 						// TODO: add models to simulate
 						simulator.endSimulatorCycle();
-					}
+					}*/
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	/*
-	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
-	 */
-	private <T> T getService(String discoveryId, String type) throws InvalidSyntaxException{
-		T service = null;
-		
-		String filter = String.format("(discoverableID=%s)", discoveryId);
-		ServiceReference[] sr  =  _bc.getServiceReferences(type, filter);
-		if(sr != null && sr.length > 0)
-		{
-			service = (T) _bc.getService(sr[0]);
-		}
-		
-		return service;
 	}
 }

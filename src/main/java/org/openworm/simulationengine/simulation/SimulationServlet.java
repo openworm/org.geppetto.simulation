@@ -192,8 +192,7 @@ public class SimulationServlet extends WebSocketServlet
 				{
 					Simulation sim = SimulationConfigReader.readConfig(_configUrl);
 
-					// grab config and retrieve model interpreters and
-					// simulators
+					// grab config and retrieve model interpreters and simulators
 					populateDiscoverableServices(sim);
 
 					// start simulation thread
@@ -238,8 +237,7 @@ public class SimulationServlet extends WebSocketServlet
 	}
 
 	/*
-	 * A generic routine to encapsulate boiler-plate code for dynamic service
-	 * discovery
+	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
 	 */
 	private <T> T getService(String discoveryId, String type) throws InvalidSyntaxException
 	{

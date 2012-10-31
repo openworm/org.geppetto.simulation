@@ -25,8 +25,6 @@ public class SessionContext
 
 	public List<String> aspectIDs = new ArrayList<String>();
 
-	public int processedAspects = 0;
-
 	public boolean runningCycle = false;
 
 	public boolean runSimulation = false;

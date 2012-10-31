@@ -12,7 +12,7 @@ import org.openworm.simulationengine.core.simulation.ISimulation;
 import org.openworm.simulationengine.core.simulation.ISimulationCallbackListener;
 import org.openworm.simulationengine.core.simulator.ISimulator;
 
-class SimulationThread extends Thread implements ISimulation, ISimulationCallbackListener {
+class SimulationThread extends Thread implements ISimulation {
 
 	private static Log logger = LogFactory.getLog(SimulationThread.class);
 	private SessionContext sessionContext = null;
@@ -23,43 +23,6 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 
 	private SessionContext getSessionContext() {
 		return sessionContext;
-	}
-
-	/*
-	 * Callback to populate results buffers.
-	 * 
-	 * @see
-	 * org.openworm.simulationengine.core.simulation.ISimulationCallbackListener
-	 * #resultReady(java.util.List)
-	 */
-	@Override
-	public void resultReady(final List<IModel> models) {
-		// when the callback is received results are appended
-		appendResults(models);
-	}
-
-	/**
-	 * @param models
-	 * TODO: figure out how to pass aspects IDs to this
-	 */
-	private void appendResults(List<IModel> models) {
-		/*String receivedId = models.get(0).getId();
-		if (getSessionContext().modelsByAspect == null) {
-			getSessionContext().modelsByAspect = new ConcurrentHashMap<String, List<IModel>>();
-		}
-
-		if (getSessionContext().modelsByAspect.containsKey(receivedId)) {
-			getSessionContext().modelsByAspect.get(receivedId).addAll(models);
-		} else {
-			getSessionContext().modelsByAspect.put(receivedId, models);
-		}
-
-		getSessionContext().processedAspects = getSessionContext().processedAspects + 1;
-
-		// NOTE: this needs to be set only when all the elements have been processed
-		if (getSessionContext().processedAspects == sessionContext.aspectIDs.size()) {
-			getSessionContext().runningCycle = false;
-		}*/
 	}
 
 	public void run() {
@@ -78,8 +41,7 @@ class SimulationThread extends Thread implements ISimulation, ISimulationCallbac
 						List<IModel> models = modelInterpreter.readModel(new URL(sessionContext.modelURLByAspect.get(aspectID)));
 						
 						// inject listener into the simulator (in this case the thread is the listener
-						// NOTE: might have to change this to inject a listener that is not the thread for multiple simulations
-						simulator.initialize(this);
+						simulator.initialize(new SimulationCallbackListener(aspectID, sessionContext));
 						simulator.startSimulatorCycle();
 						// add models to simulate
 						for(IModel model : models){

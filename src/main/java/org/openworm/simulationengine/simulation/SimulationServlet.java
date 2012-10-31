@@ -84,8 +84,7 @@ public class SimulationServlet extends WebSocketServlet
 			}
 		}, UPDATE_CYCLE, UPDATE_CYCLE);
 
-		// TODO: this is hardcoded here temp - should be set from the client or
-		// at least inject from config
+		// TODO: this is hardcoded here temp - should be set from the client or at least inject from config
 		try
 		{
 			_configUrl = new File("./src/main/resources/config/sph-sim-config.xml").toURI().toURL();

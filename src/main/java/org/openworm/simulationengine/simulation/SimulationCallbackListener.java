@@ -43,7 +43,7 @@ public class SimulationCallbackListener implements ISimulationCallbackListener
 		{
 			sessionContext.modelsByAspect.put(simulationAspectID, new HashMap<String, List<IModel>>());
 		}
-
+		
 		String modelId = models.get(0).getId();
 		if (sessionContext.modelsByAspect.get(simulationAspectID).containsKey(modelId))
 		{

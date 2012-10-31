@@ -1,5 +1,6 @@
 package org.openworm.simulationengine.simulation;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.openworm.simulationengine.core.model.IModel;
@@ -15,7 +16,7 @@ public class SimulationCallbackListener implements ISimulationCallbackListener {
 		this.sessionContext = context;
 	}
 	
-	/*
+	/**
 	 * Callback to populate results buffers.
 	 * 
 	 * @see
@@ -34,23 +35,34 @@ public class SimulationCallbackListener implements ISimulationCallbackListener {
 	 * @param models
 	 */
 	private void appendResults(List<IModel> models) {
-		/*String receivedId = models.get(0).getId();
-		if (getSessionContext().modelsByAspect == null) {
-			getSessionContext().modelsByAspect = new ConcurrentHashMap<String, List<IModel>>();
+		
+		if(!sessionContext.modelsByAspect.containsKey(simulationAspectID))
+		{
+			sessionContext.modelsByAspect.put(simulationAspectID, new HashMap<String, List<IModel>>());
 		}
 
-		if (getSessionContext().modelsByAspect.containsKey(receivedId)) {
-			getSessionContext().modelsByAspect.get(receivedId).addAll(models);
+		String modelId = models.get(0).getId();
+		if (sessionContext.modelsByAspect.get(simulationAspectID).containsKey(modelId)) {
+			
+			// NOTE: not sure how the segment below applies to the generic simulation
+			// NOTE: it was originally designed for dealing with plots (multiple timesteps)
+			// check if we have more steps than can be displayed
+			/*if (getSessionContext()._models.get(receivedId).size() >= (config.getViewport() / config.getDt()) / config.getSamplingPeriod()) {
+				// if we have more steps that can be displayed - remove the difference
+				for (int i = 0; i < models.size(); i++) {
+					// always remove the first - when removing everything gets
+					// shifted
+					getSessionContext()._models.get(receivedId).remove(0);
+				}
+			}*/
+			
+			sessionContext.modelsByAspect.get(simulationAspectID).get(modelId).addAll(models);
 		} else {
-			getSessionContext().modelsByAspect.put(receivedId, models);
+			sessionContext.modelsByAspect.get(simulationAspectID).put(modelId, models);
 		}
-
-		getSessionContext().processedAspects = getSessionContext().processedAspects + 1;
-
-		// NOTE: this needs to be set only when all the elements have been processed
-		if (getSessionContext().processedAspects == sessionContext.aspectIDs.size()) {
-			getSessionContext().runningCycle = false;
-		}*/
+		
+		Integer processed = sessionContext.processedElementsByAspect.get(simulationAspectID);
+		sessionContext.processedElementsByAspect.replace(simulationAspectID, processed + 1);
 	}
 
 }

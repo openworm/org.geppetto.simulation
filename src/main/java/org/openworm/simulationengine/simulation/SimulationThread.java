@@ -30,6 +30,7 @@ class SimulationThread extends Thread implements ISimulation {
 			getSessionContext().runSimulation = true;
 	
 			while (getSessionContext().runSimulation) {
+				updateRunningCycleFlag();
 				if (!getSessionContext().runningCycle) {
 					getSessionContext().runningCycle = true;
 					getSessionContext().processedAspects = 0;
@@ -40,14 +41,19 @@ class SimulationThread extends Thread implements ISimulation {
 						ISimulator simulator = sessionContext.simulatorsByAspect.get(aspectID);
 						List<IModel> models = modelInterpreter.readModel(new URL(sessionContext.modelURLByAspect.get(aspectID)));
 						
+						// set model count
+						sessionContext.elementCountByAspect.put(aspectID, models.size());	
+						
 						// inject listener into the simulator (in this case the thread is the listener
 						simulator.initialize(new SimulationCallbackListener(aspectID, sessionContext));
 						simulator.startSimulatorCycle();
+						
 						// add models to simulate
 						for(IModel model : models){
-							// TODO: figure out how to generalize time configuration
+							// TODO: figure out how to generalize time configuration - where is it coming from?
 							simulator.simulate(model, null);
 						}
+						
 						simulator.endSimulatorCycle();
 					}
 				}
@@ -55,5 +61,28 @@ class SimulationThread extends Thread implements ISimulation {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Figures out value of running cycle flag given processed elements counts
+	 * NOTE: when all elements have been processed running cycle is set to false so that the next cycle can start
+	 */
+	private void updateRunningCycleFlag()
+	{
+		boolean runningCycle = false;
+		
+		if(sessionContext.elementCountByAspect.size() > 0)
+		{
+			for(String aspectID : sessionContext.aspectIDs)
+			{
+				if(sessionContext.elementCountByAspect.get(aspectID) != sessionContext.processedElementsByAspect.get(aspectID))
+				{
+					runningCycle = true;
+					break;
+				}
+			}
+		}
+		
+		sessionContext.runningCycle = runningCycle;
 	}
 }

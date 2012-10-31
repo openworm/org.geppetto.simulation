@@ -88,13 +88,13 @@ public class SimulationServlet extends WebSocketServlet {
 		StringBuilder sb = new StringBuilder();
 		
 		for(String aspectID : _sessionContext.aspectIDs){
-			List<IModel> models = _sessionContext.modelsByAspect.get(aspectID);
+			
+			/*List<IModel> models = _sessionContext.modelsByAspect.get(aspectID);
 			Scene scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models); 
-			ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = new ObjectMapper();		
+			mapper.writer().writeValueAsString(scene);*/
 			
-			mapper.writer().writeValueAsString(scene);
-			
-			// TODO: figure out how to separate aspects
+			// TODO: figure out how to separate aspects in the representation
 		}
 		
 		sendUpdate(sb.toString());

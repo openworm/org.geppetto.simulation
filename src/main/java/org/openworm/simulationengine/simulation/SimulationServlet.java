@@ -89,6 +89,8 @@ public class SimulationServlet extends WebSocketServlet {
 		
 		for(String aspectID : _sessionContext.aspectIDs){
 			
+			// TODO: how do we allow for multiple timesteps to be returned?
+			
 			/*List<IModel> models = _sessionContext.modelsByAspect.get(aspectID);
 			Scene scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models); 
 			ObjectMapper mapper = new ObjectMapper();		

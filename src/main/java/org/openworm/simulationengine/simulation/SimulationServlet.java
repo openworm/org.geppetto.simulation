@@ -85,7 +85,7 @@ public class SimulationServlet extends WebSocketServlet
 			}
 		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
 
-		// TODO: this is hardcoded here temp - should be set from the client or at least inject from config
+		// TODO: the config file in future could be set externally from the UI
 		try
 		{
 			_configUrl = new File(appConfig.getSimConfigLocation()).toURI().toURL();

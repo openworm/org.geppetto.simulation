@@ -1,5 +1,6 @@
 package org.openworm.simulationengine.simulation;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,8 @@ class SimulationThread extends Thread implements ISimulation
 						if (!sessionContext.modelsByAspect.containsKey(aspectID))
 						{
 							// initial conditions
-							models = modelInterpreter.readModel(new URL(sessionContext.modelURLByAspect.get(aspectID)));
+							File file = new File(sessionContext.modelURLByAspect.get(aspectID));
+							models = modelInterpreter.readModel(file.toURI().toURL());
 						}
 						else
 						{

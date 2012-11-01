@@ -1,19 +1,16 @@
 package org.openworm.simulationengine.simulation;
 
-import java.net.URL;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openworm.simulationengine.core.model.IModel;
 import org.openworm.simulationengine.core.model.IModelInterpreter;
-import org.openworm.simulationengine.core.simulation.ISimulation;
-import org.openworm.simulationengine.core.simulation.ISimulationCallbackListener;
 import org.openworm.simulationengine.core.simulator.ISimulator;
 
-class SimulationThread extends Thread implements ISimulation
+class SimulationThread extends Thread 
 {
 
 	private static Log logger = LogFactory.getLog(SimulationThread.class);
@@ -54,7 +51,8 @@ class SimulationThread extends Thread implements ISimulation
 						if (!sessionContext.modelsByAspect.containsKey(aspectID))
 						{
 							// initial conditions
-							models = modelInterpreter.readModel(new URL(sessionContext.modelURLByAspect.get(aspectID)));
+							File file = new File(sessionContext.modelURLByAspect.get(aspectID));
+							models = modelInterpreter.readModel(file.toURI().toURL());
 						}
 						else
 						{

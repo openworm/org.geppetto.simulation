@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.openworm.simulationengine.core.model.IModel;
-import org.openworm.simulationengine.core.simulation.ISimulationCallbackListener;
+import org.openworm.simulationengine.core.simulation.ISimulatorCallbackListener;
 
-public class SimulationCallbackListener implements ISimulationCallbackListener
+public class SimulationCallbackListener implements ISimulatorCallbackListener
 {
 
 	private String simulationAspectID;
@@ -21,7 +21,7 @@ public class SimulationCallbackListener implements ISimulationCallbackListener
 	/**
 	 * Callback to populate results buffers.
 	 * 
-	 * @see org.openworm.simulationengine.core.simulation.ISimulationCallbackListener
+	 * @see org.openworm.simulationengine.core.simulation.ISimulatorCallbackListener
 	 *      #resultReady(java.util.List)
 	 */
 	@Override

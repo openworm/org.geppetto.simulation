@@ -2,35 +2,24 @@ package org.openworm.simulationengine.simulation;
 
 public class AppConfig {
 	
-	private int maxBufferSize;
-	private int updateCycle;
-	private String simConfigLocation;
+	private int _maxBufferSize;
+	private int _updateCycle;
 	
 	public int getMaxBufferSize() {
-		return maxBufferSize;
+		return _maxBufferSize;
 	}
 	
 	public void setMaxBufferSize(int elemCount) {
-		this.maxBufferSize = elemCount;
-	}
-
-	public String getSimConfigLocation()
-	{
-		return simConfigLocation;
-	}
-
-	public void setSimConfigLocation(String simConfigLocation)
-	{
-		this.simConfigLocation = simConfigLocation;
+		this._maxBufferSize = elemCount;
 	}
 
 	public int getUpdateCycle()
 	{
-		return updateCycle;
+		return _updateCycle;
 	}
 
 	public void setUpdateCycle(int updateCycle)
 	{
-		this.updateCycle = updateCycle;
+		this._updateCycle = updateCycle;
 	}
 }

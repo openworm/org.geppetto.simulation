@@ -168,28 +168,15 @@
 				<version>2.3.7</version>
 				<extensions>true</extensions>
 				<configuration>
-					<manifestLocation>WebContent/META-INF</manifestLocation>
+					<manifestLocation>src/main/java/META-INF</manifestLocation>
 					<supportedProjectTypes>
-						<supportedProjectType>war</supportedProjectType>
+						<supportedProjectType>jar</supportedProjectType>
 						<supportedProjectType>bundle</supportedProjectType>
 					</supportedProjectTypes>
 					<instructions>
 						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
-						<Import-Package>org.eclipse.virgo.web.dm;version="2.1.1.RELEASE",*</Import-Package>
-						<Import-Library>org.springframework.spring;version="${spring.version}"</Import-Library>
 					</instructions>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<configuration>
-					<packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
-					<warName>org.openworm.simulationengine.samplesimulation</warName>
-					<archive>
-						<manifestFile>WebContent/META-INF/MANIFEST.MF</manifestFile>
-					</archive>
 				</configuration>
 			</plugin>
 		</plugins>

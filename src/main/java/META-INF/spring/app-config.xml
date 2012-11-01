@@ -13,7 +13,6 @@
 		<!-- how many neurons will be simulated in parallel -->
 		<property name="maxBufferSize" value="150" />
 		<property name="updateCycle" value="100" />
-		<property name="simConfigLocation" value="./src/main/resources/config/sph-sim-config.xml" />
 	</bean>
 
 </beans>

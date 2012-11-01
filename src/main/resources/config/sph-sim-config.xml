@@ -5,7 +5,7 @@
   </tns:configuration>
   <tns:aspects>
     <tns:modelInterpreter>sphModelInterpreter</tns:modelInterpreter>
-    <tns:modelURL>someurl</tns:modelURL>
+    <tns:modelURL>./src/main/resources/model/sphModel.xml</tns:modelURL>
     <tns:simulator>sphSimulator</tns:simulator>
     <tns:id>sph</tns:id>
   </tns:aspects>

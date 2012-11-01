@@ -2,7 +2,6 @@ package org.openworm.simulationengine.simulation;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -11,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,6 +33,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
@@ -45,9 +44,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SuppressWarnings("serial")
 public class SimulationServlet extends WebSocketServlet
 {
-
+	@Autowired
+	public AppConfig appConfig;
+	
 	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-
+	
 	// TODO: inject this from a config file local to this bundle
 	private URL _configUrl;
 	private static final long UPDATE_CYCLE = 100;
@@ -82,12 +83,12 @@ public class SimulationServlet extends WebSocketServlet
 					e.printStackTrace();
 				}
 			}
-		}, UPDATE_CYCLE, UPDATE_CYCLE);
+		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
 
 		// TODO: this is hardcoded here temp - should be set from the client or at least inject from config
 		try
 		{
-			_configUrl = new File("./src/main/resources/config/sph-sim-config.xml").toURI().toURL();
+			_configUrl = new File(appConfig.getSimConfigLocation()).toURI().toURL();
 		}
 		catch (MalformedURLException e)
 		{
@@ -195,6 +196,7 @@ public class SimulationServlet extends WebSocketServlet
 					populateDiscoverableServices(sim);
 
 					// start simulation thread
+					_sessionContext.maxBufferSize = appConfig.getMaxBufferSize();
 					new SimulationThread(_sessionContext).start();
 				}
 				else if (msg.equals("stop"))
@@ -204,8 +206,7 @@ public class SimulationServlet extends WebSocketServlet
 				}
 				else
 				{
-					// NOTE: doesn't necessarily need to do smt here - could be
-					// just start/stop
+					// NOTE: doesn't necessarily need to do smt here - could be just start/stop
 				}
 			}
 			catch (InvalidSyntaxException e)

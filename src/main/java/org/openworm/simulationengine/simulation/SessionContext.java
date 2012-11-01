@@ -28,4 +28,6 @@ public class SessionContext
 	public boolean runningCycle = false;
 
 	public boolean runSimulation = false;
+	
+	public int maxBufferSize = 100;
 }

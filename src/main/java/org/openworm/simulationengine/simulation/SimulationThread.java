@@ -109,7 +109,7 @@ class SimulationThread extends Thread implements ISimulation
 				// NOTE: this is to avoid running out of memory - need to test out the max
 				for (List<IModel> models : sessionContext.modelsByAspect.get(aspectID).values())
 				{
-					if (models.size() > 100)
+					if (models.size() > sessionContext.maxBufferSize)
 					{
 						runningCycle = true;
 						break;

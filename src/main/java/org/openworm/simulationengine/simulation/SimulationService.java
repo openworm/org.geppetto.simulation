@@ -58,8 +58,6 @@ class SimulationService implements ISimulation
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener)
 	{
-		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
-		
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		// grab config and retrieve model interpreters and simulators
 		try

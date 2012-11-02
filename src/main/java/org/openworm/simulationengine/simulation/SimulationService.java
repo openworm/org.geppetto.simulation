@@ -38,13 +38,12 @@ class SimulationService implements ISimulation
 	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 
 	private static Log logger = LogFactory.getLog(SimulationService.class);
-	
-	private final Timer _simTimer = new Timer(SimulationThread.class.getSimpleName() + " Timer");
+
+	private final Timer _simTimer = new Timer(SimulationService.class.getSimpleName() + " Timer");
 
 	private final SessionContext _sessionContext = new SessionContext();
 
 	private ISimulationCallbackListener _simulationListener;
-
 
 	/*
 	 * (non-Javadoc)
@@ -115,7 +114,7 @@ class SimulationService implements ISimulation
 			}
 		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
 	}
-	
+
 	/**
 	 * Method that takes the oldest model in the buffer and send it to the
 	 * client
@@ -124,6 +123,7 @@ class SimulationService implements ISimulation
 	 */
 	private void update() throws JsonProcessingException
 	{
+		boolean updateAvailable = false;
 		StringBuilder sb = new StringBuilder();
 
 		for (String aspectID : _sessionContext.aspectIDs)
@@ -136,27 +136,35 @@ class SimulationService implements ISimulation
 
 			List<IModel> models = new ArrayList<IModel>();
 			// traverse models
-			for (String modelId : modelsMap.keySet())
+			if (modelsMap != null)
 			{
-				if (modelsMap.get(modelId).size() > 0)
+				updateAvailable = true;
+				for (String modelId : modelsMap.keySet())
 				{
-					// get oldest and add it to the models list to be sent to
-					// the client
-					models.add(modelsMap.get(modelId).get(0));
-					// remove oldest from the original buffer
-					modelsMap.get(modelId).remove(0);
+					if (modelsMap.get(modelId).size() > 0)
+					{
+						// get oldest and add it to the models list to be sent
+						// to
+						// the client
+						models.add(modelsMap.get(modelId).get(0));
+						// remove oldest from the original buffer
+						modelsMap.get(modelId).remove(0);
+					}
 				}
+
+				// create scene
+				Scene scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models);
+				ObjectMapper mapper = new ObjectMapper();
+				sb.append(mapper.writer().writeValueAsString(scene));
+
 			}
-
-			// create scene
-			Scene scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models);
-			ObjectMapper mapper = new ObjectMapper();
-			sb.append(mapper.writer().writeValueAsString(scene));
-
 			// TODO: figure out how to separate aspects in the representation
 		}
 
-		_simulationListener.updateReady(sb.toString());
+		if (updateAvailable)
+		{
+			_simulationListener.updateReady(sb.toString());
+		}
 	}
 
 	/*

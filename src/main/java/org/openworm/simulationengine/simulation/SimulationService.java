@@ -199,6 +199,7 @@ class SimulationService implements ISimulation
 			_sessionContext.modelInterpretersByAspect.put(id, modelInterpreter);
 			_sessionContext.simulatorsByAspect.put(id, simulator);
 			_sessionContext.modelURLByAspect.put(id, modelURL);
+			_sessionContext.processedElementsByAspect.put(id,0);
 		}
 	}
 

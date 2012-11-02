@@ -1,6 +1,6 @@
 package org.openworm.simulationengine.simulation;
 
-import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +10,7 @@ import org.openworm.simulationengine.core.model.IModel;
 import org.openworm.simulationengine.core.model.IModelInterpreter;
 import org.openworm.simulationengine.core.simulator.ISimulator;
 
-class SimulationThread extends Thread 
+class SimulationThread extends Thread
 {
 
 	private static Log logger = LogFactory.getLog(SimulationThread.class);
@@ -51,12 +51,13 @@ class SimulationThread extends Thread
 						if (!sessionContext.modelsByAspect.containsKey(aspectID))
 						{
 							// initial conditions
-							File file = new File(sessionContext.modelURLByAspect.get(aspectID));
-							models = modelInterpreter.readModel(file.toURI().toURL());
+							models = modelInterpreter.readModel(new URL(sessionContext.modelURLByAspect.get(aspectID)));
 						}
 						else
 						{
-							// loop through keys and take last item available from previous cycle as initial condition for the new cycle
+							// loop through keys and take last item available
+							// from previous cycle as initial condition for the
+							// new cycle
 							for (String modelID : sessionContext.modelsByAspect.get(aspectID).keySet())
 							{
 								int listSize = sessionContext.modelsByAspect.get(aspectID).get(modelID).size();
@@ -67,14 +68,16 @@ class SimulationThread extends Thread
 						// set model count
 						sessionContext.elementCountByAspect.put(aspectID, models.size());
 
-						// inject listener into the simulator (in this case the thread is the listener
+						// inject listener into the simulator (in this case the
+						// thread is the listener
 						simulator.initialize(new SimulationCallbackListener(aspectID, sessionContext));
 						simulator.startSimulatorCycle();
 
 						// add models to simulate
 						for (IModel model : models)
 						{
-							// TODO: figure out how to generalize time configuration - where is it coming from?
+							// TODO: figure out how to generalize time
+							// configuration - where is it coming from?
 							simulator.simulate(model, null);
 						}
 
@@ -103,20 +106,25 @@ class SimulationThread extends Thread
 		{
 			for (String aspectID : sessionContext.aspectIDs)
 			{
-				// check that total number of time steps stored in buffers does not exceed given max number
-				// NOTE: this is to avoid running out of memory - need to test out the max
-				for (List<IModel> models : sessionContext.modelsByAspect.get(aspectID).values())
+				// check that total number of time steps stored in buffers does
+				// not exceed given max number
+				// NOTE: this is to avoid running out of memory - need to test
+				// out the max
+				if (sessionContext.modelsByAspect != null)
 				{
-					if (models.size() > sessionContext.maxBufferSize)
+					for (List<IModel> models : sessionContext.modelsByAspect.get(aspectID).values())
 					{
-						runningCycle = true;
-						break;
+						if (models.size() > sessionContext.maxBufferSize)
+						{
+							runningCycle = true;
+							break;
+						}
 					}
 				}
-
 				if (sessionContext.elementCountByAspect.get(aspectID) != sessionContext.processedElementsByAspect.get(aspectID))
 				{
-					// if not all elements have been processed cycle is still running
+					// if not all elements have been processed cycle is still
+					// running
 					runningCycle = true;
 					break;
 				}

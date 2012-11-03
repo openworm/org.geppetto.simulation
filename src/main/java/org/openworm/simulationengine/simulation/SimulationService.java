@@ -136,7 +136,7 @@ class SimulationService implements ISimulation
 
 			List<IModel> models = new ArrayList<IModel>();
 			// traverse models
-			if (modelsMap != null)
+			if (modelsMap != null && !modelsMap.isEmpty())
 			{
 				updateAvailable = true;
 				for (String modelId : modelsMap.keySet())

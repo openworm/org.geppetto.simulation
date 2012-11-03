@@ -1,5 +1,6 @@
 package org.openworm.simulationengine.simulation;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 		}
 		else
 		{
-			sessionContext.modelsByAspect.get(simulationAspectID).put(modelId, models);
+			sessionContext.modelsByAspect.get(simulationAspectID).put(modelId, new ArrayList<IModel>(models));
 		}
 
 		Integer processed = sessionContext.processedElementsByAspect.get(simulationAspectID);

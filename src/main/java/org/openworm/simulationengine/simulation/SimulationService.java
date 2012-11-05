@@ -130,8 +130,7 @@ class SimulationService implements ISimulation
 		{
 			// TODO: how do we allow for multiple timesteps to be returned?
 
-			// get models Map for the given aspect String = modelId /
-			// List<IModel> = a given model at different timesteps
+			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different timesteps
 			HashMap<String, List<IModel>> modelsMap = _sessionContext.modelsByAspect.get(aspectID);
 
 			List<IModel> models = new ArrayList<IModel>();
@@ -143,9 +142,7 @@ class SimulationService implements ISimulation
 				{
 					if (modelsMap.get(modelId).size() > 0)
 					{
-						// get oldest and add it to the models list to be sent
-						// to
-						// the client
+						// get oldest and add it to the models list to be sent to the client
 						models.add(modelsMap.get(modelId).get(0));
 						// remove oldest from the original buffer
 						modelsMap.get(modelId).remove(0);

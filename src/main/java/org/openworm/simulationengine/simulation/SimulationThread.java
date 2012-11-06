@@ -34,10 +34,9 @@ class SimulationThread extends Thread
 
 			while (getSessionContext().runSimulation)
 			{
-				updateRunningCycleSemaphore();
-				if (!getSessionContext().runningCycle)
+				if (!getSessionContext().runningCycleSemaphore)
 				{
-					getSessionContext().runningCycle = true;
+					getSessionContext().runningCycleSemaphore = true;
 
 					for (String aspectID : sessionContext.aspectIDs)
 					{
@@ -90,44 +89,5 @@ class SimulationThread extends Thread
 		{
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Figures out value of running cycle flag given processed elements counts
-	 * NOTE: when all elements have been processed running cycle is set to false so that the next cycle can start
-	 */
-	private void updateRunningCycleSemaphore()
-	{
-		boolean runningCycle = false;
-
-		// check if simulation has started
-		if (sessionContext.elementCountByAspect.size() > 0)
-		{
-			for (String aspectID : sessionContext.aspectIDs)
-			{
-				// check that total number of time steps stored in buffers does not exceed given max number
-				// NOTE: this is to avoid running out of memory - need to test out the max
-				if (sessionContext.modelsByAspect != null)
-				{
-					for (List<IModel> models : sessionContext.modelsByAspect.get(aspectID).values())
-					{
-						if (models.size() > sessionContext.maxBufferSize)
-						{
-							runningCycle = true;
-							break;
-						}
-					}
-				}
-				
-				if (sessionContext.elementCountByAspect.get(aspectID) != sessionContext.processedElementsByAspect.get(aspectID))
-				{
-					// if not all elements have been processed cycle is still running
-					runningCycle = true;
-					break;
-				}
-			}
-		}
-
-		sessionContext.runningCycle = runningCycle;
 	}
 }

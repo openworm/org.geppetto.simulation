@@ -144,8 +144,6 @@ class SimulationService implements ISimulation
 					{
 						// get oldest and add it to the models list to be sent to the client
 						models.add(modelsMap.get(modelId).get(0));
-						// remove oldest from the original buffer
-						modelsMap.get(modelId).remove(0);
 					}
 				}
 
@@ -173,7 +171,7 @@ class SimulationService implements ISimulation
 	public void stop()
 	{
 		_sessionContext.runSimulation = false;
-		_sessionContext.runningCycle = false;
+		_sessionContext.runningCycleSemaphore = false;
 	}
 
 	/**

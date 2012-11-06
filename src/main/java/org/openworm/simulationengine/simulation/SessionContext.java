@@ -25,7 +25,7 @@ public class SessionContext
 
 	public List<String> aspectIDs = new ArrayList<String>();
 
-	public boolean runningCycle = false;
+	public boolean runningCycleSemaphore = false;
 
 	public boolean runSimulation = false;
 	

@@ -3,6 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.openworm</groupId>
 	<artifactId>simulationengine.simulation</artifactId>
+	<name>OpenWorm SimulationEngine Simulation Bundle</name>
 	<version>1.0.0</version>
 	<packaging>bundle</packaging>
 	<properties>

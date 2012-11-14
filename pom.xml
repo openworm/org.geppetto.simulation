@@ -177,6 +177,9 @@
 					<instructions>
 						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
 						<Bundle-Version>${project.version}</Bundle-Version>
+						<Include-Resource>
+							{maven-resources},META-INF/spring=src/main/java/META-INF/spring
+						</Include-Resource>
 					</instructions>
 				</configuration>
 			</plugin>

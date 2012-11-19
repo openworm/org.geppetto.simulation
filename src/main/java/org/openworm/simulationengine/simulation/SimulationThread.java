@@ -30,8 +30,6 @@ class SimulationThread extends Thread
 	{
 		try
 		{
-			@SuppressWarnings("unused")
-			boolean run = getSessionContext().runSimulation;
 			while (getSessionContext().runSimulation)
 			{
 				if (!getSessionContext().runningCycleSemaphore)

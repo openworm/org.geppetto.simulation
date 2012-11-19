@@ -1,6 +1,7 @@
 package org.openworm.simulationengine.simulation;
 
 import java.net.URL;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,9 +40,11 @@ class SimulationService implements ISimulation
 
 	private static Log logger = LogFactory.getLog(SimulationService.class);
 
-	private final Timer _simTimer = new Timer(SimulationService.class.getSimpleName() + " Timer");
-
 	private final SessionContext _sessionContext = new SessionContext();
+	
+	private Timer _clientUpdateTimer;
+	
+	private SimulationThread _simThread; 
 
 	private ISimulationCallbackListener _simulationListener;
 
@@ -49,10 +52,7 @@ class SimulationService implements ISimulation
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.openworm.simulationengine.core.simulation.ISimulation#init(java.net
-	 * .URL,
-	 * org.openworm.simulationengine.core.simulation.ISimulationCallbackListener
-	 * )
+	 * org.openworm.simulationengine.core.simulation.ISimulation#init(java.net.URL, org.openworm.simulationengine.core.simulation.ISimulationCallbackListener)
 	 */
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener)
@@ -80,16 +80,33 @@ class SimulationService implements ISimulation
 	@Override
 	public void start()
 	{
+		_sessionContext.runSimulation = true;
+		
+		startSimulationThread();
 		startClientUpdateTimer();
-		startSimulationTimer();
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.openworm.simulationengine.core.simulation.ISimulation#stop()
+	 */
+	@Override
+	public void stop()
+	{
+		// tell the thread to stop running the simulation
+		_sessionContext.runSimulation = false;
+		// also need to stop the timer that updates the client
+		_clientUpdateTimer.cancel();
 	}
 
 	/**
 	 * 
 	 */
-	private void startSimulationTimer()
+	private void startSimulationThread()
 	{
-		new SimulationThread(_sessionContext).start();
+		_simThread  = new SimulationThread(_sessionContext);
+		_simThread.start();
 	}
 
 	/**
@@ -97,7 +114,8 @@ class SimulationService implements ISimulation
 	 */
 	private void startClientUpdateTimer()
 	{
-		_simTimer.scheduleAtFixedRate(new TimerTask()
+		_clientUpdateTimer = new Timer(SimulationService.class.getSimpleName() + " - Timer - " + new java.util.Date().getTime());
+		_clientUpdateTimer.scheduleAtFixedRate(new TimerTask()
 		{
 			@Override
 			public void run()
@@ -160,18 +178,6 @@ class SimulationService implements ISimulation
 		{
 			_simulationListener.updateReady(sb.toString());
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.openworm.simulationengine.core.simulation.ISimulation#stop()
-	 */
-	@Override
-	public void stop()
-	{
-		_sessionContext.runSimulation = false;
-		_sessionContext.runningCycleSemaphore = false;
 	}
 
 	/**

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -99,6 +100,39 @@ class SimulationService implements ISimulation
 		// also need to stop the timer that updates the client
 		_clientUpdateTimer.cancel();
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.openworm.simulationengine.core.simulation.ISimulation#stop()
+	 */
+	@Override
+	public void reset()
+	{
+		// stop simulation if it's running
+		if(_sessionContext.runSimulation)
+		{
+			_sessionContext.runSimulation = false;
+			_clientUpdateTimer.cancel();
+		}
+		
+		resetCurrentSimulation();
+	}
+	
+	/**
+	 * 
+	 */
+	private void resetCurrentSimulation()
+	{
+		// clear operational buffers
+		_sessionContext.modelsByAspect = new ConcurrentHashMap<String, HashMap<String, List<IModel>>>();
+		_sessionContext.processedElementsByAspect = new ConcurrentHashMap<String, Integer>();
+		_sessionContext.elementCountByAspect = new ConcurrentHashMap<String, Integer>();
+		
+		// clear simulation fags
+		_sessionContext.runningCycleSemaphore = false;
+		_sessionContext.runSimulation = false;
+	}
 
 	/**
 	 * 
@@ -148,7 +182,7 @@ class SimulationService implements ISimulation
 		{
 			// TODO: how do we allow for multiple timesteps to be returned?
 
-			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different timesteps
+			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
 			HashMap<String, List<IModel>> modelsMap = _sessionContext.modelsByAspect.get(aspectID);
 
 			List<IModel> models = new ArrayList<IModel>();
@@ -196,10 +230,13 @@ class SimulationService implements ISimulation
 			IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());
 			ISimulator simulator = this.<ISimulator> getService(simulatorId, ISimulator.class.getName());
 
+			// populate configuration lists
 			_sessionContext.aspectIDs.add(id);
 			_sessionContext.modelInterpretersByAspect.put(id, modelInterpreter);
 			_sessionContext.simulatorsByAspect.put(id, simulator);
 			_sessionContext.modelURLByAspect.put(id, modelURL);
+			
+			// initialize operational buffers that need initialization
 			_sessionContext.processedElementsByAspect.put(id,0);
 		}
 	}

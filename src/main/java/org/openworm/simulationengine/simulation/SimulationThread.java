@@ -39,7 +39,7 @@ class SimulationThread extends Thread
 					for (String aspectID : sessionContext.aspectIDs)
 					{
 						// reset processed elements counters
-						getSessionContext().processedElementsByAspect.replace(aspectID, 0);
+						getSessionContext().processedElementsByAspect.put(aspectID, 0);
 
 						IModelInterpreter modelInterpreter = sessionContext.modelInterpretersByAspect.get(aspectID);
 						ISimulator simulator = sessionContext.simulatorsByAspect.get(aspectID);
@@ -65,8 +65,7 @@ class SimulationThread extends Thread
 						// set model count
 						sessionContext.elementCountByAspect.put(aspectID, models.size());
 
-						// inject listener into the simulator (in this case the
-						// thread is the listener
+						// inject listener into the simulator
 						simulator.initialize(new SimulationCallbackListener(aspectID, sessionContext));
 						simulator.startSimulatorCycle();
 

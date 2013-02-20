@@ -13,6 +13,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openworm.simulationengine.core.model.IModel;
 import org.openworm.simulationengine.core.model.IModelInterpreter;
+import org.openworm.simulationengine.core.model.ModelInterpreterException;
 import org.openworm.simulationengine.core.simulation.ISimulation;
 import org.openworm.simulationengine.core.simulation.ISimulationCallbackListener;
 import org.openworm.simulationengine.core.simulator.ISimulator;
@@ -200,9 +201,19 @@ class SimulationService implements ISimulation
 				}
 
 				// create scene
-				Scene scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models);
-				ObjectMapper mapper = new ObjectMapper();
-				sb.append(mapper.writer().writeValueAsString(scene));
+				Scene scene;
+				try
+				{
+					scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models);
+					ObjectMapper mapper = new ObjectMapper();
+					sb.append(mapper.writer().writeValueAsString(scene));
+				}
+				catch (ModelInterpreterException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
 
 			}
 			// TODO: figure out how to separate aspects in the representation

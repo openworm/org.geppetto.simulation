@@ -197,6 +197,7 @@ class SimulationService implements ISimulation
 					{
 						// get oldest and add it to the models list to be sent to the client
 						models.add(modelsMap.get(modelId).get(0));
+						modelsMap.get(modelId).remove(0);
 					}
 				}
 

@@ -190,12 +190,13 @@ class SimulationService implements ISimulation
 			// traverse models
 			if (modelsMap != null && !modelsMap.isEmpty())
 			{
-				updateAvailable = true;
+				
 				for (String modelId : modelsMap.keySet())
 				{
 					if (modelsMap.get(modelId).size() > 0)
 					{
 						// get oldest and add it to the models list to be sent to the client
+						updateAvailable = true;
 						models.add(modelsMap.get(modelId).get(0));
 						modelsMap.get(modelId).remove(0);
 					}

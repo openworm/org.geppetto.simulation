@@ -1,13 +1,13 @@
-package org.openworm.simulationengine.simulation;
+package org.geppetto.simulation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.openworm.simulationengine.core.model.IModel;
-import org.openworm.simulationengine.core.model.IModelInterpreter;
-import org.openworm.simulationengine.core.simulator.ISimulator;
+import org.geppetto.core.model.IModel;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.simulator.ISimulator;
 
 public class SessionContext
 {

@@ -1,11 +1,11 @@
-package org.openworm.simulationengine.simulation;
+package org.geppetto.simulation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.openworm.simulationengine.core.model.IModel;
-import org.openworm.simulationengine.core.simulation.ISimulatorCallbackListener;
+import org.geppetto.core.model.IModel;
+import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
 public class SimulationCallbackListener implements ISimulatorCallbackListener
 {
@@ -22,7 +22,7 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 	/**
 	 * Callback to populate results buffers.
 	 * 
-	 * @see org.openworm.simulationengine.core.simulation.ISimulatorCallbackListener
+	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener
 	 *      #resultReady(java.util.List)
 	 */
 	@Override

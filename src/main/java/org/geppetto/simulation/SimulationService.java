@@ -1,7 +1,6 @@
-package org.openworm.simulationengine.simulation;
+package org.geppetto.simulation;
 
 import java.net.URL;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,22 +10,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openworm.simulationengine.core.model.IModel;
-import org.openworm.simulationengine.core.model.IModelInterpreter;
-import org.openworm.simulationengine.core.model.ModelInterpreterException;
-import org.openworm.simulationengine.core.simulation.ISimulation;
-import org.openworm.simulationengine.core.simulation.ISimulationCallbackListener;
-import org.openworm.simulationengine.core.simulator.ISimulator;
-import org.openworm.simulationengine.core.visualisation.model.Scene;
-import org.openworm.simulationengine.simulation.model.Aspect;
-import org.openworm.simulationengine.simulation.model.Simulation;
+import org.geppetto.core.model.IModel;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.simulation.ISimulation;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.core.visualisation.model.Scene;
+import org.geppetto.simulation.model.Aspect;
+import org.geppetto.simulation.model.Simulation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,7 +52,7 @@ class SimulationService implements ISimulation
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.openworm.simulationengine.core.simulation.ISimulation#init(java.net.URL, org.openworm.simulationengine.core.simulation.ISimulationCallbackListener)
+	 * org.geppetto.core.simulation.ISimulation#init(java.net.URL, org.geppetto.core.simulation.ISimulationCallbackListener)
 	 */
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener)
@@ -77,7 +75,7 @@ class SimulationService implements ISimulation
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.openworm.simulationengine.core.simulation.ISimulation#start()
+	 * @see org.geppetto.core.simulation.ISimulation#start()
 	 */
 	@Override
 	public void start()
@@ -91,7 +89,7 @@ class SimulationService implements ISimulation
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.openworm.simulationengine.core.simulation.ISimulation#stop()
+	 * @see org.geppetto.core.simulation.ISimulation#stop()
 	 */
 	@Override
 	public void stop()
@@ -105,7 +103,7 @@ class SimulationService implements ISimulation
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.openworm.simulationengine.core.simulation.ISimulation#stop()
+	 * @see org.geppetto.core.simulation.ISimulation#stop()
 	 */
 	@Override
 	public void reset()

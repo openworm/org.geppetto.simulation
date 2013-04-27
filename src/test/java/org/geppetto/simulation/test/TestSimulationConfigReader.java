@@ -1,13 +1,13 @@
-package org.openworm.simulationengine.simulation.test;
+package org.geppetto.simulation.test;
 
 import java.io.File;
 import java.net.MalformedURLException;
 
+import org.geppetto.simulation.SimulationConfigReader;
+import org.geppetto.simulation.model.OutputFormat;
+import org.geppetto.simulation.model.Simulation;
 import org.junit.Assert;
 import org.junit.Test;
-import org.openworm.simulationengine.simulation.SimulationConfigReader;
-import org.openworm.simulationengine.simulation.model.OutputFormat;
-import org.openworm.simulationengine.simulation.model.Simulation;
 
 public class TestSimulationConfigReader {
 

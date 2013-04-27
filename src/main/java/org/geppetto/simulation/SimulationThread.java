@@ -1,4 +1,4 @@
-package org.openworm.simulationengine.simulation;
+package org.geppetto.simulation;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openworm.simulationengine.core.model.IModel;
-import org.openworm.simulationengine.core.model.IModelInterpreter;
-import org.openworm.simulationengine.core.simulator.ISimulator;
+import org.geppetto.core.model.IModel;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.simulator.ISimulator;
 
 class SimulationThread extends Thread
 {

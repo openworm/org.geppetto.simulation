@@ -1,4 +1,4 @@
-package org.openworm.simulationengine.simulation;
+package org.geppetto.simulation;
 
 public class AppConfig {
 	

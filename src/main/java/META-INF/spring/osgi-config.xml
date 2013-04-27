@@ -8,7 +8,7 @@
 							http://www.springframework.org/schema/osgi/spring-osgi-1.1.xsd">
 
 	<!-- Exports the service implementation to other bundles by its service interface -->
-	<osgi:service id="SimulationExporter" ref="simulationService" interface="org.openworm.simulationengine.core.simulation.ISimulation">
+	<osgi:service id="SimulationExporter" ref="simulationService" interface="org.geppetto.core.simulation.ISimulation">
 
 	</osgi:service>
 

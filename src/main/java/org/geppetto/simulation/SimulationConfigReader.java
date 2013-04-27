@@ -1,4 +1,4 @@
-package org.openworm.simulationengine.simulation;
+package org.geppetto.simulation;
 
 import java.net.URL;
 
@@ -6,7 +6,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import org.openworm.simulationengine.simulation.model.Simulation;
+import org.geppetto.simulation.model.Simulation;
 
 public class SimulationConfigReader {
 

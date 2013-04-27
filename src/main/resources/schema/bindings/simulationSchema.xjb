@@ -5,7 +5,7 @@
 	<jxb:bindings schemaLocation="../simulationSchema.xsd" node="/xs:schema">
 	    	         
     	<jxb:schemaBindings>			
-    		<jxb:package name="org.openworm.simulationengine.simulation.model"/>
+    		<jxb:package name="org.geppetto.simulation.model"/>
     	</jxb:schemaBindings>
 	
 	    

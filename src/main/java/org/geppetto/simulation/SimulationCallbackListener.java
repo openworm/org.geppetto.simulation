@@ -1,73 +1,42 @@
 package org.geppetto.simulation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.geppetto.core.model.IModel;
+import org.geppetto.core.model.StateSet;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
 public class SimulationCallbackListener implements ISimulatorCallbackListener
 {
 
 	private String simulationAspectID;
-	private SessionContext sessionContext;
+	private SessionContext _sessionContext;
 
 	public SimulationCallbackListener(String aspectID, SessionContext context)
 	{
 		this.simulationAspectID = aspectID;
-		this.sessionContext = context;
+		this._sessionContext = context;
 	}
 
-	/**
-	 * Callback to populate results buffers.
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener
-	 *      #resultReady(java.util.List)
-	 */
-	@Override
-	public void resultReady(final List<IModel> models)
-	{
-		// when the callback is received results are appended
-		appendResults(models);
-	}
 
 	/**
 	 * Populates results in session context.
 	 * 
-	 * @param models
+	 * @param results
 	 */
-	private void appendResults(List<IModel> models)
+	private void appendResults(StateSet results)
 	{
-		if (!sessionContext.modelsByAspect.containsKey(simulationAspectID))
+		StateSet currentStateSet=_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).getStateSet();
+		if(currentStateSet==null)
 		{
-			sessionContext.modelsByAspect.put(simulationAspectID, new HashMap<String, List<IModel>>());
+			currentStateSet=new StateSet(results.getModelId());
+			_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).setStateSet(currentStateSet);
 		}
 		
-		String modelId = models.get(0).getId();
-		if (sessionContext.modelsByAspect.get(simulationAspectID).containsKey(modelId))
+		if (currentStateSet.getNumberOfStates()>=_sessionContext.getMaxBufferSize())
 		{
-			// check if we have more steps stored than our fixed maximum
-			if (sessionContext.modelsByAspect.get(simulationAspectID).get(modelId).size() >= sessionContext.maxBufferSize)
-			{
-				// if we have more steps that can be displayed - remove the difference
-				for (int i = 0; i < models.size(); i++)
-				{
-					// always remove the first - when removing everything gets shifted
-					sessionContext.modelsByAspect.get(simulationAspectID).get(modelId).remove(0);
-				}
-			}
-			
-			sessionContext.modelsByAspect.get(simulationAspectID).get(modelId).addAll(models);
+			currentStateSet.removeOldestStates(results.getNumberOfStates());
 		}
-		else
-		{
-			sessionContext.modelsByAspect.get(simulationAspectID).put(modelId, new ArrayList<IModel>(models));
-		}
+		currentStateSet.appendStateSet(results);
+		_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).increaseProcessedElements();
 
-		Integer processed = sessionContext.processedElementsByAspect.get(simulationAspectID);
-		sessionContext.processedElementsByAspect.replace(simulationAspectID, processed + 1);
-		
 		updateRunningCycleSemaphore();
 	}
 	
@@ -80,19 +49,26 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 		int processedAspects = 0; 
 		
 		// check that all elements have been processed on all the simulation aspects
-		for (String aspectID : sessionContext.aspectIDs)
+		for (String aspectID : _sessionContext.getAspectIds())
 		{	
-			if (sessionContext.elementCountByAspect.get(aspectID) == sessionContext.processedElementsByAspect.get(aspectID))
+			if (_sessionContext.getSimulatorRuntimeByAspect(aspectID).allElementsProcessed())
 			{
 				// if not all elements have been processed cycle is still running
 				processedAspects++;
 			}
 		}
 		
-		if(sessionContext.aspectIDs.size() == processedAspects)
+		if(_sessionContext.getAspectIds().size() == processedAspects)
 		{
-			sessionContext.runningCycleSemaphore = false;
+			_sessionContext.setRunningCycleSemaphore(false);
 		}
+	}
+
+	@Override
+	public void stateSetReady(StateSet results)
+	{
+		// when the callback is received results are appended
+		appendResults(results);
 	}
 
 }

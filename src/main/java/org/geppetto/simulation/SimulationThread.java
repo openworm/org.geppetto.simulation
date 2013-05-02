@@ -1,90 +1,93 @@
 package org.geppetto.simulation;
 
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 
 class SimulationThread extends Thread
 {
 
 	private static Log logger = LogFactory.getLog(SimulationThread.class);
-	private SessionContext sessionContext = null;
+	private SessionContext _sessionContext = null;
 
 	public SimulationThread(SessionContext context)
 	{
-		this.sessionContext = context;
+		this._sessionContext = context;
 	}
 
 	private SessionContext getSessionContext()
 	{
-		return sessionContext;
+		return _sessionContext;
 	}
 
-	public void run()
+	public void run() 
 	{
-		try
+
+		while(getSessionContext().isRunning())
 		{
-			while (getSessionContext().runSimulation)
+			if(!getSessionContext().isRunningCycleSemaphore())
 			{
-				if (!getSessionContext().runningCycleSemaphore)
+				getSessionContext().setRunningCycleSemaphore(true);
+
+				for(String aspectID : _sessionContext.getAspectIds())
 				{
-					getSessionContext().runningCycleSemaphore = true;
+					// reset processed elements counters
+					getSessionContext().setProcessedElements(aspectID, 0);
 
-					for (String aspectID : sessionContext.aspectIDs)
+					IModelInterpreter modelInterpreter = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter();
+					ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+					if(!simulator.isInitialized())
 					{
-						// reset processed elements counters
-						getSessionContext().processedElementsByAspect.put(aspectID, 0);
-
-						IModelInterpreter modelInterpreter = sessionContext.modelInterpretersByAspect.get(aspectID);
-						ISimulator simulator = sessionContext.simulatorsByAspect.get(aspectID);
-
-						List<IModel> models = new ArrayList<IModel>();
-						if (!sessionContext.modelsByAspect.containsKey(aspectID))
+						IModel model = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel();
+						if(model == null)
 						{
-							// initial conditions
-							models = modelInterpreter.readModel(new URL(sessionContext.modelURLByAspect.get(aspectID)));
-						}
-						else
-						{
-							// loop through keys and take last item available
-							// from previous cycle as initial condition for the
-							// new cycle
-							for (String modelID : sessionContext.modelsByAspect.get(aspectID).keySet())
+							try
 							{
-								int listSize = sessionContext.modelsByAspect.get(aspectID).get(modelID).size();
-								models.add(sessionContext.modelsByAspect.get(aspectID).get(modelID).get(listSize - 1));
+								model = modelInterpreter.readModel(new URL(_sessionContext.getConfigurationByAspect(aspectID).getUrl()));
 							}
+							catch(MalformedURLException e)
+							{
+								throw new RuntimeException(e);
+							}
+							catch(ModelInterpreterException e)
+							{
+								throw new RuntimeException(e);
+							}
+							_sessionContext.getSimulatorRuntimeByAspect(aspectID).setModel(model);
+							_sessionContext.getSimulatorRuntimeByAspect(aspectID).setElementCount(1);
 						}
-
-						// set model count
-						sessionContext.elementCountByAspect.put(aspectID, models.size());
-
-						// inject listener into the simulator
-						simulator.initialize(new SimulationCallbackListener(aspectID, sessionContext));
-						simulator.startSimulatorCycle();
-
-						// add models to simulate
-						for (IModel model : models)
+						try
 						{
-							// TODO: figure out how to generalize time
-							// configuration - where is it coming from?
-							simulator.simulate(model, null);
+							simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));
 						}
-
-						simulator.endSimulatorCycle();
+						catch(GeppettoInitializationException e)
+						{
+							throw new RuntimeException(e);
+						}
 					}
+					
+					// TODO this is just saying "advance one step" at the moment
+					try
+					{
+						simulator.simulate(new TimeConfiguration(null, 1, 1));
+					}
+					catch(GeppettoExecutionException e)
+					{
+						throw new RuntimeException(e);
+					}
+
 				}
 			}
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
 		}
 	}
 }

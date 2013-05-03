@@ -56,14 +56,9 @@ class SimulationService implements ISimulation
 	{
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		// grab config and retrieve model interpreters and simulators
-		try
-		{
-			populateDiscoverableServices(sim);
-		}
-		catch(InvalidSyntaxException e)
-		{
-			throw new GeppettoInitializationException(e);
-		}
+
+		populateDiscoverableServices(sim);
+
 		_simulationListener = simulationListener;
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 	}
@@ -198,7 +193,7 @@ class SimulationService implements ISimulation
 	 * @param simConfig
 	 * @throws InvalidSyntaxException
 	 */
-	private void populateDiscoverableServices(Simulation simConfig) throws InvalidSyntaxException
+	private void populateDiscoverableServices(Simulation simConfig) throws GeppettoInitializationException
 	{
 		for(Aspect aspect : simConfig.getAspects())
 		{
@@ -224,17 +219,29 @@ class SimulationService implements ISimulation
 	 * @return
 	 * @throws InvalidSyntaxException
 	 */
-	private <T> T getService(String discoveryId, String type) throws InvalidSyntaxException
+	private <T> T getService(String discoveryId, String type) throws GeppettoInitializationException
 	{
 		T service = null;
 
 		String filter = String.format("(discoverableID=%s)", discoveryId);
-		ServiceReference<?>[] sr = _bc.getServiceReferences(type, filter);
+		ServiceReference<?>[] sr;
+		try
+		{
+			sr = _bc.getServiceReferences(type, filter);
+		}
+		catch(InvalidSyntaxException e)
+		{
+			throw new GeppettoInitializationException(e);
+		}
 		if(sr != null && sr.length > 0)
 		{
 			service = (T) _bc.getService(sr[0]);
 		}
 
+		if(service == null)
+		{
+			throw new GeppettoInitializationException("No service found for id:"+discoveryId);
+		}
 		return service;
 	}
 

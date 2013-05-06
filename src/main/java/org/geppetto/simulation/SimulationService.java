@@ -158,7 +158,8 @@ class SimulationService implements ISimulation
 			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateSet() != null)
 			{
 				StateSet oldestSet = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateSet().pullOldestStateSet();
-				if(!oldestSet.isEmpty())
+				//we send data to the frontend if it' either the first cycle or if there is a change in the state, i.e. something that might produce a frontend update
+				if(!oldestSet.isEmpty() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed()==0)
 				{
 					logger.info("Available update found");
 					updateAvailable = true;
@@ -169,6 +170,7 @@ class SimulationService implements ISimulation
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), oldestSet);
 						ObjectMapper mapper = new ObjectMapper();
 						sb.append(mapper.writer().writeValueAsString(scene));
+						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();
 					}
 					catch(ModelInterpreterException e)
 					{
@@ -185,7 +187,7 @@ class SimulationService implements ISimulation
 		if(updateAvailable)
 		{
 			logger.info("Update sent to listener");
-			_simulationListener.updateReady(sb.toString());
+			_simulationListener.updateReady(sb.toString());			
 		}
 	}
 

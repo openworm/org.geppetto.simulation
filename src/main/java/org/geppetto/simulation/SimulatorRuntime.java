@@ -17,6 +17,7 @@ public class SimulatorRuntime
 	private Integer _processedElements;
 	private Integer _elementCount;
 	private IModel _model;
+	private int _updatesSent=0;
 	
 	public IModel getModel()
 	{
@@ -68,5 +69,14 @@ public class SimulatorRuntime
 		return _elementCount==_processedElements;
 	}
 
+	public int getUpdatesProcessed()
+	{
+		return _updatesSent;
+	}
+
+	public void updateProcessed()
+	{
+		_updatesSent++;
+	}
 	
 }

@@ -36,6 +36,7 @@ class SimulationThread extends Thread
 		{
 			if(!getSessionContext().isRunningCycleSemaphore())
 			{
+				logger.info("Simulation thread cycle");
 				getSessionContext().setRunningCycleSemaphore(true);
 
 				for(String aspectID : _sessionContext.getAspectIds())
@@ -85,7 +86,7 @@ class SimulationThread extends Thread
 					{
 						throw new RuntimeException(e);
 					}
-
+					
 				}
 			}
 		}

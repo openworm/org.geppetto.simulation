@@ -23,6 +23,25 @@ public class SessionContext
 	
 	private int _maxBufferSize = 100;
 	
+	/*
+	 * Reverts the simulation state to initial conditions
+	 * */
+	public void revertToInitialConditions()
+	{
+		// for each aspect, revert runtime to initial conditions
+		for(String aspectID : this.getAspectIds())
+		{
+			this.getSimulatorRuntimeByAspect(aspectID).revertToInitialConditions();
+		}
+
+		_runningCycleSemaphore = false;
+		_isRunning = false;
+	}
+	
+	/*
+	 * Resets the simulation context
+	 * NOTE: WIPES EVERYTHING
+	 * */
 	public void reset()
 	{
 		_runtimeByAspect.clear();

@@ -79,4 +79,18 @@ public class SimulatorRuntime
 		_updatesSent++;
 	}
 	
+	/*
+	 * reset everything - only thing untouched is _model, representing initial conditions
+	 * */
+	public void revertToInitialConditions(){
+		_stateSet = null;
+	}
+	
+	/*
+	 * Check if the runtime is at initial conditions
+	 * */
+	public boolean isAtInitialConditions()
+	{
+		return _model != null && _stateSet == null;
+	}
 }

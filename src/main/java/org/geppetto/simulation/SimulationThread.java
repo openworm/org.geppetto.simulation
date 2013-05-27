@@ -47,9 +47,11 @@ class SimulationThread extends Thread
 					IModelInterpreter modelInterpreter = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter();
 					ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
 
-					if(!simulator.isInitialized())
+					if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
 					{
 						IModel model = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel();
+						
+						// if we don't have a model fish it out of configuration
 						if(model == null)
 						{
 							try
@@ -64,9 +66,12 @@ class SimulationThread extends Thread
 							{
 								throw new RuntimeException(e);
 							}
+							
+							// set initial conditions
 							_sessionContext.getSimulatorRuntimeByAspect(aspectID).setModel(model);
 							_sessionContext.getSimulatorRuntimeByAspect(aspectID).setElementCount(1);
 						}
+						
 						try
 						{
 							simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));

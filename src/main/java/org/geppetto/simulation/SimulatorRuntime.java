@@ -91,6 +91,6 @@ public class SimulatorRuntime
 	 * */
 	public boolean isAtInitialConditions()
 	{
-		return _model != null && _stateSet == null;
+		return _stateSet == null;
 	}
 }

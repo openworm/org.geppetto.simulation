@@ -55,8 +55,11 @@ class SimulationService implements ISimulation
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
-		// grab config and retrieve model interpreters and simulators
-
+		
+		// refresh simulation context
+		_sessionContext.reset();
+		
+		// retrieve model interpreters and simulators
 		populateDiscoverableServices(sim);
 
 		_simulationListener = simulationListener;
@@ -105,24 +108,6 @@ class SimulationService implements ISimulation
 		
 		// revert simulation to initial conditions
 		_sessionContext.revertToInitialConditions();
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#stop()
-	 */
-	@Override
-	public void reset()
-	{
-		// stop simulation if it's running
-		if(_sessionContext.isRunning())
-		{
-			_sessionContext.setRunning(false);
-			_clientUpdateTimer.cancel();
-		}
-
-		_sessionContext.reset();
 	}
 
 	/**

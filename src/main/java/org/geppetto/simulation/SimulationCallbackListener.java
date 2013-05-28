@@ -1,6 +1,9 @@
 package org.geppetto.simulation;
 
-import org.geppetto.core.model.StateSet;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.model.state.StateTreeRoot;
+import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
+import org.geppetto.core.model.state.visitors.RemoveTimeStepsVisitor;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
 public class SimulationCallbackListener implements ISimulatorCallbackListener
@@ -15,30 +18,6 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 		this._sessionContext = context;
 	}
 
-
-	/**
-	 * Populates results in session context.
-	 * 
-	 * @param results
-	 */
-	private void appendResults(StateSet results)
-	{
-		StateSet currentStateSet=_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).getStateSet();
-		if(currentStateSet==null)
-		{
-			currentStateSet=new StateSet(results.getModelId());
-			_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).setStateSet(currentStateSet);
-		}
-		
-		if (currentStateSet.getNumberOfStates()>=_sessionContext.getMaxBufferSize())
-		{
-			currentStateSet.removeOldestStates(results.getNumberOfStates());
-		}
-		currentStateSet.appendStateSet(results);
-		_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).increaseProcessedElements();
-
-		updateRunningCycleSemaphore();
-	}
 	
 	/**
 	 * Figures out value of running cycle flag given processed elements counts
@@ -64,11 +43,33 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 		}
 	}
 
+
 	@Override
-	public void stateSetReady(StateSet results)
+	public void stateTreeUpdated(StateTreeRoot stateTree) throws GeppettoExecutionException
 	{
-		// when the callback is received results are appended
-		appendResults(results);
+		StateTreeRoot sessionStateTree=_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).getStateSet();
+		if(sessionStateTree==null)
+		{
+			sessionStateTree=stateTree;
+			_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).setStateSet(sessionStateTree);
+		}
+		//we throw an exception if the tree is a different object, this should not happen.
+		if(!sessionStateTree.equals(stateTree))
+		{
+			throw new GeppettoExecutionException("Out of sync! The state tree received is different from the one stored in the session context");
+		}
+		//if the tree starts having more elements than the max size of the buffers remove the oldest ones
+		CountTimeStepsVisitor countTimeStepsVisitor=new CountTimeStepsVisitor();
+		stateTree.apply(countTimeStepsVisitor);
+		int timeStepsToRemove=countTimeStepsVisitor.getNumberOfTimeSteps()-_sessionContext.getMaxBufferSize();
+		if (timeStepsToRemove>0)
+		{
+			RemoveTimeStepsVisitor removeTimeStepsVisitor=new RemoveTimeStepsVisitor(timeStepsToRemove);
+			sessionStateTree.apply(removeTimeStepsVisitor);
+		}
+		//This line is necessary because we have logic that checks that all models are processed before sending an update
+		_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).increaseProcessedElements();
+		updateRunningCycleSemaphore();
 	}
 
 }

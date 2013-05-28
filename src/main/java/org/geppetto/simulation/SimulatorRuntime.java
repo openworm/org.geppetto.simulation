@@ -4,7 +4,7 @@
 package org.geppetto.simulation;
 
 import org.geppetto.core.model.IModel;
-import org.geppetto.core.model.StateSet;
+import org.geppetto.core.model.state.StateTreeRoot;
 
 /**
  * @author matteocantarelli
@@ -13,7 +13,7 @@ import org.geppetto.core.model.StateSet;
 public class SimulatorRuntime
 {
 
-	private StateSet _stateSet;
+	private StateTreeRoot _stateTree;
 	private Integer _processedElements;
 	private Integer _elementCount;
 	private IModel _model;
@@ -29,14 +29,14 @@ public class SimulatorRuntime
 		this._model = model;
 	}
 
-	public StateSet getStateSet()
+	public StateTreeRoot getStateSet()
 	{
-		return _stateSet;
+		return _stateTree;
 	}
 	
-	public void setStateSet(StateSet stateSet)
+	public void setStateSet(StateTreeRoot stateTree)
 	{
-		this._stateSet = stateSet;
+		this._stateTree = stateTree;
 	}
 	
 	public Integer getProcessedElements()
@@ -83,7 +83,7 @@ public class SimulatorRuntime
 	 * reset everything - only thing untouched is _model, representing initial conditions
 	 * */
 	public void revertToInitialConditions(){
-		_stateSet = null;
+		_stateTree = null;
 	}
 	
 	/*
@@ -91,6 +91,6 @@ public class SimulatorRuntime
 	 * */
 	public boolean isAtInitialConditions()
 	{
-		return _stateSet == null;
+		return _stateTree == null;
 	}
 }

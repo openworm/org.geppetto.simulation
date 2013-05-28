@@ -10,7 +10,8 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.StateSet;
+import org.geppetto.core.model.state.StateTreeRoot;
+import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
@@ -159,9 +160,14 @@ class SimulationService implements ISimulation
 			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
 			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateSet() != null)
 			{
-				StateSet oldestSet = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateSet().pullOldestStateSet();
+				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateSet();
+				CountTimeStepsVisitor countTimeStepsVisitor=new CountTimeStepsVisitor();
+				stateTree.apply(countTimeStepsVisitor);
 				//we send data to the frontend if it's either the first cycle or if there is a change in the state, i.e. something that might produce a frontend update
-				if(!oldestSet.isEmpty() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed()==0)
+				//putting the constraint to have at least two states buffered before starting sending updates to client, this is to avoid the scenario where one thread is 
+				//about to remove one state from the tree because we are visualizing it) and we come here and we see there is one timestep so we go ahead but by
+				//the time we are trying to visualise it there is nothing there because the previous thread completed. In this way we wait to have at least two buffered.
+				if(countTimeStepsVisitor.getNumberOfTimeSteps()>2 || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed()==0)
 				{
 					logger.info("Available update found");
 					updateAvailable = true;
@@ -169,7 +175,7 @@ class SimulationService implements ISimulation
 					Scene scene;
 					try
 					{
-						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), oldestSet);
+						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
 						ObjectMapper mapper = new ObjectMapper();
 						sb.append(mapper.writer().writeValueAsString(scene));
 						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();

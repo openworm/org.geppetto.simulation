@@ -83,6 +83,7 @@ public class SimulatorRuntime
 	 * reset everything - only thing untouched is _model, representing initial conditions
 	 * */
 	public void revertToInitialConditions(){
+		_stateTree.getChildren().clear();
 		_stateTree = null;
 	}
 	

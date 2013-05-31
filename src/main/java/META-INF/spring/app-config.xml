@@ -12,7 +12,7 @@
 	<bean id="appconfig" class="org.geppetto.simulation.AppConfig">
 		<!-- how many neurons will be simulated in parallel -->
 		<property name="maxBufferSize" value="100" />
-		<property name="updateCycle" value="100" />
+		<property name="updateCycle" value="40" />
 	</bean>
 
 </beans>

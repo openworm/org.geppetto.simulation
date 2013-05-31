@@ -29,7 +29,7 @@ public class SimulatorRuntime
 		this._model = model;
 	}
 
-	public StateTreeRoot getStateSet()
+	public StateTreeRoot getStateTree()
 	{
 		return _stateTree;
 	}

@@ -151,16 +151,15 @@ class SimulationService implements ISimulation
 	 */
 	private void update() throws GeppettoExecutionException
 	{
-		logger.info("Update frontend called");
 		StringBuilder sb = new StringBuilder();
 		boolean updateAvailable = false;
 
 		for(String aspectID : _sessionContext.getAspectIds())
 		{
 			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
-			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateSet() != null)
+			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree() != null)
 			{
-				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateSet();
+				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();
 				CountTimeStepsVisitor countTimeStepsVisitor=new CountTimeStepsVisitor();
 				stateTree.apply(countTimeStepsVisitor);
 				//we send data to the frontend if it's either the first cycle or if there is a change in the state, i.e. something that might produce a frontend update

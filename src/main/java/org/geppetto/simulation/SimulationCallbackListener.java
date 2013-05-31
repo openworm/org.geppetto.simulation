@@ -47,7 +47,7 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 	@Override
 	public void stateTreeUpdated(StateTreeRoot stateTree) throws GeppettoExecutionException
 	{
-		StateTreeRoot sessionStateTree=_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).getStateSet();
+		StateTreeRoot sessionStateTree=_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).getStateTree();
 		if(sessionStateTree==null)
 		{
 			sessionStateTree=stateTree;

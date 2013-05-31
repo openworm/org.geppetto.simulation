@@ -1,18 +1,17 @@
 package org.geppetto.simulation;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geppetto.core.model.IModel;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.state.StateTreeRoot;
+import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
@@ -41,35 +40,31 @@ class SimulationService implements ISimulation
 	private static Log logger = LogFactory.getLog(SimulationService.class);
 
 	private final SessionContext _sessionContext = new SessionContext();
-	
+
 	private Timer _clientUpdateTimer;
-	
-	private SimulationThread _simThread; 
+
+	private SimulationThread _simThread;
 
 	private ISimulationCallbackListener _simulationListener;
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * org.geppetto.core.simulation.ISimulation#init(java.net.URL, org.geppetto.core.simulation.ISimulationCallbackListener)
+	 * @see org.geppetto.core.simulation.ISimulation#init(java.net.URL, org.geppetto.core.simulation.ISimulationCallbackListener)
 	 */
 	@Override
-	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener)
+	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
-		// grab config and retrieve model interpreters and simulators
-		try
-		{
-			populateDiscoverableServices(sim);
-		}
-		catch (InvalidSyntaxException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		// refresh simulation context
+		_sessionContext.reset();
+		
+		// retrieve model interpreters and simulators
+		populateDiscoverableServices(sim);
+
 		_simulationListener = simulationListener;
-		_sessionContext.maxBufferSize = appConfig.getMaxBufferSize();
+		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 	}
 
 	/*
@@ -80,12 +75,25 @@ class SimulationService implements ISimulation
 	@Override
 	public void start()
 	{
-		_sessionContext.runSimulation = true;
-		
+		_sessionContext.setRunning(true);
 		startSimulationThread();
 		startClientUpdateTimer();
 	}
-	
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#stop()
+	 */
+	@Override
+	public void pause()
+	{
+		// tell the thread to stop running the simulation
+		_sessionContext.setRunning(false);
+		// stop the timer that updates the client
+		_clientUpdateTimer.cancel();
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -95,42 +103,12 @@ class SimulationService implements ISimulation
 	public void stop()
 	{
 		// tell the thread to stop running the simulation
-		_sessionContext.runSimulation = false;
-		// also need to stop the timer that updates the client
+		_sessionContext.setRunning(false);
+		// stop the timer that updates the client
 		_clientUpdateTimer.cancel();
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#stop()
-	 */
-	@Override
-	public void reset()
-	{
-		// stop simulation if it's running
-		if(_sessionContext.runSimulation)
-		{
-			_sessionContext.runSimulation = false;
-			_clientUpdateTimer.cancel();
-		}
 		
-		resetCurrentSimulation();
-	}
-	
-	/**
-	 * 
-	 */
-	private void resetCurrentSimulation()
-	{
-		// clear operational buffers
-		_sessionContext.modelsByAspect = new ConcurrentHashMap<String, HashMap<String, List<IModel>>>();
-		_sessionContext.processedElementsByAspect = new ConcurrentHashMap<String, Integer>();
-		_sessionContext.elementCountByAspect = new ConcurrentHashMap<String, Integer>();
-		
-		// clear simulation fags
-		_sessionContext.runningCycleSemaphore = false;
-		_sessionContext.runSimulation = false;
+		// revert simulation to initial conditions
+		_sessionContext.revertToInitialConditions();
 	}
 
 	/**
@@ -138,7 +116,7 @@ class SimulationService implements ISimulation
 	 */
 	private void startSimulationThread()
 	{
-		_simThread  = new SimulationThread(_sessionContext);
+		_simThread = new SimulationThread(_sessionContext);
 		_simThread.start();
 	}
 
@@ -157,71 +135,66 @@ class SimulationService implements ISimulation
 				{
 					update();
 				}
-				catch (JsonProcessingException e)
+				catch(GeppettoExecutionException e)
 				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
+
 			}
 		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
 	}
 
 	/**
-	 * Method that takes the oldest model in the buffer and send it to the
-	 * client
+	 * Method that takes the oldest model in the buffer and send it to the client
 	 * 
 	 * @throws JsonProcessingException
 	 */
-	private void update() throws JsonProcessingException
+	private void update() throws GeppettoExecutionException
 	{
-		boolean updateAvailable = false;
 		StringBuilder sb = new StringBuilder();
+		boolean updateAvailable = false;
 
-		for (String aspectID : _sessionContext.aspectIDs)
+		for(String aspectID : _sessionContext.getAspectIds())
 		{
-			// TODO: how do we allow for multiple timesteps to be returned?
-
 			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
-			HashMap<String, List<IModel>> modelsMap = _sessionContext.modelsByAspect.get(aspectID);
-
-			List<IModel> models = new ArrayList<IModel>();
-			// traverse models
-			if (modelsMap != null && !modelsMap.isEmpty())
+			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree() != null)
 			{
-				
-				for (String modelId : modelsMap.keySet())
+				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();
+				CountTimeStepsVisitor countTimeStepsVisitor=new CountTimeStepsVisitor();
+				stateTree.apply(countTimeStepsVisitor);
+				//we send data to the frontend if it's either the first cycle or if there is a change in the state, i.e. something that might produce a frontend update
+				//putting the constraint to have at least two states buffered before starting sending updates to client, this is to avoid the scenario where one thread is 
+				//about to remove one state from the tree because we are visualizing it) and we come here and we see there is one timestep so we go ahead but by
+				//the time we are trying to visualise it there is nothing there because the previous thread completed. In this way we wait to have at least two buffered.
+				if(countTimeStepsVisitor.getNumberOfTimeSteps()>2 || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed()==0)
 				{
-					if (modelsMap.get(modelId).size() > 0)
+					logger.info("Available update found");
+					updateAvailable = true;
+					// create scene
+					Scene scene;
+					try
 					{
-						// get oldest and add it to the models list to be sent to the client
-						updateAvailable = true;
-						models.add(modelsMap.get(modelId).get(0));
-						modelsMap.get(modelId).remove(0);
+						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
+						ObjectMapper mapper = new ObjectMapper();
+						sb.append(mapper.writer().writeValueAsString(scene));
+						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();
+					}
+					catch(ModelInterpreterException e)
+					{
+						throw new GeppettoExecutionException(e);
+					}
+					catch(JsonProcessingException e)
+					{
+						throw new GeppettoExecutionException(e);
 					}
 				}
-
-				// create scene
-				Scene scene;
-				try
-				{
-					scene = _sessionContext.modelInterpretersByAspect.get(aspectID).getSceneFromModel(models);
-					ObjectMapper mapper = new ObjectMapper();
-					sb.append(mapper.writer().writeValueAsString(scene));
-				}
-				catch (ModelInterpreterException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-
 			}
-			// TODO: figure out how to separate aspects in the representation
 		}
 
-		if (updateAvailable)
+		if(updateAvailable)
 		{
-			_simulationListener.updateReady(sb.toString());
+			logger.info("Update sent to listener");
+			_simulationListener.updateReady(sb.toString());			
 		}
 	}
 
@@ -229,9 +202,9 @@ class SimulationService implements ISimulation
 	 * @param simConfig
 	 * @throws InvalidSyntaxException
 	 */
-	private void populateDiscoverableServices(Simulation simConfig) throws InvalidSyntaxException
+	private void populateDiscoverableServices(Simulation simConfig) throws GeppettoInitializationException
 	{
-		for (Aspect aspect : simConfig.getAspects())
+		for(Aspect aspect : simConfig.getAspects())
 		{
 			String id = aspect.getId();
 			String modelInterpreterId = aspect.getModelInterpreter();
@@ -241,20 +214,13 @@ class SimulationService implements ISimulation
 			IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());
 			ISimulator simulator = this.<ISimulator> getService(simulatorId, ISimulator.class.getName());
 
-			// populate configuration lists
-			_sessionContext.aspectIDs.add(id);
-			_sessionContext.modelInterpretersByAspect.put(id, modelInterpreter);
-			_sessionContext.simulatorsByAspect.put(id, simulator);
-			_sessionContext.modelURLByAspect.put(id, modelURL);
-			
-			// initialize operational buffers that need initialization
-			_sessionContext.processedElementsByAspect.put(id,0);
+			// populate context
+			_sessionContext.addAspectId(id, modelInterpreter, simulator, modelURL);
 		}
 	}
 
 	/*
-	 * A generic routine to encapsulate boiler-plate code for dynamic service
-	 * discovery
+	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
 	 */
 	/**
 	 * @param discoveryId
@@ -262,17 +228,29 @@ class SimulationService implements ISimulation
 	 * @return
 	 * @throws InvalidSyntaxException
 	 */
-	private <T> T getService(String discoveryId, String type) throws InvalidSyntaxException
+	private <T> T getService(String discoveryId, String type) throws GeppettoInitializationException
 	{
 		T service = null;
 
 		String filter = String.format("(discoverableID=%s)", discoveryId);
-		ServiceReference[] sr = _bc.getServiceReferences(type, filter);
-		if (sr != null && sr.length > 0)
+		ServiceReference<?>[] sr;
+		try
+		{
+			sr = _bc.getServiceReferences(type, filter);
+		}
+		catch(InvalidSyntaxException e)
+		{
+			throw new GeppettoInitializationException(e);
+		}
+		if(sr != null && sr.length > 0)
 		{
 			service = (T) _bc.getService(sr[0]);
 		}
 
+		if(service == null)
+		{
+			throw new GeppettoInitializationException("No service found for id:"+discoveryId);
+		}
 		return service;
 	}
 

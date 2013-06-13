@@ -99,18 +99,6 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 			{
 				wait=false;
 			}
-//			else
-//			{
-//				//we can't remove steps, we can slow down the simulation though!
-//				try
-//				{
-//					Thread.sleep(50);
-//				}
-//				catch(InterruptedException e)
-//				{
-//					throw new GeppettoExecutionException(e);
-//				}
-//			}
 		}
 		// This line is necessary because we have logic that checks that all models are processed before sending an update
 		_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).increaseProcessedElements();

@@ -87,7 +87,7 @@ class SimulationService implements ISimulation
 	 */
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
-	{
+	{		
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		
 		// refresh simulation context
@@ -124,7 +124,7 @@ class SimulationService implements ISimulation
 		// tell the thread to stop running the simulation
 		_sessionContext.setRunning(false);
 		// stop the timer that updates the client
-		_clientUpdateTimer.cancel();
+		_clientUpdateTimer.cancel();		
 	}
 
 	/*
@@ -141,7 +141,16 @@ class SimulationService implements ISimulation
 		_clientUpdateTimer.cancel();
 		
 		// revert simulation to initial conditions
-		_sessionContext.revertToInitialConditions();
+		_sessionContext.revertToInitialConditions();		
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.geppetto.core.simulation.ISimulation#isRunning()
+	 */
+	@Override
+	public boolean isRunning(){
+		return _sessionContext.isRunning();
 	}
 
 	/**

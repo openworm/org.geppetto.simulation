@@ -39,11 +39,12 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.simulation.model.Simulation;
 
 public class SimulationConfigReader {
 
-	public static Simulation readConfig(URL url) {
+	public static Simulation readConfig(URL url) throws GeppettoInitializationException {
 		
 		
 		Simulation sim = null;
@@ -51,7 +52,7 @@ public class SimulationConfigReader {
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
 			sim = (Simulation) unmarshaller.unmarshal(url);
 		} catch (JAXBException e1) {
-			e1.printStackTrace();
+			throw new GeppettoInitializationException("Unable to unmarshall simulation with ur : " + url.toString());
 		}
 
 		return sim;

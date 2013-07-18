@@ -33,6 +33,7 @@
 
 package org.geppetto.simulation;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -98,6 +99,19 @@ class SimulationService implements ISimulation
 
 		_simulationListener = simulationListener;
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
+
+		loadModel();
+	}
+
+	private void loadModel() {
+		_simThread = new SimulationThread(_sessionContext);
+		_simThread.loadModel();
+		try {
+			update();
+		} catch (GeppettoExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 
 	/*
@@ -152,7 +166,7 @@ class SimulationService implements ISimulation
 	public boolean isRunning(){
 		return _sessionContext.isRunning();
 	}
-
+	
 	/**
 	 * 
 	 */
@@ -210,7 +224,7 @@ class SimulationService implements ISimulation
 				//the time we are trying to visualise it there is nothing there because the previous thread completed. In this way we wait to have at least two buffered.
 				if(countTimeStepsVisitor.getNumberOfTimeSteps()>2 || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed()==0)
 				{
-					logger.info("Available update found");
+					logger.info("Available update found " + aspectID + _sessionContext.getAspectIds().size());
 					updateAvailable = true;
 					// create scene
 					Scene scene;
@@ -260,7 +274,8 @@ class SimulationService implements ISimulation
 			_sessionContext.addAspectId(id, modelInterpreter, simulator, modelURL);
 		}
 	}
-
+	
+	
 	/*
 	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
 	 */

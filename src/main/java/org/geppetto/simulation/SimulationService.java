@@ -224,7 +224,7 @@ class SimulationService implements ISimulation
 				//the time we are trying to visualise it there is nothing there because the previous thread completed. In this way we wait to have at least two buffered.
 				if(countTimeStepsVisitor.getNumberOfTimeSteps()>2 || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed()==0)
 				{
-					logger.info("Available update found " + aspectID + _sessionContext.getAspectIds().size());
+					logger.info("Available update found ");
 					updateAvailable = true;
 					// create scene
 					Scene scene;

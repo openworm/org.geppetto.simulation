@@ -105,7 +105,6 @@ class SimulationThread extends Thread
 				{
 					//initialize simulator
 					simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));
-					simulator.simulate(new TimeConfiguration(null,0,0));
 				}
 				catch(GeppettoInitializationException e)
 				{
@@ -134,6 +133,12 @@ class SimulationThread extends Thread
 
 						ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
 
+						//Load Model if it is still in initial conditions
+						if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
+						{
+							loadModel();
+						}
+						
 						// TODO this is just saying "advance one step" at the moment
 						try
 						{

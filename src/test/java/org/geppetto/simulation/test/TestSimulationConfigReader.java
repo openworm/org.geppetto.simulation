@@ -57,5 +57,20 @@ public class TestSimulationConfigReader {
 		Assert.assertTrue(sim.getAspects().get(0).getModelURL().equals("someurl"));
 		Assert.assertTrue(sim.getAspects().get(0).getSimulator().equals("sphSimulator"));
 		Assert.assertTrue(sim.getAspects().get(0).getId().equals("sph"));
+		
+		String json = SimulationConfigReader.writeSimulationConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());
+		
+		Assert.assertNotNull(json);
+								
+		Simulation s = SimulationConfigReader.readSimulationConfig(json);
+		
+		Assert.assertTrue(s != null);
+		Assert.assertTrue(s.getName().equals("sph"));
+		Assert.assertTrue(s.getConfiguration().getOutputFormat() == OutputFormat.RAW);
+		Assert.assertTrue(s.getAspects().size() == 1);
+		Assert.assertTrue(s.getAspects().get(0).getModelInterpreter().equals("sphModelInterpreter"));
+		Assert.assertTrue(s.getAspects().get(0).getModelURL().equals("someurl"));
+		Assert.assertTrue(s.getAspects().get(0).getSimulator().equals("sphSimulator"));
+		Assert.assertTrue(s.getAspects().get(0).getId().equals("sph"));
 	}
 }

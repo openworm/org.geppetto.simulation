@@ -65,9 +65,10 @@ class SimulationThread extends Thread
 	/**
 	 * Initializes the simulator with the model. 
 	 * Simulates one step only to load the model positions and state tree.
+	 * @throws GeppettoInitializationException 
 	 * 
 	 */
-	public void loadModel(){
+	public void loadModel() throws GeppettoInitializationException{
 		for(String aspectID : _sessionContext.getAspectIds())
 		{		
 			// reset processed elements counters
@@ -86,14 +87,17 @@ class SimulationThread extends Thread
 					try
 					{
 						model = modelInterpreter.readModel(new URL(_sessionContext.getConfigurationByAspect(aspectID).getUrl()));
+						if(model == null){
+							throw new GeppettoInitializationException("Null model");
+						}
 					}
 					catch(MalformedURLException e)
 					{
-						throw new RuntimeException(e);
+						logger.error("Malformed URL for model");
 					}
 					catch(ModelInterpreterException e)
 					{
-						throw new RuntimeException(e);
+						logger.error("Error Reading Model");
 					}
 					
 					// set initial conditions
@@ -108,10 +112,9 @@ class SimulationThread extends Thread
 				}
 				catch(GeppettoInitializationException e)
 				{
-					throw new RuntimeException(e);
+					logger.error("Error initializing simulator");
 				} catch (GeppettoExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error("Error updating state tree of initial model");
 				}
 			}
 		}
@@ -136,7 +139,11 @@ class SimulationThread extends Thread
 						//Load Model if it is still in initial conditions
 						if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
 						{
-							loadModel();
+							try {
+								loadModel();
+							} catch (GeppettoInitializationException e) {
+								logger.warn("Load model error");
+							}
 						}
 						
 						// TODO this is just saying "advance one step" at the moment

@@ -33,7 +33,6 @@
 
 package org.geppetto.simulation;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -90,20 +89,35 @@ class SimulationService implements ISimulation
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{		
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
+		_simulationListener = simulationListener;
 		
+		load(sim);
+	}
+	
+	/**
+	 * Initializes simulation with JSON object containing simulation. 
+	 */
+	@Override
+	public void init(String simulationConfig, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException {
+		Simulation sim = SimulationConfigReader.readSimulationConfig(simulationConfig);
+		_simulationListener = simulationListener;
+
+		load(sim);
+	}
+	
+	public void load(Simulation sim) throws GeppettoInitializationException{
 		// refresh simulation context
 		_sessionContext.reset();
-		
+
 		// retrieve model interpreters and simulators
 		populateDiscoverableServices(sim);
 
-		_simulationListener = simulationListener;
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
 		loadModel();
 	}
 
-	private void loadModel() {
+	private void loadModel() throws GeppettoInitializationException {
 		_simThread = new SimulationThread(_sessionContext);
 		_simThread.loadModel();
 		try {
@@ -311,4 +325,13 @@ class SimulationService implements ISimulation
 		return service;
 	}
 
+	/**
+	 * Takes a URL corresponding to simulation file and extracts information.
+	 */
+	@Override
+	public String getSimulationConfig(URL simURL) {
+		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
+		
+		return simulationConfig;
+	}
 }

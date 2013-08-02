@@ -61,72 +61,103 @@ class SimulationThread extends Thread
 	{
 		return _sessionContext;
 	}
+	
+	/**
+	 * Initializes the simulator with the model. 
+	 * Simulates one step only to load the model positions and state tree.
+	 * @throws GeppettoInitializationException 
+	 * 
+	 */
+	public void loadModel() throws GeppettoInitializationException{
+		for(String aspectID : _sessionContext.getAspectIds())
+		{		
+			// reset processed elements counters
+			getSessionContext().setProcessedElements(aspectID, 0);
+			
+			IModelInterpreter modelInterpreter = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter();
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
 
-	public void run() 
-	{
-
-		while(getSessionContext().isRunning())
-		{
-			if(!getSessionContext().isRunningCycleSemaphore())
+			if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
 			{
-				//logger.info("Simulation thread cycle");
-				getSessionContext().setRunningCycleSemaphore(true);
-
-				for(String aspectID : _sessionContext.getAspectIds())
+				IModel model = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel();
+				
+				// if we don't have a model fish it out of configuration
+				if(model == null)
 				{
-					// reset processed elements counters
-					getSessionContext().setProcessedElements(aspectID, 0);
-
-					IModelInterpreter modelInterpreter = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter();
-					ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
-					if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
-					{
-						IModel model = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel();
-						
-						// if we don't have a model fish it out of configuration
-						if(model == null)
-						{
-							try
-							{
-								model = modelInterpreter.readModel(new URL(_sessionContext.getConfigurationByAspect(aspectID).getUrl()));
-							}
-							catch(MalformedURLException e)
-							{
-								throw new RuntimeException(e);
-							}
-							catch(ModelInterpreterException e)
-							{
-								throw new RuntimeException(e);
-							}
-							
-							// set initial conditions
-							_sessionContext.getSimulatorRuntimeByAspect(aspectID).setModel(model);
-							_sessionContext.getSimulatorRuntimeByAspect(aspectID).setElementCount(1);
-						}
-						
-						try
-						{
-							simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));
-						}
-						catch(GeppettoInitializationException e)
-						{
-							throw new RuntimeException(e);
-						}
-					}
-					
-					// TODO this is just saying "advance one step" at the moment
 					try
 					{
-						simulator.simulate(new TimeConfiguration(null, 1, 1));
+						model = modelInterpreter.readModel(new URL(_sessionContext.getConfigurationByAspect(aspectID).getUrl()));
+						if(model == null){
+							throw new GeppettoInitializationException("Null model");
+						}
 					}
-					catch(GeppettoExecutionException e)
+					catch(MalformedURLException e)
 					{
-						throw new RuntimeException(e);
+						logger.error("Malformed URL for model");
+					}
+					catch(ModelInterpreterException e)
+					{
+						logger.error("Error Reading Model");
 					}
 					
+					// set initial conditions
+					_sessionContext.getSimulatorRuntimeByAspect(aspectID).setModel(model);
+					_sessionContext.getSimulatorRuntimeByAspect(aspectID).setElementCount(1);
+				}
+				
+				try
+				{
+					//initialize simulator
+					simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));
+				}
+				catch(GeppettoInitializationException e)
+				{
+					logger.error("Error initializing simulator");
+				} catch (GeppettoExecutionException e) {
+					logger.error("Error updating state tree of initial model");
 				}
 			}
 		}
+	}
+	
+	public void run() 
+	{
+			while(getSessionContext().isRunning())
+			{
+				if(!getSessionContext().isRunningCycleSemaphore())
+				{
+					//logger.info("Simulation thread cycle");
+					getSessionContext().setRunningCycleSemaphore(true);
+
+					for(String aspectID : _sessionContext.getAspectIds())
+					{
+						// reset processed elements counters
+						getSessionContext().setProcessedElements(aspectID, 0);
+
+						ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+						//Load Model if it is still in initial conditions
+						if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
+						{
+							try {
+								loadModel();
+							} catch (GeppettoInitializationException e) {
+								logger.warn("Load model error");
+							}
+						}
+						
+						// TODO this is just saying "advance one step" at the moment
+						try
+						{
+							simulator.simulate(new TimeConfiguration(null, 1, 1));
+						}
+						catch(GeppettoExecutionException e)
+						{
+							throw new RuntimeException(e);
+						}
+
+					}
+				}
+			}
 	}
 }

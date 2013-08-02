@@ -33,17 +33,24 @@
 
 package org.geppetto.simulation;
 
+import java.io.IOException;
 import java.net.URL;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.simulation.model.Simulation;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SimulationConfigReader {
 
-	public static Simulation readConfig(URL url) {
+	public static Simulation readConfig(URL url) throws GeppettoInitializationException {
 		
 		
 		Simulation sim = null;
@@ -51,9 +58,61 @@ public class SimulationConfigReader {
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
 			sim = (Simulation) unmarshaller.unmarshal(url);
 		} catch (JAXBException e1) {
-			e1.printStackTrace();
+			throw new GeppettoInitializationException("Unable to unmarshall simulation with ur : " + url.toString());
 		}
 
 		return sim;
+	}
+	
+	/**
+	 * Takes a JSON object with simulation information and creates a Simulation out of it.
+	 * 
+	 * @param simulationConfig
+	 * @return
+	 * @throws GeppettoInitializationException
+	 */
+	public static Simulation readSimulationConfig(String simulationConfig) throws GeppettoInitializationException {
+
+		ObjectMapper mapper = new ObjectMapper();
+		Simulation sim = null;
+		try {
+			sim = mapper.readValue(simulationConfig, Simulation.class);
+		} catch (JsonParseException e) {
+			throw new GeppettoInitializationException("Unable to unmarshall simulation");
+		} catch (JsonMappingException e) {
+			throw new GeppettoInitializationException("Unable to unmarshall simulation, invalid information");
+		} catch (IOException e) {
+			throw new GeppettoInitializationException("Unable to unmarshall simulation");
+		}
+		
+		return sim;
+	}
+	
+	/**
+	 * Takes a URL for simulation file and creates a json object out of it with the 
+	 * simulation information.
+	 * 
+	 * @param url
+	 * @return
+	 */
+	public static String writeSimulationConfig(URL url){
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		String json = null;
+
+		Simulation simulation;
+		try {
+			simulation = readConfig(url);
+			json = mapper.writeValueAsString(simulation);
+		} catch (GeppettoInitializationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return json;
 	}
 }

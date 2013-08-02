@@ -36,6 +36,7 @@ package org.geppetto.simulation.test;
 import java.io.File;
 import java.net.MalformedURLException;
 
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.simulation.SimulationConfigReader;
 import org.geppetto.simulation.model.OutputFormat;
 import org.geppetto.simulation.model.Simulation;
@@ -45,7 +46,7 @@ import org.junit.Test;
 public class TestSimulationConfigReader {
 
 	@Test
-	public void testReadConfig() throws MalformedURLException {
+	public void testReadConfig() throws MalformedURLException, GeppettoInitializationException {
 		Simulation sim = SimulationConfigReader.readConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());
 		
 		Assert.assertTrue(sim != null);
@@ -56,5 +57,20 @@ public class TestSimulationConfigReader {
 		Assert.assertTrue(sim.getAspects().get(0).getModelURL().equals("someurl"));
 		Assert.assertTrue(sim.getAspects().get(0).getSimulator().equals("sphSimulator"));
 		Assert.assertTrue(sim.getAspects().get(0).getId().equals("sph"));
+		
+		String json = SimulationConfigReader.writeSimulationConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());
+		
+		Assert.assertNotNull(json);
+								
+		Simulation s = SimulationConfigReader.readSimulationConfig(json);
+		
+		Assert.assertTrue(s != null);
+		Assert.assertTrue(s.getName().equals("sph"));
+		Assert.assertTrue(s.getConfiguration().getOutputFormat() == OutputFormat.RAW);
+		Assert.assertTrue(s.getAspects().size() == 1);
+		Assert.assertTrue(s.getAspects().get(0).getModelInterpreter().equals("sphModelInterpreter"));
+		Assert.assertTrue(s.getAspects().get(0).getModelURL().equals("someurl"));
+		Assert.assertTrue(s.getAspects().get(0).getSimulator().equals("sphSimulator"));
+		Assert.assertTrue(s.getAspects().get(0).getId().equals("sph"));
 	}
 }

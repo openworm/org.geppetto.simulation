@@ -89,15 +89,43 @@ class SimulationService implements ISimulation
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{		
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
+		_simulationListener = simulationListener;
 		
+		load(sim);
+	}
+	
+	/**
+	 * Initializes simulation with JSON object containing simulation. 
+	 */
+	@Override
+	public void init(String simulationConfig, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException {
+		Simulation sim = SimulationConfigReader.readSimulationConfig(simulationConfig);
+		_simulationListener = simulationListener;
+
+		load(sim);
+	}
+	
+	public void load(Simulation sim) throws GeppettoInitializationException{
 		// refresh simulation context
 		_sessionContext.reset();
-		
+
 		// retrieve model interpreters and simulators
 		populateDiscoverableServices(sim);
 
-		_simulationListener = simulationListener;
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
+
+		loadModel();
+	}
+
+	private void loadModel() throws GeppettoInitializationException {
+		_simThread = new SimulationThread(_sessionContext);
+		_simThread.loadModel();
+		try {
+			update();
+		} catch (GeppettoExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 
 	/*
@@ -152,7 +180,7 @@ class SimulationService implements ISimulation
 	public boolean isRunning(){
 		return _sessionContext.isRunning();
 	}
-
+	
 	/**
 	 * 
 	 */
@@ -210,7 +238,7 @@ class SimulationService implements ISimulation
 				//the time we are trying to visualise it there is nothing there because the previous thread completed. In this way we wait to have at least two buffered.
 				if(countTimeStepsVisitor.getNumberOfTimeSteps()>2 || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed()==0)
 				{
-					logger.info("Available update found");
+					logger.info("Available update found ");
 					updateAvailable = true;
 					// create scene
 					Scene scene;
@@ -260,7 +288,8 @@ class SimulationService implements ISimulation
 			_sessionContext.addAspectId(id, modelInterpreter, simulator, modelURL);
 		}
 	}
-
+	
+	
 	/*
 	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
 	 */
@@ -296,4 +325,13 @@ class SimulationService implements ISimulation
 		return service;
 	}
 
+	/**
+	 * Takes a URL corresponding to simulation file and extracts information.
+	 */
+	@Override
+	public String getSimulationConfig(URL simURL) {
+		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
+		
+		return simulationConfig;
+	}
 }

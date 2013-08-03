@@ -87,9 +87,6 @@ class SimulationThread extends Thread
 					try
 					{
 						model = modelInterpreter.readModel(new URL(_sessionContext.getConfigurationByAspect(aspectID).getUrl()));
-						if(model == null){
-							throw new GeppettoInitializationException("Null model");
-						}
 					}
 					catch(MalformedURLException e)
 					{
@@ -112,9 +109,9 @@ class SimulationThread extends Thread
 				}
 				catch(GeppettoInitializationException e)
 				{
-					logger.error("Error initializing simulator");
+					throw new GeppettoInitializationException("Error initializing simulator");
 				} catch (GeppettoExecutionException e) {
-					logger.error("Error updating state tree of initial model");
+					throw new GeppettoInitializationException("Error updating state tree of initial model");
 				}
 			}
 		}

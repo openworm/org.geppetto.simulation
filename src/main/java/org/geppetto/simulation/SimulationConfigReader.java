@@ -94,8 +94,9 @@ public class SimulationConfigReader {
 	 * 
 	 * @param url
 	 * @return
+	 * @throws GeppettoInitializationException 
 	 */
-	public static String writeSimulationConfig(URL url){
+	public static String writeSimulationConfig(URL url) throws GeppettoInitializationException{
 
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -106,11 +107,9 @@ public class SimulationConfigReader {
 			simulation = readConfig(url);
 			json = mapper.writeValueAsString(simulation);
 		} catch (GeppettoInitializationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			throw new GeppettoInitializationException("Unable to read simulation file with url : " + url.toString());
 		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GeppettoInitializationException("Unable to read simulation file with url: " + url.toString());
 		}
 
 		return json;

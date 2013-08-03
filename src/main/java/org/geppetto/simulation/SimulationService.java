@@ -327,9 +327,10 @@ class SimulationService implements ISimulation
 
 	/**
 	 * Takes a URL corresponding to simulation file and extracts information.
+	 * @throws GeppettoInitializationException 
 	 */
 	@Override
-	public String getSimulationConfig(URL simURL) {
+	public String getSimulationConfig(URL simURL) throws GeppettoInitializationException {
 		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
 		
 		return simulationConfig;

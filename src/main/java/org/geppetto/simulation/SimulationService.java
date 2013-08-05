@@ -91,7 +91,12 @@ class SimulationService implements ISimulation
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		_simulationListener = simulationListener;
 		
-		load(sim);
+		try {
+			load(sim);
+		} catch (GeppettoExecutionException e) {
+			// TODO Auto-generated catch block
+			throw new GeppettoInitializationException("Error Loading Simulation Model");
+		}
 	}
 	
 	/**
@@ -102,10 +107,15 @@ class SimulationService implements ISimulation
 		Simulation sim = SimulationConfigReader.readSimulationConfig(simulationConfig);
 		_simulationListener = simulationListener;
 
-		load(sim);
+		try {
+			load(sim);
+		} catch (GeppettoExecutionException e) {
+			// TODO Auto-generated catch block
+			throw new GeppettoInitializationException("Error Loading Simulation Model");
+		}
 	}
 	
-	public void load(Simulation sim) throws GeppettoInitializationException{
+	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException{
 		// refresh simulation context
 		_sessionContext.reset();
 
@@ -117,14 +127,14 @@ class SimulationService implements ISimulation
 		loadModel();
 	}
 
-	private void loadModel() throws GeppettoInitializationException {
+	private void loadModel() throws GeppettoInitializationException, GeppettoExecutionException {
 		_simThread = new SimulationThread(_sessionContext);
 		_simThread.loadModel();
 		try {
 			update();
 		} catch (GeppettoExecutionException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new GeppettoExecutionException("Error loading simulation model");
 		}		
 	}
 

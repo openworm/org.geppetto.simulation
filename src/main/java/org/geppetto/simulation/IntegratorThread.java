@@ -1,4 +1,4 @@
-package org.geppetto.simulation.test;
+package org.geppetto.simulation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,15 +8,16 @@ import java.util.Map;
 
 import py4j.GatewayServer;
 
-public class IntegratorExample
+public class IntegratorThread extends Thread
 {
 	private static Process _p;
-	private static GatewayServer _server; 
+	private static GatewayServer _server;
 	private static IIntegrator _integrator;
 	private static int _steps = 0;
-	private static int N=2;
-	
+
 	private static Map<String, Double> _states = new LinkedHashMap<String, Double>();
+	private boolean _run = false;
+	private String _path;
 
 	public int integratorReady(IIntegrator integrator) throws InterruptedException
 	{
@@ -26,29 +27,20 @@ public class IntegratorExample
 		{
 			integrator.addState(state, _states.get(state).doubleValue());
 		}
-		
-		while(_steps<N)
-		{
-			_steps++;
-			_integrator.runIntegration();
-			Thread.sleep(1000);
-		}
 
-		_integrator.stopScript();
 		return 1;
 	}
 
-	public void resultsReady()
+	public IntegratorThread()
 	{
-		System.out.println("Results ready!");
-		for(String state : _states.keySet())
-		{
-			_states.put(state, _integrator.getState(state));
-			System.out.println("State" + state + "[" + _steps + "]=" + _states.get(state));
-		}
+		super();
+		_path = getClass().getResource("/integration/sample.py").getPath();
+		
+
 	}
 
-	public static void main(String[] args)
+	@Override
+	public void run()
 	{
 		String s = null;
 
@@ -56,13 +48,13 @@ public class IntegratorExample
 		_states.put("v2", 0.2d);
 		_states.put("v3", 0.3d);
 		_states.put("v4", 0.4d);
-		_server = new GatewayServer(new IntegratorExample());
+		_server = new GatewayServer(this);
 		_server.start();
 
-		
 		try
 		{
-			_p = Runtime.getRuntime().exec("python ./src/test/resources/sample.py");
+			
+			_p = Runtime.getRuntime().exec("python " + _path);
 
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(_p.getInputStream()));
 
@@ -87,7 +79,35 @@ public class IntegratorExample
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		while(true)
+		{
+			if(_run)
+			{
+				_run = false;
+				_integrator.runIntegration();
+				_steps++;
+			}
+		}
+	}
 
+	public void resultsReady()
+	{
+		System.out.println("Results ready!");
+		for(String state : _states.keySet())
+		{
+			_states.put(state, _integrator.getState(state));
+			System.out.println("State" + state + "[" + _steps + "]=" + _states.get(state));
+		}
+	}
+
+	public void dispose()
+	{
+		_integrator.stopScript();
+	}
+
+	public void runIntegration()
+	{
+		_run = true;
 	}
 
 }

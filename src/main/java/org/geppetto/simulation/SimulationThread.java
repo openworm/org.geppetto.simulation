@@ -51,6 +51,7 @@ class SimulationThread extends Thread
 
 	private static Log logger = LogFactory.getLog(SimulationThread.class);
 	private SessionContext _sessionContext = null;
+	IntegratorThread _integrator = new IntegratorThread();
 
 	public SimulationThread(SessionContext context)
 	{
@@ -115,6 +116,8 @@ class SimulationThread extends Thread
 				}
 			}
 		}
+		// hack to try calling python
+		_integrator.start();
 	}
 	
 	public void run() 
@@ -155,6 +158,7 @@ class SimulationThread extends Thread
 
 					}
 				}
+				_integrator.runIntegration();
 			}
 	}
 }

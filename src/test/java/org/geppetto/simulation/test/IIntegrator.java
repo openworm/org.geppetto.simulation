@@ -1,5 +1,5 @@
 package org.geppetto.simulation.test;
-public interface Integrator {
+public interface IIntegrator {
 
         public void addState(String stateName, double value);
 

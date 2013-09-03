@@ -33,7 +33,10 @@
 
 package org.geppetto.simulation;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.URL;
 
 import javax.xml.bind.JAXBContext;
@@ -42,6 +45,10 @@ import javax.xml.bind.Unmarshaller;
 
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.simulation.model.Simulation;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -73,16 +80,14 @@ public class SimulationConfigReader {
 	 */
 	public static Simulation readSimulationConfig(String simulationConfig) throws GeppettoInitializationException {
 
-		ObjectMapper mapper = new ObjectMapper();
 		Simulation sim = null;
+		
+		StringReader reader = new StringReader(simulationConfig);
 		try {
-			sim = mapper.readValue(simulationConfig, Simulation.class);
-		} catch (JsonParseException e) {
-			throw new GeppettoInitializationException("Unable to unmarshall simulation");
-		} catch (JsonMappingException e) {
-			throw new GeppettoInitializationException("Unable to unmarshall simulation, invalid information");
-		} catch (IOException e) {
-			throw new GeppettoInitializationException("Unable to unmarshall simulation");
+			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			sim = (Simulation) unmarshaller.unmarshal(reader);
+		} catch (JAXBException e) {
+			throw new GeppettoInitializationException("Unmarshall simulation from xml");
 		}
 		
 		return sim;
@@ -94,25 +99,24 @@ public class SimulationConfigReader {
 	 * 
 	 * @param url
 	 * @return
+	 * @throws GeppettoInitializationException 
 	 */
-	public static String writeSimulationConfig(URL url){
+	public static String writeSimulationConfig(URL url) throws GeppettoInitializationException{
 
-		ObjectMapper mapper = new ObjectMapper();
-
-		String json = null;
-
-		Simulation simulation;
+		String line = null;
+		StringBuilder sb = new StringBuilder();
+		
 		try {
-			simulation = readConfig(url);
-			json = mapper.writeValueAsString(simulation);
-		} catch (GeppettoInitializationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+			
+			while((line=br.readLine())!= null){
+			    sb.append(line.trim());
+			}
+		} catch (IOException e) {
+			throw new GeppettoInitializationException("Error while attempting to read simulation's configuration");
 		}
-
-		return json;
+		
+		return sb.toString();
 	}
 }

@@ -104,8 +104,10 @@ class SimulationThread extends Thread
 				
 				try
 				{
-					//initialize simulator
-					simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));
+					
+						//initialize simulator
+						simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));
+					
 				}
 				catch(GeppettoInitializationException e)
 				{
@@ -146,6 +148,7 @@ class SimulationThread extends Thread
 						// TODO this is just saying "advance one step" at the moment
 						try
 						{
+							
 							simulator.simulate(new TimeConfiguration(null, 1, 1));
 						}
 						catch(GeppettoExecutionException e)

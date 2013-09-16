@@ -291,7 +291,7 @@ class SimulationService implements ISimulation
 			String simulatorId = aspect.getSimulator();
 			String modelURL = aspect.getModelURL();
 
-			IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());
+			IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());			
 			ISimulator simulator = this.<ISimulator> getService(simulatorId, ISimulator.class.getName());
 
 			// populate context

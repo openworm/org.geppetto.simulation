@@ -89,6 +89,7 @@ public class SessionContext
 		_aspectIDs.clear();
 		_runningCycleSemaphore = false;
 		_isRunning = false;
+		_isStopped = false;
 	}
 
 	public boolean isRunning()

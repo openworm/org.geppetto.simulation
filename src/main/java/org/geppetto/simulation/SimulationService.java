@@ -115,7 +115,7 @@ class SimulationService implements ISimulation
 		}
 	}
 	
-	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException{
+	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException{		
 		// refresh simulation context
 		_sessionContext.reset();
 
@@ -228,9 +228,7 @@ class SimulationService implements ISimulation
 			{
 				try
 				{
-					if(_sessionContext.isRunning()){
-						update();
-					}
+					update();
 				}
 				catch(GeppettoExecutionException e)
 				{

@@ -115,7 +115,7 @@ class SimulationService implements ISimulation
 		}
 	}
 	
-	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException{
+	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException{		
 		// refresh simulation context
 		_sessionContext.reset();
 
@@ -146,7 +146,10 @@ class SimulationService implements ISimulation
 	@Override
 	public void start()
 	{
+		logger.warn("Starting simulation");
+		//start the simulation
 		_sessionContext.setRunning(true);
+		_sessionContext.setStopped(false);
 		startSimulationThread();
 		startClientUpdateTimer();
 	}
@@ -159,8 +162,10 @@ class SimulationService implements ISimulation
 	@Override
 	public void pause()
 	{
-		// tell the thread to stop running the simulation
+		logger.warn("Pausing simulation");
+		// tell the thread to pause the simulation, but don't stop it
 		_sessionContext.setRunning(false);
+		_sessionContext.setStopped(false);
 		// stop the timer that updates the client
 		_clientUpdateTimer.cancel();		
 	}
@@ -173,13 +178,17 @@ class SimulationService implements ISimulation
 	@Override
 	public void stop()
 	{
+		
+		logger.warn("Stopping simulation");
 		// tell the thread to stop running the simulation
 		_sessionContext.setRunning(false);
+		_sessionContext.setStopped(true);
+		
 		// stop the timer that updates the client
 		_clientUpdateTimer.cancel();
-		
+				
 		// revert simulation to initial conditions
-		_sessionContext.revertToInitialConditions();		
+		_sessionContext.revertToInitialConditions();			
 	}
 	
 	/*
@@ -196,6 +205,12 @@ class SimulationService implements ISimulation
 	 */
 	private void startSimulationThread()
 	{
+		
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			//Load Model if it is still in initial conditions
+			logger.warn(aspectID + " : " + _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions());
+		}
 		_simThread = new SimulationThread(_sessionContext);
 		_simThread.start();
 	}
@@ -291,7 +306,7 @@ class SimulationService implements ISimulation
 			String simulatorId = aspect.getSimulator();
 			String modelURL = aspect.getModelURL();
 
-			IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());
+			IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());			
 			ISimulator simulator = this.<ISimulator> getService(simulatorId, ISimulator.class.getName());
 
 			// populate context

@@ -33,10 +33,11 @@
 
 package org.geppetto.simulation;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
-import org.geppetto.core.model.state.visitors.RemoveTimeStepsVisitor;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
 public class SimulationCallbackListener implements ISimulatorCallbackListener
@@ -44,6 +45,8 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 
 	private String simulationAspectID;
 	private SessionContext _sessionContext;
+
+	private static Log logger = LogFactory.getLog(SimulationCallbackListener.class);
 
 	public SimulationCallbackListener(String aspectID, SessionContext context)
 	{
@@ -103,6 +106,12 @@ public class SimulationCallbackListener implements ISimulatorCallbackListener
 		// This line is necessary because we have logic that checks that all models are processed before sending an update
 		_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).increaseProcessedElements();
 		updateRunningCycleSemaphore();
+
+		//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
+		//to revert tree to initial conditions is simulation has been stopped
+		if(_sessionContext.isStopped()){
+			_sessionContext.revertToInitialConditions();
+		}
 	}
 
 }

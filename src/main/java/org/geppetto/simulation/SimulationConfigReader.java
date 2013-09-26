@@ -87,7 +87,7 @@ public class SimulationConfigReader {
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
 			sim = (Simulation) unmarshaller.unmarshal(reader);
 		} catch (JAXBException e) {
-			throw new GeppettoInitializationException("Unmarshall simulation from xml");
+			throw new GeppettoInitializationException(e);
 		}
 		
 		return sim;

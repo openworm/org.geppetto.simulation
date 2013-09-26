@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.simulator.ISimulator;
 
@@ -47,13 +49,16 @@ public class SessionContext
 	private ConcurrentHashMap<String,AspectConfiguration> _configurationByAspect= new ConcurrentHashMap<String,AspectConfiguration>();
 	
 	private List<String> _aspectIDs = new ArrayList<String>();
+	
+	private static Log logger = LogFactory.getLog(SessionContext.class);
 
 	/*
 	 * simulation flags 
 	 */
 	private boolean _runningCycleSemaphore = false;
 	private boolean _isRunning = false;
-	
+	private boolean _isStopped = false;
+
 	private int _maxBufferSize = 100;
 	
 	/*
@@ -69,6 +74,8 @@ public class SessionContext
 
 		_runningCycleSemaphore = false;
 		_isRunning = false;
+		
+		logger.warn("Reverted to initial conditions");
 	}
 	
 	/*
@@ -82,6 +89,7 @@ public class SessionContext
 		_aspectIDs.clear();
 		_runningCycleSemaphore = false;
 		_isRunning = false;
+		_isStopped = false;
 	}
 
 	public boolean isRunning()
@@ -92,6 +100,16 @@ public class SessionContext
 	public void setRunning(boolean isRunning)
 	{
 		_isRunning=isRunning;
+	}
+	
+	public boolean isStopped()
+	{
+		return _isStopped;
+	}
+	
+	public void setStopped(boolean isStopped)
+	{
+		_isStopped = isStopped;
 	}
 
 	public boolean isRunningCycleSemaphore()

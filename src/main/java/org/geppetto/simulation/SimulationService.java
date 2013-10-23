@@ -43,7 +43,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.common.IVariable;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.state.StateTreeRoot;
@@ -51,7 +50,9 @@ import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.core.visualisation.model.Scene;
+import org.geppetto.core.pojo.model.AVariable;
+import org.geppetto.core.pojo.model.VariableList;
+import org.geppetto.core.pojo.model.Scene;
 import org.geppetto.simulation.model.Aspect;
 import org.geppetto.simulation.model.Simulation;
 import org.osgi.framework.BundleContext;
@@ -218,7 +219,7 @@ class SimulationService implements ISimulation
 	 * Gets the list of all watchable variables in a give simulation
 	 */
 	@Override
-	public List<IVariable> listWatchableVariables() {
+	public VariableList listWatchableVariables() {
 		return this.listVariablesHelper(true);
 	}
 
@@ -226,7 +227,7 @@ class SimulationService implements ISimulation
 	 * Gets the list of all forceable variables in a give simulation
 	 */
 	@Override
-	public List<IVariable> listForceableVariables() {
+	public VariableList listForceableVariables() {
 		return this.listVariablesHelper(false);
 	}
 	
@@ -236,9 +237,10 @@ class SimulationService implements ISimulation
 	 * @param isWatch specifies is the helper should fetch watch- or force-able variables
 	 * @return
 	 */
-	public List<IVariable> listVariablesHelper(boolean isWatch)
+	public VariableList listVariablesHelper(boolean isWatch)
 	{
-		List<IVariable> vars = new ArrayList<IVariable>();
+		VariableList varsList = new VariableList();
+		List<AVariable> vars = new ArrayList<AVariable>();
 		
 		for(String aspectID : _sessionContext.getAspectIds())
 		{
@@ -246,11 +248,13 @@ class SimulationService implements ISimulation
 
 			if(simulator != null)
 			{
-				vars.addAll(isWatch? simulator.getWatchableVariables() : simulator.getForceableVariables());
+				vars.addAll(isWatch? simulator.getWatchableVariables().getEntities() : simulator.getForceableVariables().getEntities());
 			}
 		}
 		
-		return vars;
+		varsList.setEntities(vars);
+		
+		return varsList;
 	}
 	
 	/**

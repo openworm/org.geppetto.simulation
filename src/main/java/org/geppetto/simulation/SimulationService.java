@@ -43,6 +43,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.model.AVariable;
+import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.state.StateTreeRoot;
@@ -50,9 +52,7 @@ import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.core.pojo.model.AVariable;
-import org.geppetto.core.pojo.model.VariableList;
-import org.geppetto.core.pojo.model.Scene;
+import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.model.Aspect;
 import org.geppetto.simulation.model.Simulation;
 import org.osgi.framework.BundleContext;
@@ -248,11 +248,11 @@ class SimulationService implements ISimulation
 
 			if(simulator != null)
 			{
-				vars.addAll(isWatch? simulator.getWatchableVariables().getEntities() : simulator.getForceableVariables().getEntities());
+				vars.addAll(isWatch? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
 			}
 		}
 		
-		varsList.setEntities(vars);
+		varsList.setVariables(vars);
 		
 		return varsList;
 	}

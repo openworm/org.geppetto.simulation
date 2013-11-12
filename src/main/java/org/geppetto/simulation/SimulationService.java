@@ -257,6 +257,16 @@ class SimulationService implements ISimulation
 		return varsList;
 	}
 	
+	@Override
+	public void addWatchList() {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void startWatch() {
+		// TODO Auto-generated method stub	
+	}
+	
 	/**
 	 * Starts simulation thread - under the hood the run method of the thread gets invoked.
 	 */

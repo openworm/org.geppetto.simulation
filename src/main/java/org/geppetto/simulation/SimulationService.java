@@ -60,12 +60,14 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
+@Scope("prototype")
 class SimulationService implements ISimulation
 {
 
@@ -83,7 +85,7 @@ class SimulationService implements ISimulation
 	private SimulationThread _simThread;
 
 	private ISimulationCallbackListener _simulationListener;
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -92,6 +94,7 @@ class SimulationService implements ISimulation
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{		
+		logger.warn("Initializing simulation");
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		_simulationListener = simulationListener;
 		
@@ -415,5 +418,23 @@ class SimulationService implements ISimulation
 			throw new GeppettoInitializationException("No service found for id:"+discoveryId);
 		}
 		return service;
+	}
+
+	@Override
+	public int simulationCapacity() {
+		
+		int simulatorCapacity = 1;
+		
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				simulatorCapacity = simulator.getCapacity();
+			}
+		}
+		
+		return simulatorCapacity;
 	}
 }

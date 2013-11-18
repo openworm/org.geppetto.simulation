@@ -45,6 +45,7 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.VariableList;
+import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.state.StateTreeRoot;
@@ -83,6 +84,8 @@ class SimulationService implements ISimulation
 	private SimulationThread _simThread;
 
 	private ISimulationCallbackListener _simulationListener;
+	
+	private List<WatchList> _watchLists = new ArrayList<WatchList>();
 
 	/*
 	 * (non-Javadoc)
@@ -258,8 +261,8 @@ class SimulationService implements ISimulation
 	}
 	
 	@Override
-	public void addWatchLists() {
-		// TODO Auto-generated method stub
+	public void addWatchLists(List<WatchList> list) {
+		_watchLists.addAll(list);
 	}
 
 	@Override
@@ -277,6 +280,12 @@ class SimulationService implements ISimulation
 	public void clearWatchLists() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	@Override
+	public List<WatchList> getWatchLists() {
+		// TODO Auto-generated method stub
+		return _watchLists;
 	}
 	
 	/**

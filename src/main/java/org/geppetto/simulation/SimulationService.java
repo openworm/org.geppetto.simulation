@@ -421,7 +421,7 @@ class SimulationService implements ISimulation
 	}
 
 	@Override
-	public int simulationCapacity() {
+	public int getSimulatorCapacity() {
 		
 		int simulatorCapacity = 1;
 		
@@ -436,5 +436,22 @@ class SimulationService implements ISimulation
 		}
 		
 		return simulatorCapacity;
+	}
+
+	@Override
+	public String getSimulatorName() {
+		String simulatorName = null;
+		
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				simulatorName = simulator.getName();
+			}
+		}
+		
+		return simulatorName;
 	}
 }

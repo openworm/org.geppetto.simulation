@@ -258,13 +258,25 @@ class SimulationService implements ISimulation
 	}
 	
 	@Override
-	public void addWatchList() {
+	public void addWatchLists() {
 		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void startWatch() {
 		// TODO Auto-generated method stub	
+	}
+	
+	@Override
+	public void stopWatch() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void clearWatchLists() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	/**

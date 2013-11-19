@@ -262,29 +262,31 @@ class SimulationService implements ISimulation
 	
 	@Override
 	public void addWatchLists(List<WatchList> list) {
+		// TODO: iterate through aspects and set variables to be watched for each
+		
 		_watchLists.addAll(list);
 	}
 
 	@Override
 	public void startWatch() {
-		// TODO Auto-generated method stub	
+		// TODO: iterate through aspects and start watching	
 	}
 	
 	@Override
 	public void stopWatch() {
-		// TODO Auto-generated method stub
-		
+		// TODO: iterate through aspects and stop watching
 	}
 
 	@Override
 	public void clearWatchLists() {
-		// TODO Auto-generated method stub
+		// TODO: instruct aspects to clear watch variables
 		
+		// clear locally stored watchlists
+		_watchLists = new ArrayList<WatchList>();
 	}
 	
 	@Override
 	public List<WatchList> getWatchLists() {
-		// TODO Auto-generated method stub
 		return _watchLists;
 	}
 	

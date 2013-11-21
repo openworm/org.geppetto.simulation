@@ -34,6 +34,8 @@
 package org.geppetto.simulation;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -41,6 +43,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.model.AVariable;
+import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.state.StateTreeRoot;
@@ -201,7 +205,70 @@ class SimulationService implements ISimulation
 	}
 	
 	/**
+	 * Takes a URL corresponding to simulation file and extracts information.
+	 * @throws GeppettoInitializationException 
+	 */
+	@Override
+	public String getSimulationConfig(URL simURL) throws GeppettoInitializationException {
+		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
+		
+		return simulationConfig;
+	}
+	
+	/**
+	 * Gets the list of all watchable variables in a give simulation
+	 */
+	@Override
+	public VariableList listWatchableVariables() {
+		return this.listVariablesHelper(true);
+	}
+
+	/**
+	 * Gets the list of all forceable variables in a give simulation
+	 */
+	@Override
+	public VariableList listForceableVariables() {
+		return this.listVariablesHelper(false);
+	}
+	
+	/**
+	 * Fetches variables from simulators
 	 * 
+	 * @param isWatch specifies is the helper should fetch watch- or force-able variables
+	 * @return
+	 */
+	public VariableList listVariablesHelper(boolean isWatch)
+	{
+		VariableList varsList = new VariableList();
+		List<AVariable> vars = new ArrayList<AVariable>();
+		
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				vars.addAll(isWatch? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
+			}
+		}
+		
+		varsList.setVariables(vars);
+		
+		return varsList;
+	}
+	
+	@Override
+	public void addWatchList() {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void startWatch() {
+		// TODO Auto-generated method stub	
+	}
+	
+	/**
+	 * Starts simulation thread - under the hood the run method of the thread gets invoked.
 	 */
 	private void startSimulationThread()
 	{
@@ -216,7 +283,7 @@ class SimulationService implements ISimulation
 	}
 
 	/**
-	 * 
+	 * Starts client updates on a timer.
 	 */
 	private void startClientUpdateTimer()
 	{
@@ -292,7 +359,7 @@ class SimulationService implements ISimulation
 			_simulationListener.updateReady(sb.toString());			
 		}
 	}
-
+	
 	/**
 	 * @param simConfig
 	 * @throws InvalidSyntaxException
@@ -348,16 +415,5 @@ class SimulationService implements ISimulation
 			throw new GeppettoInitializationException("No service found for id:"+discoveryId);
 		}
 		return service;
-	}
-
-	/**
-	 * Takes a URL corresponding to simulation file and extracts information.
-	 * @throws GeppettoInitializationException 
-	 */
-	@Override
-	public String getSimulationConfig(URL simURL) throws GeppettoInitializationException {
-		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
-		
-		return simulationConfig;
 	}
 }

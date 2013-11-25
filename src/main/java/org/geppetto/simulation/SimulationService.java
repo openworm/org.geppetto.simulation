@@ -86,6 +86,8 @@ class SimulationService implements ISimulation
 	private ISimulationCallbackListener _simulationListener;
 	
 	private List<WatchList> _watchLists = new ArrayList<WatchList>();
+	
+	private boolean _watch = false;
 
 	/*
 	 * (non-Javadoc)
@@ -123,6 +125,9 @@ class SimulationService implements ISimulation
 	}
 	
 	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException{		
+		// clear watch lists
+		this.clearWatchLists();
+		
 		// refresh simulation context
 		_sessionContext.reset();
 
@@ -140,7 +145,6 @@ class SimulationService implements ISimulation
 		try {
 			update();
 		} catch (GeppettoExecutionException e) {
-			// TODO Auto-generated catch block
 			throw new GeppettoExecutionException("Error loading simulation model");
 		}		
 	}
@@ -261,28 +265,106 @@ class SimulationService implements ISimulation
 	}
 	
 	@Override
-	public void addWatchLists(List<WatchList> list) {
-		// TODO: iterate through aspects and set variables to be watched for each
+	public void addWatchLists(List<WatchList> lists) throws GeppettoExecutionException {
+		// add to local container
+		_watchLists.addAll(lists);
 		
-		_watchLists.addAll(list);
+		// iterate through aspects and set variables to be watched for each
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				List<String> variableNames = new ArrayList<String>();
+				 
+				for (WatchList list : lists)
+				{
+					for(String varPath : list.getVariablePaths())
+					{
+						// parse to extract aspect id from variable path
+						// NOTE: this kinda sucks
+						String aspectIDFromPath = null;
+						String nakedVarName = null;
+						
+						if (varPath.contains(".")) {
+						    // Split it.
+							String[] split = varPath.split("\\.", 2);
+							
+							if(split.length != 2)
+							{
+								throw new GeppettoExecutionException("Error parsing variable path: unexpected format.");
+							}
+							
+							aspectIDFromPath = split[0];
+							nakedVarName = split[1];
+						} else {
+							throw new GeppettoExecutionException("Error parsing variable path: unexpected format.");
+						}
+						
+						// add only variables for the given aspect
+						if (aspectID.equals(aspectIDFromPath))
+						{
+							// TODO: check that those variables actually exists before adding them for watch
+							variableNames.add(nakedVarName);
+						}
+					}
+				}
+				
+				simulator.addWatchVariables(variableNames);
+			}
+		}
 	}
 
 	@Override
 	public void startWatch() {
-		// TODO: iterate through aspects and start watching	
+		// set local watch flag
+		_watch = true;
+		
+		// iterate through aspects and instruct them to start watching
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				simulator.startWatch();
+			}
+		}
 	}
 	
 	@Override
 	public void stopWatch() {
-		// TODO: iterate through aspects and stop watching
+		// set local watch flag
+		_watch = false;
+		
+		// iterate through aspects and instruct them to stop watching
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				simulator.stopWatch();
+			}
+		}
 	}
 
 	@Override
 	public void clearWatchLists() {
-		// TODO: instruct aspects to clear watch variables
+		// instruct aspects to clear watch variables
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				simulator.clearWatchVariables();
+			}
+		}
 		
 		// clear locally stored watchlists
-		_watchLists = new ArrayList<WatchList>();
+		_watchLists.clear();
 	}
 	
 	@Override

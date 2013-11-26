@@ -441,6 +441,9 @@ class SimulationService implements ISimulation
 					Scene scene;
 					try
 					{
+						// TODO: 1. get state tree for variable-watch
+						// TODO: 2. serialize state tree for variable watch
+						
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
 						ObjectMapper mapper = new ObjectMapper();
 						sb.append(mapper.writer().writeValueAsString(scene));

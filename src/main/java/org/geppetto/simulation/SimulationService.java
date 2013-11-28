@@ -453,15 +453,16 @@ class SimulationService implements ISimulation
 								if(node.getName().equals("variable-watch"))
 								{
 									variableWatchRoot = (CompositeStateNode) node;
+									break;
 								}
 							}
 							
 							if(variableWatchRoot!=null)
 							{
-								CountTimeStepsVisitor countVisitor = new CountTimeStepsVisitor();
-								variableWatchRoot.apply(countTimeStepsVisitor);
+								CountTimeStepsVisitor countWatchVisitor = new CountTimeStepsVisitor();
+								variableWatchRoot.apply(countWatchVisitor);
 								
-								if(countVisitor.getNumberOfTimeSteps() > 2){
+								if(countWatchVisitor.getNumberOfTimeSteps() > 2){
 									// serialize state tree for variable watch and store in a string
 									SerializeTreeVisitor visitor = new SerializeTreeVisitor();
 									variableWatchRoot.apply(visitor);

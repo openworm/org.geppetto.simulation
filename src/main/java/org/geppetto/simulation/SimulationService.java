@@ -454,11 +454,11 @@ class SimulationService implements ISimulation
 					try
 					{	
 						if(_watch){
-							// get state tree for variable-watch
+							// get state tree for variable_watch
 							CompositeStateNode variableWatchRoot = null;
 							for(AStateNode node : stateTree.getChildren())
 							{
-								if(node.getName().equals("variable-watch"))
+								if(node.getName().equals("variable_watch"))
 								{
 									variableWatchRoot = (CompositeStateNode) node;
 									break;

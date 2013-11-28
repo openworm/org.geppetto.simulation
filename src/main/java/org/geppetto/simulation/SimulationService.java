@@ -48,8 +48,11 @@ import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.state.AStateNode;
+import org.geppetto.core.model.state.CompositeStateNode;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
+import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
@@ -65,6 +68,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 @Service
 class SimulationService implements ISimulation
@@ -418,7 +422,8 @@ class SimulationService implements ISimulation
 	 */
 	private void update() throws GeppettoExecutionException
 	{
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sceneBuilder = new StringBuilder();
+		String variableWatchTree = null;
 		boolean updateAvailable = false;
 
 		for(String aspectID : _sessionContext.getAspectIds())
@@ -437,16 +442,34 @@ class SimulationService implements ISimulation
 				{
 					logger.info("Available update found ");
 					updateAvailable = true;
-					// create scene
-					Scene scene;
+
 					try
-					{
-						// TODO: 1. get state tree for variable-watch
-						// TODO: 2. serialize state tree for variable watch
+					{	
+						if(_watch){
+							// get state tree for variable-watch
+							CompositeStateNode variableWatchRoot = null;
+							for(AStateNode node : stateTree.getChildren())
+							{
+								if(node.getName().equals("variable-watch"))
+								{
+									variableWatchRoot = (CompositeStateNode) node;
+								}
+							}
+							
+							if(variableWatchRoot!=null)
+							{
+								// serialize state tree for variable watch and store in a string
+								SerializeTreeVisitor visitor = new SerializeTreeVisitor();
+								variableWatchRoot.apply(visitor);
+								variableWatchTree = visitor.getSerializedTree();
+							}
+						}
 						
+						// create scene
+						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
 						ObjectMapper mapper = new ObjectMapper();
-						sb.append(mapper.writer().writeValueAsString(scene));
+						sceneBuilder.append(mapper.writer().writeValueAsString(scene));
 						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();
 					}
 					catch(ModelInterpreterException e)
@@ -457,6 +480,10 @@ class SimulationService implements ISimulation
 					{
 						throw new GeppettoExecutionException(e);
 					}
+					catch(Exception e)
+					{
+						throw new GeppettoExecutionException(e);
+					}
 				}
 			}
 		}
@@ -464,7 +491,7 @@ class SimulationService implements ISimulation
 		if(updateAvailable)
 		{
 			logger.info("Update sent to listener");
-			_simulationListener.updateReady(sb.toString());			
+			_simulationListener.updateReady(sceneBuilder.toString(), variableWatchTree);			
 		}
 	}
 	

@@ -458,10 +458,15 @@ class SimulationService implements ISimulation
 							
 							if(variableWatchRoot!=null)
 							{
-								// serialize state tree for variable watch and store in a string
-								SerializeTreeVisitor visitor = new SerializeTreeVisitor();
-								variableWatchRoot.apply(visitor);
-								variableWatchTree = visitor.getSerializedTree();
+								CountTimeStepsVisitor countVisitor = new CountTimeStepsVisitor();
+								variableWatchRoot.apply(countTimeStepsVisitor);
+								
+								if(countVisitor.getNumberOfTimeSteps() > 2){
+									// serialize state tree for variable watch and store in a string
+									SerializeTreeVisitor visitor = new SerializeTreeVisitor();
+									variableWatchRoot.apply(visitor);
+									variableWatchTree = visitor.getSerializedTree();
+								}
 							}
 						}
 						

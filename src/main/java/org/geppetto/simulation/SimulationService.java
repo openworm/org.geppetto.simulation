@@ -131,6 +131,10 @@ class SimulationService implements ISimulation
 	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException{		
 		// clear watch lists
 		this.clearWatchLists();
+		if(_watch){
+			// stop the watching - will cause all previous stored watch values to be flushed
+			this.stopWatch();
+		}
 		
 		// refresh simulation context
 		_sessionContext.reset();
@@ -349,6 +353,7 @@ class SimulationService implements ISimulation
 
 			if(simulator != null)
 			{
+				// stop watch and reset state tree for variable watch for each simulator
 				simulator.stopWatch();
 			}
 		}
@@ -356,6 +361,9 @@ class SimulationService implements ISimulation
 
 	@Override
 	public void clearWatchLists() {
+		// stop watching - wills top all simulators and clear watch data for each
+		this.stopWatch();
+		
 		// instruct aspects to clear watch variables
 		for(String aspectID : _sessionContext.getAspectIds())
 		{
@@ -367,7 +375,7 @@ class SimulationService implements ISimulation
 			}
 		}
 		
-		// clear locally stored watchlists
+		// clear locally stored watch lists
 		_watchLists.clear();
 	}
 	

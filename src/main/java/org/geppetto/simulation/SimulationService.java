@@ -33,6 +33,7 @@
 
 package org.geppetto.simulation;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +93,8 @@ class SimulationService implements ISimulation
 
 	private boolean _watching = false;
 
+	private List<URL> scripts;
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -149,7 +152,9 @@ class SimulationService implements ISimulation
 
 		// retrieve model interpreters and simulators
 		populateDiscoverableServices(sim);
-
+		
+		populateScripts(sim);
+		
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
 		loadModel();
@@ -410,6 +415,16 @@ class SimulationService implements ISimulation
 	{
 		return _watchLists;
 	}
+	
+	@Override
+	public void setScripts(List<URL> scripts){
+		this.scripts = scripts;
+	}
+	
+	@Override
+	public List<URL> getScripts(){
+		return this.scripts;
+	}
 
 	/**
 	 * Starts simulation thread - under the hood the run method of the thread gets invoked.
@@ -544,6 +559,28 @@ class SimulationService implements ISimulation
 			// populate context
 			_sessionContext.addAspectId(id, modelInterpreter, simulator, modelURL);
 		}
+	}
+	
+	/**
+	 * @param simConfig
+	 * @throws InvalidSyntaxException
+	 */
+	private void populateScripts(Simulation simConfig) throws GeppettoInitializationException
+	{
+		List<URL> scripts = new ArrayList<URL>();
+		for(String script : simConfig.getScript())
+		{
+			URL scriptURL = null;
+			try {
+				scriptURL = new URL(script);
+			} catch (MalformedURLException e) {
+				throw new GeppettoInitializationException("Malformed script url " + script);
+			}
+			
+			scripts.add(scriptURL);
+		}
+		
+		this.setScripts(scripts);
 	}
 
 	/*

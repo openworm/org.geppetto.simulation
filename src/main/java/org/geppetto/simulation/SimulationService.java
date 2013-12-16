@@ -68,6 +68,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Service
 class SimulationService implements ISimulation
@@ -499,6 +500,12 @@ class SimulationService implements ISimulation
 						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
 						ObjectMapper mapper = new ObjectMapper();
+						
+						//a custom serializer is used to change what precision is used when serializing doubles in the scene
+						SimpleModule customSerializationModule = new SimpleModule("customSerializationModule");
+						customSerializationModule.addSerializer(new CustomSerializer(Double.class)); // assuming serializer declares correct class to bind to
+						mapper.registerModule(customSerializationModule);
+						   
 						sceneBuilder.append(mapper.writer().writeValueAsString(scene));
 						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();
 					}

@@ -42,7 +42,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
  * @author matteocantarelli
- *
+ * 
  */
 public class CustomSerializer extends StdSerializer<Double>
 {
@@ -52,16 +52,24 @@ public class CustomSerializer extends StdSerializer<Double>
 	}
 
 	@Override
-	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException {
+	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
+	{
 
-	    if (null == value) {
-	        //write the word 'null' if there's no value available
-	        jgen.writeNull();
-	    } else {
-	        final String pattern = "#.##";
-	        final DecimalFormat myFormatter = new DecimalFormat(pattern);
-	        final String output = myFormatter.format(value);
-	        jgen.writeNumber(output);
-	    }    
+		if(null == value)
+		{
+			// write the word 'null' if there's no value available
+			jgen.writeNull();
+		}
+		else if(value.equals(Double.NaN))
+		{
+			jgen.writeNumber(Double.NaN);
+		}
+		else
+		{
+			final String pattern = "#.##";
+			final DecimalFormat myFormatter = new DecimalFormat(pattern);
+			final String output = myFormatter.format(value);
+			jgen.writeNumber(output);
+		}
 	}
 }

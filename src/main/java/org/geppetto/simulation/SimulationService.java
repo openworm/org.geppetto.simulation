@@ -94,7 +94,7 @@ class SimulationService implements ISimulation
 
 	private boolean _watching = false;
 
-	private List<URL> scripts;
+	private List<URL> _scripts = new ArrayList<URL>();
 
 	/*
 	 * (non-Javadoc)
@@ -418,13 +418,8 @@ class SimulationService implements ISimulation
 	}
 	
 	@Override
-	public void setScripts(List<URL> scripts){
-		this.scripts = scripts;
-	}
-	
-	@Override
 	public List<URL> getScripts(){
-		return this.scripts;
+		return _scripts;
 	}
 
 	/**
@@ -574,7 +569,9 @@ class SimulationService implements ISimulation
 	 */
 	private void populateScripts(Simulation simConfig) throws GeppettoInitializationException
 	{
-		List<URL> scripts = new ArrayList<URL>();
+		//clear local scripts variable
+		_scripts.clear();
+		
 		for(String script : simConfig.getScript())
 		{
 			URL scriptURL = null;
@@ -584,10 +581,8 @@ class SimulationService implements ISimulation
 				throw new GeppettoInitializationException("Malformed script url " + script);
 			}
 			
-			scripts.add(scriptURL);
-		}
-		
-		this.setScripts(scripts);
+			_scripts.add(scriptURL);
+		}		
 	}
 
 	/*

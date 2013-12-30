@@ -70,6 +70,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Service
 @Scope("prototype")
@@ -95,7 +96,7 @@ class SimulationService implements ISimulation
 
 	private boolean _watching = false;
 
-	private List<URL> scripts;
+	private List<URL> _scripts = new ArrayList<URL>();
 
 	/*
 	 * (non-Javadoc)
@@ -420,13 +421,8 @@ class SimulationService implements ISimulation
 	}
 	
 	@Override
-	public void setScripts(List<URL> scripts){
-		this.scripts = scripts;
-	}
-	
-	@Override
 	public List<URL> getScripts(){
-		return this.scripts;
+		return _scripts;
 	}
 
 	/**
@@ -517,6 +513,12 @@ class SimulationService implements ISimulation
 						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
 						ObjectMapper mapper = new ObjectMapper();
+						
+						//a custom serializer is used to change what precision is used when serializing doubles in the scene
+						SimpleModule customSerializationModule = new SimpleModule("customSerializationModule");
+						customSerializationModule.addSerializer(new CustomSerializer(Double.class)); // assuming serializer declares correct class to bind to
+						mapper.registerModule(customSerializationModule);
+						   
 						sceneBuilder.append(mapper.writer().writeValueAsString(scene));
 						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();
 					}
@@ -570,7 +572,9 @@ class SimulationService implements ISimulation
 	 */
 	private void populateScripts(Simulation simConfig) throws GeppettoInitializationException
 	{
-		List<URL> scripts = new ArrayList<URL>();
+		//clear local scripts variable
+		_scripts.clear();
+		
 		for(String script : simConfig.getScript())
 		{
 			URL scriptURL = null;
@@ -580,10 +584,8 @@ class SimulationService implements ISimulation
 				throw new GeppettoInitializationException("Malformed script url " + script);
 			}
 			
-			scripts.add(scriptURL);
-		}
-		
-		this.setScripts(scripts);
+			_scripts.add(scriptURL);
+		}		
 	}
 
 	/*

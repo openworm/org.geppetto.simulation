@@ -88,10 +88,12 @@ class SimulationThread extends Thread
 				catch(MalformedURLException e)
 				{
 					logger.error("Malformed URL for model");
+					throw new GeppettoInitializationException("Unable to load model for " + e);
 				}
 				catch(ModelInterpreterException e)
 				{
 					logger.error("Error Reading Model");
+					throw new GeppettoInitializationException("Unable to load model for " + e);
 				}
 
 				// set initial conditions

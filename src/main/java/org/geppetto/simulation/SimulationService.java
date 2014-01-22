@@ -65,6 +65,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -72,6 +73,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Service
+@Scope("prototype")
 class SimulationService implements ISimulation
 {
 
@@ -94,7 +96,7 @@ class SimulationService implements ISimulation
 
 	private boolean _watching = false;
 
-	private List<URL> scripts;
+	private List<URL> _scripts = new ArrayList<URL>();
 
 	/*
 	 * (non-Javadoc)
@@ -103,7 +105,8 @@ class SimulationService implements ISimulation
 	 */
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
-	{
+	{		
+		logger.warn("Initializing simulation");
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		_simulationListener = simulationListener;
 
@@ -418,13 +421,8 @@ class SimulationService implements ISimulation
 	}
 	
 	@Override
-	public void setScripts(List<URL> scripts){
-		this.scripts = scripts;
-	}
-	
-	@Override
 	public List<URL> getScripts(){
-		return this.scripts;
+		return _scripts;
 	}
 
 	/**
@@ -574,7 +572,9 @@ class SimulationService implements ISimulation
 	 */
 	private void populateScripts(Simulation simConfig) throws GeppettoInitializationException
 	{
-		List<URL> scripts = new ArrayList<URL>();
+		//clear local scripts variable
+		_scripts.clear();
+		
 		for(String script : simConfig.getScript())
 		{
 			URL scriptURL = null;
@@ -584,10 +584,8 @@ class SimulationService implements ISimulation
 				throw new GeppettoInitializationException("Malformed script url " + script);
 			}
 			
-			scripts.add(scriptURL);
-		}
-		
-		this.setScripts(scripts);
+			_scripts.add(scriptURL);
+		}		
 	}
 
 	/*
@@ -623,5 +621,40 @@ class SimulationService implements ISimulation
 			throw new GeppettoInitializationException("No service found for id:" + discoveryId);
 		}
 		return service;
+	}
+
+	@Override
+	public int getSimulatorCapacity() {
+		
+		int simulatorCapacity = 1;
+		
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				simulatorCapacity = simulator.getCapacity();
+			}
+		}
+		
+		return simulatorCapacity;
+	}
+
+	@Override
+	public String getSimulatorName() {
+		String simulatorName = null;
+		
+		for(String aspectID : _sessionContext.getAspectIds())
+		{
+			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			if(simulator != null)
+			{
+				simulatorName = simulator.getName();
+			}
+		}
+		
+		return simulatorName;
 	}
 }

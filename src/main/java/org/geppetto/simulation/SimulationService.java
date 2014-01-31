@@ -66,6 +66,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -73,8 +74,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Service
-@Scope("prototype")
-class SimulationService implements ISimulation
+public class SimulationService implements ISimulation
 {
 
 	@Autowired
@@ -98,6 +98,9 @@ class SimulationService implements ISimulation
 
 	private List<URL> _scripts = new ArrayList<URL>();
 
+	public SimulationService(){
+		
+	}
 	/*
 	 * (non-Javadoc)
 	 * 

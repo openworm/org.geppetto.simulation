@@ -99,7 +99,7 @@ public class SimulationService implements ISimulation
 	private List<URL> _scripts = new ArrayList<URL>();
 
 	public SimulationService(){
-		
+		logger.warn("New Simulation Service created");
 	}
 	/*
 	 * (non-Javadoc)

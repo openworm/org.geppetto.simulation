@@ -45,21 +45,12 @@ import javax.xml.bind.Unmarshaller;
 
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.simulation.model.Simulation;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SimulationConfigReader {
 
 	public static Simulation readConfig(URL url) throws GeppettoInitializationException {
 		
-		
+	
 		Simulation sim = null;
 		try {
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();

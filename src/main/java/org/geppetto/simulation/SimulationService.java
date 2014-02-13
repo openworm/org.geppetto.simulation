@@ -59,14 +59,13 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.model.Aspect;
+import org.geppetto.simulation.model.Entity;
 import org.geppetto.simulation.model.Simulation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -98,9 +97,11 @@ public class SimulationService implements ISimulation
 
 	private List<URL> _scripts = new ArrayList<URL>();
 
-	public SimulationService(){
+	public SimulationService()
+	{
 		logger.warn("New Simulation Service created");
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -108,7 +109,7 @@ public class SimulationService implements ISimulation
 	 */
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
-	{		
+	{
 		logger.warn("Initializing simulation");
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		_simulationListener = simulationListener;
@@ -159,9 +160,9 @@ public class SimulationService implements ISimulation
 
 		// retrieve model interpreters and simulators
 		populateDiscoverableServices(sim);
-		
+
 		populateScripts(sim);
-		
+
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
 		loadModel();
@@ -422,9 +423,10 @@ public class SimulationService implements ISimulation
 	{
 		return _watchLists;
 	}
-	
+
 	@Override
-	public List<URL> getScripts(){
+	public List<URL> getScripts()
+	{
 		return _scripts;
 	}
 
@@ -516,12 +518,12 @@ public class SimulationService implements ISimulation
 						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
 						ObjectMapper mapper = new ObjectMapper();
-						
-						//a custom serializer is used to change what precision is used when serializing doubles in the scene
+
+						// a custom serializer is used to change what precision is used when serializing doubles in the scene
 						SimpleModule customSerializationModule = new SimpleModule("customSerializationModule");
 						customSerializationModule.addSerializer(new CustomSerializer(Double.class)); // assuming serializer declares correct class to bind to
 						mapper.registerModule(customSerializationModule);
-						   
+
 						sceneBuilder.append(mapper.writer().writeValueAsString(scene));
 						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();
 					}
@@ -554,41 +556,53 @@ public class SimulationService implements ISimulation
 	 */
 	private void populateDiscoverableServices(Simulation simConfig) throws GeppettoInitializationException
 	{
-		for(Aspect aspect : simConfig.getAspects())
+		for(Entity entity : simConfig.getEntities())
 		{
-			String id = aspect.getId();
-			String modelInterpreterId = aspect.getModelInterpreter();
-			String simulatorId = aspect.getSimulator();
-			String modelURL = aspect.getModelURL();
+			for(Aspect aspect : entity.getAspects())
+			{
+				String id = aspect.getId();
+				String modelInterpreterId = aspect.getModel().getModelInterpreterId();
+				String modelURL = aspect.getModel().getModelURL();
 
-			IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());
-			ISimulator simulator = this.<ISimulator> getService(simulatorId, ISimulator.class.getName());
+				IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());
 
-			// populate context
-			_sessionContext.addAspectId(id, modelInterpreter, simulator, modelURL);
+				// A simulator for a given aspect is optional
+				ISimulator simulator = null;
+				if(aspect.getSimulator() != null)
+				{
+					String simulatorId = aspect.getSimulator().getSimulatorId();
+					simulator = this.<ISimulator> getService(simulatorId, ISimulator.class.getName());
+				}
+
+				// populate context
+				_sessionContext.addAspectId(id, modelInterpreter, simulator, modelURL);
+			}
 		}
 	}
-	
+
 	/**
 	 * @param simConfig
 	 * @throws InvalidSyntaxException
 	 */
 	private void populateScripts(Simulation simConfig) throws GeppettoInitializationException
 	{
-		//clear local scripts variable
+		// clear local scripts variable
 		_scripts.clear();
-		
+
 		for(String script : simConfig.getScript())
 		{
 			URL scriptURL = null;
-			try {
+			try
+			{
 				scriptURL = new URL(script);
-			} catch (MalformedURLException e) {
+			}
+			catch(MalformedURLException e)
+			{
 				throw new GeppettoInitializationException("Malformed script url " + script);
 			}
-			
+
 			_scripts.add(scriptURL);
-		}		
+		}
 	}
 
 	/*
@@ -627,10 +641,11 @@ public class SimulationService implements ISimulation
 	}
 
 	@Override
-	public int getSimulatorCapacity() {
-		
+	public int getSimulatorCapacity()
+	{
+
 		int simulatorCapacity = 1;
-		
+
 		for(String aspectID : _sessionContext.getAspectIds())
 		{
 			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
@@ -640,14 +655,15 @@ public class SimulationService implements ISimulation
 				simulatorCapacity = simulator.getCapacity();
 			}
 		}
-		
+
 		return simulatorCapacity;
 	}
 
 	@Override
-	public String getSimulatorName() {
+	public String getSimulatorName()
+	{
 		String simulatorName = null;
-		
+
 		for(String aspectID : _sessionContext.getAspectIds())
 		{
 			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
@@ -657,7 +673,7 @@ public class SimulationService implements ISimulation
 				simulatorName = simulator.getName();
 			}
 		}
-		
+
 		return simulatorName;
 	}
 }

@@ -38,7 +38,6 @@ import java.net.MalformedURLException;
 
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.simulation.SimulationConfigReader;
-import org.geppetto.simulation.model.OutputFormat;
 import org.geppetto.simulation.model.Simulation;
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,13 +49,13 @@ public class TestSimulationConfigReader {
 		Simulation sim = SimulationConfigReader.readConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());
 		
 		Assert.assertTrue(sim != null);
-		Assert.assertTrue(sim.getName().equals("sph"));
-		Assert.assertTrue(sim.getConfiguration().getOutputFormat() == OutputFormat.RAW);
-		Assert.assertTrue(sim.getAspects().size() == 1);
-		Assert.assertTrue(sim.getAspects().get(0).getModelInterpreter().equals("sphModelInterpreter"));
-		Assert.assertTrue(sim.getAspects().get(0).getModelURL().equals("someurl"));
-		Assert.assertTrue(sim.getAspects().get(0).getSimulator().equals("sphSimulator"));
-		Assert.assertTrue(sim.getAspects().get(0).getId().equals("sph"));
+		Assert.assertTrue(sim.getEntities().size() == 1);
+		Assert.assertTrue(sim.getEntities().get(0).getId().equals("Entity1"));
+		Assert.assertTrue(sim.getEntities().get(0).getAspects().size() == 1);
+		Assert.assertTrue(sim.getEntities().get(0).getAspects().get(0).getModel().getModelInterpreterId().equals("sphModelInterpreter"));
+		Assert.assertTrue(sim.getEntities().get(0).getAspects().get(0).getModel().getModelURL().equals("someurl"));
+		Assert.assertTrue(sim.getEntities().get(0).getAspects().get(0).getSimulator().getSimulatorId().equals("sphSimulator"));
+		Assert.assertTrue(sim.getEntities().get(0).getAspects().get(0).getId().equals("sph"));
 		
 		String xml = SimulationConfigReader.writeSimulationConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());
 				
@@ -65,12 +64,12 @@ public class TestSimulationConfigReader {
 		Simulation s = SimulationConfigReader.readSimulationConfig(xml);
 		
 		Assert.assertTrue(s != null);
-		Assert.assertTrue(s.getName().equals("sph"));
-		Assert.assertTrue(s.getConfiguration().getOutputFormat() == OutputFormat.RAW);
-		Assert.assertTrue(s.getAspects().size() == 1);
-		Assert.assertTrue(s.getAspects().get(0).getModelInterpreter().equals("sphModelInterpreter"));
-		Assert.assertTrue(s.getAspects().get(0).getModelURL().equals("someurl"));
-		Assert.assertTrue(s.getAspects().get(0).getSimulator().equals("sphSimulator"));
-		Assert.assertTrue(s.getAspects().get(0).getId().equals("sph"));
+		Assert.assertTrue(sim.getEntities().size() == 1);
+		Assert.assertTrue(sim.getEntities().get(0).getId().equals("Entity1"));
+		Assert.assertTrue(s.getEntities().get(0).getAspects().size() == 1);
+		Assert.assertTrue(s.getEntities().get(0).getAspects().get(0).getModel().getModelInterpreterId().equals("sphModelInterpreter"));
+		Assert.assertTrue(s.getEntities().get(0).getAspects().get(0).getModel().getModelURL().equals("someurl"));
+		Assert.assertTrue(s.getEntities().get(0).getAspects().get(0).getSimulator().getSimulatorId().equals("sphSimulator"));
+		Assert.assertTrue(s.getEntities().get(0).getAspects().get(0).getId().equals("sph"));
 	}
 }

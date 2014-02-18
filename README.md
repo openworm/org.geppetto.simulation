@@ -1,7 +1,8 @@
-#Generic simulation bundle for the OpenWorm simulation engine / http://openworm.org
+[![Build Status](https://travis-ci.org/openworm/org.geppetto.simulation.png?branch=master)](https://travis-ci.org/openworm/org.geppetto.simulation)
 
-This is a generic simulation loader that will retrieve a given simulation from config, discover required OSGi services dynamically based on config parameters and will initiate/control the simulation in a generic way.
+#Geppetto simulation bundle http://openworm.org
 
-This is a sample config file for reference: https://www.dropbox.com/s/iyr085zcegyis0n/sph-sim-config.xml?dl=1
+This is a generic simulation module that will retrieve a given simulation from a configuration file, discover required OSGi services dynamically based on config parameters and will initialize the simulators and model interpreters required to perform the loaded simulation.
 
-The config file is to be intended as a "project file" for a given simulation.
+(This)[https://github.com/openworm/org.geppetto.samples/blob/master/LEMS/SingleComponentHH/GEPPETTO.xml] is a sample simulation file for reference.
+

@@ -10,3 +10,4 @@ This is a generic simulation module that will retrieve a given simulation from a
 
 [This](https://github.com/openworm/org.geppetto.samples/blob/master/LEMS/SingleComponentHH/GEPPETTO.xml) is a sample simulation file for reference.
 
+For information about how this fits into [Geppetto](http://www.geppetto.org/) refer to the umbrella project [org.geppetto](https://github.com/openworm/org.geppetto) on GitHub.

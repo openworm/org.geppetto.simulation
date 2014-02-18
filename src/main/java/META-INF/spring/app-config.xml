@@ -13,6 +13,7 @@
 		<!-- how many neurons will be simulated in parallel -->
 		<property name="maxBufferSize" value="500" />
 		<property name="updateCycle" value="20" />
+		<property name="simulationCapacity" value="10" />
 	</bean>
 
 </beans>

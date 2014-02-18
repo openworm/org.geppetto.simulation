@@ -65,7 +65,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -73,8 +72,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Service
-@Scope("prototype")
-class SimulationService implements ISimulation
+public class SimulationService implements ISimulation
 {
 
 	@Autowired
@@ -98,6 +96,9 @@ class SimulationService implements ISimulation
 
 	private List<URL> _scripts = new ArrayList<URL>();
 
+	public SimulationService(){
+		logger.warn("New Simulation Service created");
+	}
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -624,37 +625,16 @@ class SimulationService implements ISimulation
 	}
 
 	@Override
-	public int getSimulatorCapacity() {
-		
-		int simulatorCapacity = 1;
-		
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
-			if(simulator != null)
-			{
-				simulatorCapacity = simulator.getCapacity();
-			}
-		}
-		
-		return simulatorCapacity;
-	}
-
-	@Override
 	public String getSimulatorName() {
-		String simulatorName = null;
-		
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
-			if(simulator != null)
-			{
-				simulatorName = simulator.getName();
-			}
-		}
+		String simulatorName = "Simulation";
 		
 		return simulatorName;
+	}
+	@Override
+	public int getSimulationCapacity() {
+		
+		int capacity = this.appConfig.getSimulationCapacity();
+		
+		return capacity;
 	}
 }

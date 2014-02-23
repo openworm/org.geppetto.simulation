@@ -56,7 +56,7 @@ public class SimulationConfigReader {
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
 			sim = (Simulation) unmarshaller.unmarshal(url);
 		} catch (JAXBException e1) {
-			throw new GeppettoInitializationException("Unable to unmarshall simulation with ur : " + url.toString());
+			throw new GeppettoInitializationException("Unable to unmarshall simulation with url : " + url.toString(),e1);
 		}
 
 		return sim;

@@ -11,8 +11,6 @@
 				minOccurs="1"></element>
 			<element name="modelURL" type="string" maxOccurs="1"
 				minOccurs="1"></element>
-			<element name="simulatorID" type="string" maxOccurs="1"
-				minOccurs="0"></element>
 		</sequence>
 	</complexType>
 
@@ -49,7 +47,7 @@
 			<enumeration value="VARIABLE" />
 		</restriction>
 	</simpleType>
-
+	
 	<complexType name="Aspect">
 		<sequence>
 			<element name="id" type="string" maxOccurs="1" minOccurs="1"></element>
@@ -72,7 +70,7 @@
 				</annotation>
 			</element>
 			<element name="entity" type="tns:Entity" maxOccurs="unbounded"
-				minOccurs="1">
+				minOccurs="0">
 				<annotation>
 					<appinfo>
 						<jxb:property name="entities" />

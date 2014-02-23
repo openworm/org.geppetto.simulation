@@ -41,6 +41,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.simulation.model.Simulation;
 
 public class SessionContext
 {
@@ -49,6 +50,8 @@ public class SessionContext
 	private ConcurrentHashMap<String,AspectConfiguration> _configurationByAspect= new ConcurrentHashMap<String,AspectConfiguration>();
 	
 	private List<String> _aspectIDs = new ArrayList<String>();
+	
+	private Simulation _simulation;
 	
 	private static Log logger = LogFactory.getLog(SessionContext.class);
 
@@ -90,6 +93,7 @@ public class SessionContext
 		_runningCycleSemaphore = false;
 		_isRunning = false;
 		_isStopped = false;
+		_simulation=null;
 	}
 
 	public boolean isRunning()
@@ -163,6 +167,22 @@ public class SessionContext
 		aspectConfiguration.setUrl(modelURL);
 		_runtimeByAspect.put(id, simulatorRuntime);
 		_configurationByAspect.put(id, aspectConfiguration);
+	}
+
+	/**
+	 * @return
+	 */
+	public Simulation getSimulation()
+	{
+		return _simulation;
+	}
+
+	/**
+	 * @param sim
+	 */
+	public void setSimulation(Simulation simulation)
+	{
+		_simulation=simulation;
 	}
 	
 	

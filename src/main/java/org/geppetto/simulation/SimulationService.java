@@ -61,6 +61,7 @@ import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.model.Aspect;
 import org.geppetto.simulation.model.Entity;
 import org.geppetto.simulation.model.Simulation;
+import org.geppetto.simulation.visitor.SimulationVisitor;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
@@ -158,6 +159,7 @@ public class SimulationService implements ISimulation
 		// refresh simulation context
 		_sessionContext.reset();
 
+		_sessionContext.setSimulation(sim);
 		// retrieve model interpreters and simulators
 		populateDiscoverableServices(sim);
 
@@ -246,10 +248,9 @@ public class SimulationService implements ISimulation
 		return _sessionContext.isRunning();
 	}
 
-	/**
-	 * Takes a URL corresponding to simulation file and extracts information.
-	 * 
-	 * @throws GeppettoInitializationException
+
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.simulation.ISimulation#getSimulationConfig(java.net.URL)
 	 */
 	@Override
 	public String getSimulationConfig(URL simURL) throws GeppettoInitializationException
@@ -480,6 +481,12 @@ public class SimulationService implements ISimulation
 		String variableWatchTree = null;
 		boolean updateAvailable = false;
 
+		
+		//STEP 1 - Visit the entities tree and start simulating them depth first
+		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext);
+		_sessionContext.getSimulation().accept(simulationVisitor);
+		
+		
 		for(String aspectID : _sessionContext.getAspectIds())
 		{
 			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps

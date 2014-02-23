@@ -641,39 +641,16 @@ public class SimulationService implements ISimulation
 	}
 
 	@Override
-	public int getSimulatorCapacity()
-	{
-
-		int simulatorCapacity = 1;
-
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
-			if(simulator != null)
-			{
-				simulatorCapacity = simulator.getCapacity();
-			}
-		}
-
-		return simulatorCapacity;
-	}
-
-	@Override
-	public String getSimulatorName()
-	{
-		String simulatorName = null;
-
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
-			if(simulator != null)
-			{
-				simulatorName = simulator.getName();
-			}
-		}
-
+	public String getSimulatorName() {
+		String simulatorName = "Simulation";
+		
 		return simulatorName;
+	}
+	@Override
+	public int getSimulationCapacity() {
+		
+		int capacity = this.appConfig.getSimulationCapacity();
+		
+		return capacity;
 	}
 }

@@ -37,7 +37,16 @@ public class AppConfig {
 	
 	private int _maxBufferSize;
 	private int _updateCycle;
+	private int _simulationCapacity;
 	
+	public int getSimulationCapacity() {
+		return _simulationCapacity;
+	}
+
+	public void setSimulationCapacity(int simulationCapacity) {
+		this._simulationCapacity = simulationCapacity;
+	}
+
 	public int getMaxBufferSize() {
 		return _maxBufferSize;
 	}

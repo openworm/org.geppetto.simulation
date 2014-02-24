@@ -47,7 +47,6 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
-import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.state.CompositeStateNode;
 import org.geppetto.core.model.state.StateTreeRoot;
@@ -58,14 +57,11 @@ import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Scene;
-import org.geppetto.simulation.model.Aspect;
-import org.geppetto.simulation.model.Entity;
 import org.geppetto.simulation.model.Simulation;
+import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
+import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.SimulationVisitor;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -79,8 +75,6 @@ public class SimulationService implements ISimulation
 
 	@Autowired
 	public AppConfig appConfig;
-
-	BundleContext _bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
 
 	private static Log logger = LogFactory.getLog(SimulationService.class);
 
@@ -148,6 +142,10 @@ public class SimulationService implements ISimulation
 
 	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException
 	{
+		// decorate Simulation model
+		InstancePathDecoratorVisitor decoratorVisitor = new InstancePathDecoratorVisitor();
+		sim.accept(decoratorVisitor);
+
 		// clear watch lists
 		this.clearWatchLists();
 		if(_watching)
@@ -160,18 +158,15 @@ public class SimulationService implements ISimulation
 		_sessionContext.reset();
 
 		_sessionContext.setSimulation(sim);
+
 		// retrieve model interpreters and simulators
-		populateDiscoverableServices(sim);
+		CreateSimulationServicesVisitor createServicesVisitor = new CreateSimulationServicesVisitor(_sessionContext);
+		sim.accept(createServicesVisitor);
 
 		populateScripts(sim);
 
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
-		loadModel();
-	}
-
-	private void loadModel() throws GeppettoInitializationException, GeppettoExecutionException
-	{
 		_simThread = new SimulationThread(_sessionContext);
 		_simThread.loadModel();
 		try
@@ -248,8 +243,9 @@ public class SimulationService implements ISimulation
 		return _sessionContext.isRunning();
 	}
 
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getSimulationConfig(java.net.URL)
 	 */
 	@Override
@@ -481,12 +477,10 @@ public class SimulationService implements ISimulation
 		String variableWatchTree = null;
 		boolean updateAvailable = false;
 
-		
-		//STEP 1 - Visit the entities tree and start simulating them depth first
-		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext);
+		// STEP 1 - Visit the entities tree and start simulating them depth first
+		SimulationVisitor simulationVisitor = new SimulationVisitor(_sessionContext);
 		_sessionContext.getSimulation().accept(simulationVisitor);
-		
-		
+
 		for(String aspectID : _sessionContext.getAspectIds())
 		{
 			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
@@ -561,36 +555,6 @@ public class SimulationService implements ISimulation
 	 * @param simConfig
 	 * @throws InvalidSyntaxException
 	 */
-	private void populateDiscoverableServices(Simulation simConfig) throws GeppettoInitializationException
-	{
-		for(Entity entity : simConfig.getEntities())
-		{
-			for(Aspect aspect : entity.getAspects())
-			{
-				String id = aspect.getId();
-				String modelInterpreterId = aspect.getModel().getModelInterpreterId();
-				String modelURL = aspect.getModel().getModelURL();
-
-				IModelInterpreter modelInterpreter = this.<IModelInterpreter> getService(modelInterpreterId, IModelInterpreter.class.getName());
-
-				// A simulator for a given aspect is optional
-				ISimulator simulator = null;
-				if(aspect.getSimulator() != null)
-				{
-					String simulatorId = aspect.getSimulator().getSimulatorId();
-					simulator = this.<ISimulator> getService(simulatorId, ISimulator.class.getName());
-				}
-
-				// populate context
-				_sessionContext.addAspectId(id, modelInterpreter, simulator, modelURL);
-			}
-		}
-	}
-
-	/**
-	 * @param simConfig
-	 * @throws InvalidSyntaxException
-	 */
 	private void populateScripts(Simulation simConfig) throws GeppettoInitializationException
 	{
 		// clear local scripts variable
@@ -605,59 +569,32 @@ public class SimulationService implements ISimulation
 			}
 			catch(MalformedURLException e)
 			{
-				throw new GeppettoInitializationException("Malformed script url " + script);
+				throw new GeppettoInitializationException("Malformed script url " + script,e);
 			}
-
 			_scripts.add(scriptURL);
 		}
 	}
 
-	/*
-	 * A generic routine to encapsulate boiler-plate code for dynamic service discovery
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.simulation.ISimulation#getSimulatorName()
 	 */
-	/**
-	 * @param discoveryId
-	 * @param type
-	 * @return
-	 * @throws InvalidSyntaxException
-	 */
-	private <T> T getService(String discoveryId, String type) throws GeppettoInitializationException
-	{
-		T service = null;
-
-		String filter = String.format("(discoverableID=%s)", discoveryId);
-		ServiceReference<?>[] sr;
-		try
-		{
-			sr = _bc.getServiceReferences(type, filter);
-		}
-		catch(InvalidSyntaxException e)
-		{
-			throw new GeppettoInitializationException(e);
-		}
-		if(sr != null && sr.length > 0)
-		{
-			service = (T) _bc.getService(sr[0]);
-		}
-
-		if(service == null)
-		{
-			throw new GeppettoInitializationException("No service found for id:" + discoveryId);
-		}
-		return service;
-	}
-
 	@Override
-	public String getSimulatorName() {
+	public String getSimulatorName()
+	{
 		String simulatorName = "Simulation";
-		
+
 		return simulatorName;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.simulation.ISimulation#getSimulationCapacity()
+	 */
 	@Override
-	public int getSimulationCapacity() {
-		
+	public int getSimulationCapacity()
+	{
+
 		int capacity = this.appConfig.getSimulationCapacity();
-		
+
 		return capacity;
 	}
 }

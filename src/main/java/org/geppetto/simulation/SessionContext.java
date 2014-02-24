@@ -35,19 +35,28 @@ package org.geppetto.simulation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.simulation.model.Model;
 import org.geppetto.simulation.model.Simulation;
+import org.geppetto.simulation.model.Simulator;
 
 public class SessionContext
 {
 
+	private ConcurrentHashMap<Model,IModelInterpreter> _modelInterpreters=new ConcurrentHashMap<Model,IModelInterpreter>();
+	private ConcurrentHashMap<Simulator,ISimulator> _simulators=new ConcurrentHashMap<Simulator,ISimulator>();
+	
 	private ConcurrentHashMap<String,SimulatorRuntime> _runtimeByAspect= new ConcurrentHashMap<String,SimulatorRuntime>();
 	private ConcurrentHashMap<String,AspectConfiguration> _configurationByAspect= new ConcurrentHashMap<String,AspectConfiguration>();
+	
+
 	
 	private List<String> _aspectIDs = new ArrayList<String>();
 	
@@ -184,6 +193,50 @@ public class SessionContext
 	{
 		_simulation=simulation;
 	}
+
+	/**
+	 * @param model
+	 * @return
+	 * @throws GeppettoInitializationException
+	 */
+	public IModelInterpreter getModelInterpreter(Model model) throws GeppettoInitializationException
+	{
+		if(!_modelInterpreters.contains(model))
+		{
+			throw new GeppettoInitializationException("The model interpreter for "+model.getInstancePath()+ " was not found");
+		}
+		return _modelInterpreters.get(model);
+	}
 	
+	/**
+	 * @param simulator
+	 * @return
+	 * @throws GeppettoInitializationException
+	 */
+	public ISimulator getSimulator(Simulator simulatorModel) throws GeppettoInitializationException
+	{
+		if(!_simulators.contains(simulatorModel))
+		{
+			throw new GeppettoInitializationException("The simulator for "+simulatorModel.getInstancePath()+ " was not found");
+		}
+		return _simulators.get(simulatorModel);
+	}
+
+
+	/**
+	 * @return
+	 */
+	public Map<Model,IModelInterpreter> getModelInterpreters()
+	{
+		return _modelInterpreters;
+	}
+	
+	/**
+	 * @return
+	 */
+	public Map<Simulator,ISimulator> getSimulators()
+	{
+		return _simulators;
+	}
 	
 }

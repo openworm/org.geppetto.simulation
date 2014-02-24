@@ -32,85 +32,63 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.visualisation.model.Scene;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.simulation.ServiceCreator;
 import org.geppetto.simulation.SessionContext;
-import org.geppetto.simulation.model.Aspect;
-import org.geppetto.simulation.model.Entity;
 import org.geppetto.simulation.model.Model;
-import org.geppetto.simulation.model.Simulation;
 import org.geppetto.simulation.model.Simulator;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;
 
 /**
- * This is the simulation visitor which traverse the simulation tree and orchestrates
- * the simulation of the different models.
- * 
+ * This visitor discovers and instantiates the services for each model interpreter and simulator.
+ * A thread is used to instantiate the services so that a new instance of the services is created
+ * at each time (the services use a ThreadScope).
  * 
  * @author matteocantarelli
- *
+ * 
  */
-public class SimulationVisitor extends TraversingVisitor
+public class CreateSimulationServicesVisitor extends TraversingVisitor
 {
-	
-	private SessionContext _sessionContext;
-	private Scene _scene;
 
-	public SimulationVisitor(SessionContext sessionContext)
+	private SessionContext _sessionContext;
+
+	public CreateSimulationServicesVisitor(SessionContext sessionContext)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_sessionContext=sessionContext;
-		_scene=new Scene();
+		_sessionContext = sessionContext;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Aspect)
-	 */
-	@Override
-	public void visit(Aspect aspect)
-	{
-		super.visit(aspect);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Entity)
-	 */
-	@Override
-	public void visit(Entity entity)
-	{
-		//This happens before visiting the child entities
-		super.visit(entity);
-		//This happens after visiting the child entities
-	}
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Model)
 	 */
 	@Override
 	public void visit(Model model)
 	{
 		super.visit(model);
-		//IModelInterpreter modelInterpreter=_sessionContext.getModelInterpreter(model);
+		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
+				_sessionContext.getModelInterpreters());
+		Thread t = new Thread(sc);
+		t.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulation)
-	 */
-	@Override
-	public void visit(Simulation simulation)
-	{
-		super.visit(simulation);
-	}
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
 	@Override
-	public void visit(Simulator simulator)
+	public void visit(Simulator simulatorModel)
 	{
-		// TODO Auto-generated method stub
-		super.visit(simulator);
+		super.visit(simulatorModel);
+		ServiceCreator<Simulator, ISimulator> sc = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
+				_sessionContext.getSimulators());
+		Thread t = new Thread(sc);
+		t.start();
 	}
 
 }

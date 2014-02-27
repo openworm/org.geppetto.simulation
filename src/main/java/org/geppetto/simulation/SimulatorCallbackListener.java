@@ -37,79 +37,48 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.state.StateTreeRoot;
-import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
+import org.geppetto.simulation.model.Simulator;
 
-public class SimulationCallbackListener implements ISimulatorCallbackListener
+public class SimulatorCallbackListener implements ISimulatorCallbackListener
 {
 
-	private String simulationAspectID;
+	private Simulator _simulatorModel;
+	private SimulatorRuntime _simulatorRuntime;
 	private SessionContext _sessionContext;
 
-	private static Log logger = LogFactory.getLog(SimulationCallbackListener.class);
+	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
-	public SimulationCallbackListener(String aspectID, SessionContext context)
+	public SimulatorCallbackListener(Simulator simulatorModel, SessionContext context)
 	{
-		this.simulationAspectID = aspectID;
-		this._sessionContext = context;
-	}
-
-	/**
-	 * Figures out value of running cycle flag given processed elements counts NOTE: when all elements have been processed running cycle is set to false so that the next cycle can start
-	 */
-	private void updateRunningCycleSemaphore()
-	{
-		int processedAspects = 0;
-
-		// check that all elements have been processed on all the simulation aspects
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).allElementsProcessed())
-			{
-				// if not all elements have been processed cycle is still running
-				processedAspects++;
-			}
-		}
-
-		if(_sessionContext.getAspectIds().size() == processedAspects)
-		{
-			_sessionContext.setRunningCycleSemaphore(false);
-		}
+		_simulatorModel = simulatorModel;
+		_sessionContext = context;
+		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel);
 	}
 
 	@Override
 	public void stateTreeUpdated(StateTreeRoot stateTree) throws GeppettoExecutionException
 	{
-		StateTreeRoot sessionStateTree = _sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).getStateTree();
+		
+		_simulatorRuntime.incrementProcessedSteps();
+		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
+		
+		StateTreeRoot sessionStateTree = _simulatorRuntime.getStateTree();
+		
 		if(sessionStateTree == null)
 		{
 			sessionStateTree = stateTree;
-			_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).setStateSet(sessionStateTree);
+			_simulatorRuntime.setStateTree(sessionStateTree);
 		}
 		// we throw an exception if the tree is a different object, this should not happen.
 		if(!sessionStateTree.equals(stateTree))
 		{
 			throw new GeppettoExecutionException("Out of sync! The state tree received is different from the one stored in the session context");
 		}
-		// if the tree starts having more elements than the max size of the buffers remove the oldest ones
-		boolean wait = true;
-		while(wait)
-		{
-			CountTimeStepsVisitor countTimeStepsVisitor = new CountTimeStepsVisitor();
-			stateTree.apply(countTimeStepsVisitor);
-			int timeStepsToRemove = countTimeStepsVisitor.getNumberOfTimeSteps() - _sessionContext.getMaxBufferSize();
-			if(timeStepsToRemove<0)
-			{
-				wait=false;
-			}
-		}
-		// This line is necessary because we have logic that checks that all models are processed before sending an update
-		_sessionContext.getSimulatorRuntimeByAspect(simulationAspectID).increaseProcessedElements();
-		updateRunningCycleSemaphore();
-
+				
 		//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
 		//to revert tree to initial conditions is simulation has been stopped
-		if(_sessionContext.isStopped()){
+		if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
 			_sessionContext.revertToInitialConditions();
 		}
 	}

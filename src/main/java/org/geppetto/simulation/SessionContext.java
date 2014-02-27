@@ -33,7 +33,6 @@
 
 package org.geppetto.simulation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,141 +40,134 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.model.Model;
 import org.geppetto.simulation.model.Simulation;
 import org.geppetto.simulation.model.Simulator;
 
+/**
+ * This class stores the context of a given session.
+ * Each user has its own session. Each session has its own simulation.
+ * 
+ * @author matteocantarelli
+ *
+ */
 public class SessionContext
 {
 
+	//The maximum number of steps that can be stored.
+	//Note: this affects all the simulators
+	private int _maxBufferSize = 100;
+	
+	//This are the services that have been created for this simulation
 	private ConcurrentHashMap<Model,IModelInterpreter> _modelInterpreters=new ConcurrentHashMap<Model,IModelInterpreter>();
 	private ConcurrentHashMap<Simulator,ISimulator> _simulators=new ConcurrentHashMap<Simulator,ISimulator>();
 	
-	private ConcurrentHashMap<String,SimulatorRuntime> _runtimeByAspect= new ConcurrentHashMap<String,SimulatorRuntime>();
-	private ConcurrentHashMap<String,AspectConfiguration> _configurationByAspect= new ConcurrentHashMap<String,AspectConfiguration>();
+	//This map contains the simulator runtime for each one of the simulators
+	private ConcurrentHashMap<Simulator,SimulatorRuntime> _simulatorRuntimes= new ConcurrentHashMap<Simulator,SimulatorRuntime>();
 	
-
+	//The string in the map below is the instancepath for a specific model specified in a simulation file
+	private ConcurrentHashMap<String,IModel> _models=new ConcurrentHashMap<String,IModel>();
 	
-	private List<String> _aspectIDs = new ArrayList<String>();
+	//This map caches which models are been executed for a given simulatore
+	private ConcurrentHashMap<Simulator,List<Model>> _simulatorToModels=new ConcurrentHashMap<Simulator,List<Model>>();
 	
+	//This map caches for each model what simulator is responsible for its simulation
+	private ConcurrentHashMap<Model, Simulator> _modelToSimulator=new ConcurrentHashMap<Model, Simulator>();
+	
+	//This is the Simulation tree that was loaded from the simulation file
 	private Simulation _simulation;
 	
-	private static Log logger = LogFactory.getLog(SessionContext.class);
+	//The logger
+	private static Log _logger = LogFactory.getLog(SessionContext.class);
 
-	/*
-	 * simulation flags 
+	//The status of the current simulation
+	private SimulationRuntimeStatus _status=SimulationRuntimeStatus.IDLE;
+
+	/**
+	 * @return
 	 */
-	private boolean _runningCycleSemaphore = false;
-	private boolean _isRunning = false;
-	private boolean _isStopped = false;
-
-	private int _maxBufferSize = 100;
+	public SimulationRuntimeStatus getStatus()
+	{
+		return _status;
+	}
 	
-	/*
+	/**
+	 * @param status
+	 */
+	public void setSimulationStatus(SimulationRuntimeStatus status)
+	{
+		_status=status;
+	}
+	
+	/**
 	 * Reverts the simulation state to initial conditions
-	 * */
+	 */
 	public void revertToInitialConditions()
 	{
-		// for each aspect, revert runtime to initial conditions
-		for(String aspectID : this.getAspectIds())
-		{
-			this.getSimulatorRuntimeByAspect(aspectID).revertToInitialConditions();
-		}
 
-		_runningCycleSemaphore = false;
-		_isRunning = false;
+		setSimulationStatus(SimulationRuntimeStatus.IDLE);
+		// for each aspect, revert runtime to initial conditions
+		for(SimulatorRuntime simulatorRuntime : _simulatorRuntimes.values())
+		{
+			simulatorRuntime.revertToInitialConditions();
+		}
 		
-		logger.warn("Reverted to initial conditions");
+		_logger.info("Simulation reverted to initial conditions");
 	}
 	
-	/*
+	/**
 	 * Resets the simulation context
 	 * NOTE: WIPES EVERYTHING
-	 * */
+	 */
 	public void reset()
 	{
-		_runtimeByAspect.clear();
-		_configurationByAspect.clear();
-		_aspectIDs.clear();
-		_runningCycleSemaphore = false;
-		_isRunning = false;
-		_isStopped = false;
+		_simulatorRuntimes.clear();
+		_modelInterpreters.clear();
+		_simulatorToModels.clear();
+		_modelToSimulator.clear();
+		_simulators.clear();
+		_models.clear();
 		_simulation=null;
-	}
-
-	public boolean isRunning()
-	{
-		return _isRunning;
+		setSimulationStatus(SimulationRuntimeStatus.IDLE);
 	}
 	
-	public void setRunning(boolean isRunning)
-	{
-		_isRunning=isRunning;
-	}
-	
-	public boolean isStopped()
-	{
-		return _isStopped;
-	}
-	
-	public void setStopped(boolean isStopped)
-	{
-		_isStopped = isStopped;
-	}
-
-	public boolean isRunningCycleSemaphore()
-	{
-		return _runningCycleSemaphore;
-	}
-	
-	public void setRunningCycleSemaphore(boolean runningCycleSemaphore)
-	{
-		_runningCycleSemaphore=runningCycleSemaphore;
-	}
-	
+	/**
+	 * @return
+	 */
 	public int getMaxBufferSize()
 	{
 		return _maxBufferSize;
 	}
 
-	public List<String> getAspectIds()
+
+	/**
+	 * @param simulatorModel
+	 * @return
+	 */
+	public SimulatorRuntime getSimulatorRuntime(Simulator simulatorModel)
 	{
-		return _aspectIDs;
+		return _simulatorRuntimes.get(simulatorModel);
 	}
 
-	public SimulatorRuntime getSimulatorRuntimeByAspect(String aspectId)
-	{
-		return _runtimeByAspect.get(aspectId);
-	}
 
-	public AspectConfiguration getConfigurationByAspect(String aspectId)
-	{
-		return _configurationByAspect.get(aspectId);
-	}
-
-	public void setProcessedElements(String aspectId, int i)
-	{
-		_runtimeByAspect.get(aspectId).setProcessedElements(i);
-	}
-
+	/**
+	 * @param maxBufferSize
+	 */
 	public void setMaxBufferSize(int maxBufferSize)
 	{
 		_maxBufferSize=maxBufferSize;
 	}
 
-	public void addAspectId(String id, IModelInterpreter modelInterpreter, ISimulator simulator, String modelURL)
+	/**
+	 * @param simulatorModel
+	 */
+	public void addSimulatorRuntime(Simulator simulatorModel)
 	{
-		_aspectIDs.add(id);
 		SimulatorRuntime simulatorRuntime=new SimulatorRuntime();
-		AspectConfiguration aspectConfiguration=new AspectConfiguration();
-		simulatorRuntime.setProcessedElements(0);
-		aspectConfiguration.setModelInterpreter(modelInterpreter);
-		aspectConfiguration.setSimulator(simulator);
-		aspectConfiguration.setUrl(modelURL);
-		_runtimeByAspect.put(id, simulatorRuntime);
-		_configurationByAspect.put(id, aspectConfiguration);
+		_simulatorRuntimes.put(simulatorModel, simulatorRuntime);
 	}
 
 	/**
@@ -221,6 +213,19 @@ public class SessionContext
 		}
 		return _simulators.get(simulatorModel);
 	}
+	
+	/**
+	 * @param model
+	 * @return
+	 */
+	public IModel getIModel(String instancePath)
+	{
+		if(!_models.contains(instancePath))
+		{
+			return null;
+		}
+		return _models.get(instancePath);
+	}
 
 
 	/**
@@ -238,5 +243,60 @@ public class SessionContext
 	{
 		return _simulators;
 	}
+
+	/**
+	 * @return
+	 */
+	public Map<String,IModel> getModels()
+	{
+		return _models;
+	}
 	
+	/**
+	 * @param model
+	 * @return
+	 */
+	public IModel getIModel(Model model)
+	{
+		return _models.get(model.getInstancePath());
+	}
+
+	/**
+	 * Maps the instance path of an aspect to a Simulator which is used to simulate that specific model
+	 * @param instancePath
+	 * @param simulator
+	 */
+	public void mapSimulatorToModels(Simulator simulator, List<Model> models)
+	{
+		_simulatorToModels.put(simulator,models);
+	}
+	
+	/**
+	 * @param modelInstancePath
+	 * @return
+	 */
+	public List<Model> getModelsFromSimulator(Simulator simulator)
+	{
+		return _simulatorToModels.get(simulator);
+	}
+
+	/**
+	 * @param model
+	 * @param simulator
+	 */
+	public void mapModelToSimulator(Model model, Simulator simulator)
+	{
+		_modelToSimulator.put(model,simulator);
+		
+	}
+
+	/**
+	 * @param model
+	 * @return
+	 */
+	public Simulator getSimulatorFromModel(Model model)
+	{
+		return _modelToSimulator.get(model);
+	}
+
 }

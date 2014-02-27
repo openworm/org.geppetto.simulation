@@ -47,27 +47,21 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
-import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.state.CompositeStateNode;
-import org.geppetto.core.model.state.StateTreeRoot;
-import org.geppetto.core.model.state.StateTreeRoot.SUBTREE;
-import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
-import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.core.visualisation.model.Scene;
+import org.geppetto.simulation.model.Model;
 import org.geppetto.simulation.model.Simulation;
+import org.geppetto.simulation.model.Simulator;
+import org.geppetto.simulation.visitor.BuildClientUpdateVisitor;
+import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
-import org.geppetto.simulation.visitor.SimulationVisitor;
+import org.geppetto.simulation.visitor.LoadSimulationVisitor;
+import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 
 @Service
 public class SimulationService implements ISimulation
@@ -76,13 +70,13 @@ public class SimulationService implements ISimulation
 	@Autowired
 	public AppConfig appConfig;
 
-	private static Log logger = LogFactory.getLog(SimulationService.class);
+	private static Log _logger = LogFactory.getLog(SimulationService.class);
 
 	private final SessionContext _sessionContext = new SessionContext();
 
 	private Timer _clientUpdateTimer;
 
-	private SimulationThread _simThread;
+	private SimulationThread _simulationThread;
 
 	private ISimulationCallbackListener _simulationListener;
 
@@ -92,9 +86,12 @@ public class SimulationService implements ISimulation
 
 	private List<URL> _scripts = new ArrayList<URL>();
 
+	/**
+	 * 
+	 */
 	public SimulationService()
 	{
-		logger.warn("New Simulation Service created");
+		_logger.info("New Simulation Service created");
 	}
 
 	/*
@@ -105,7 +102,7 @@ public class SimulationService implements ISimulation
 	@Override
 	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
-		logger.warn("Initializing simulation");
+		_logger.info("Initializing simulation");
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		_simulationListener = simulationListener;
 
@@ -115,7 +112,6 @@ public class SimulationService implements ISimulation
 		}
 		catch(GeppettoExecutionException e)
 		{
-			// TODO Auto-generated catch block
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
 	}
@@ -126,25 +122,31 @@ public class SimulationService implements ISimulation
 	@Override
 	public void init(String simulationConfig, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
-		Simulation sim = SimulationConfigReader.readSimulationConfig(simulationConfig);
+		Simulation simulation = SimulationConfigReader.readSimulationConfig(simulationConfig);
 		_simulationListener = simulationListener;
 
 		try
 		{
-			load(sim);
+			load(simulation);
 		}
 		catch(GeppettoExecutionException e)
 		{
-			// TODO Auto-generated catch block
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
 	}
 
-	public void load(Simulation sim) throws GeppettoInitializationException, GeppettoExecutionException
+	/**
+	 * @param simulation
+	 * @throws GeppettoInitializationException
+	 * @throws GeppettoExecutionException
+	 */
+	public void load(Simulation simulation) throws GeppettoInitializationException, GeppettoExecutionException
 	{
 		// decorate Simulation model
-		InstancePathDecoratorVisitor decoratorVisitor = new InstancePathDecoratorVisitor();
-		sim.accept(decoratorVisitor);
+		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
+		simulation.accept(instancePathdecoratorVisitor);
+		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
+		simulation.accept(parentDecoratorVisitor);
 
 		// clear watch lists
 		this.clearWatchLists();
@@ -157,26 +159,22 @@ public class SimulationService implements ISimulation
 		// refresh simulation context
 		_sessionContext.reset();
 
-		_sessionContext.setSimulation(sim);
+		_sessionContext.setSimulation(simulation);
 
 		// retrieve model interpreters and simulators
 		CreateSimulationServicesVisitor createServicesVisitor = new CreateSimulationServicesVisitor(_sessionContext);
-		sim.accept(createServicesVisitor);
+		simulation.accept(createServicesVisitor);
 
-		populateScripts(sim);
+		populateScripts(simulation);
 
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
-		_simThread = new SimulationThread(_sessionContext);
-		_simThread.loadModel();
-		try
-		{
-			update();
-		}
-		catch(GeppettoExecutionException e)
-		{
-			throw new GeppettoExecutionException("Error loading simulation model");
-		}
+		
+		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext);
+		simulation.accept(loadSimulationVisitor);
+
+		updateClient();
+
 	}
 
 	/*
@@ -187,11 +185,15 @@ public class SimulationService implements ISimulation
 	@Override
 	public void start()
 	{
-		logger.warn("Starting simulation");
-		// start the simulation
-		_sessionContext.setRunning(true);
-		_sessionContext.setStopped(false);
-		startSimulationThread();
+		_logger.info("Starting simulation");
+
+		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
+
+		_simulationThread = new SimulationThread(_sessionContext);
+		_simulationThread.start();
+		
+		
+
 		startClientUpdateTimer();
 	}
 
@@ -203,10 +205,10 @@ public class SimulationService implements ISimulation
 	@Override
 	public void pause()
 	{
-		logger.warn("Pausing simulation");
+		_logger.info("Pausing simulation");
 		// tell the thread to pause the simulation, but don't stop it
-		_sessionContext.setRunning(false);
-		_sessionContext.setStopped(false);
+		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.PAUSED);
+
 		// stop the timer that updates the client
 		_clientUpdateTimer.cancel();
 	}
@@ -220,10 +222,9 @@ public class SimulationService implements ISimulation
 	public void stop()
 	{
 
-		logger.warn("Stopping simulation");
+		_logger.warn("Stopping simulation");
 		// tell the thread to stop running the simulation
-		_sessionContext.setRunning(false);
-		_sessionContext.setStopped(true);
+		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
 
 		// stop the timer that updates the client
 		_clientUpdateTimer.cancel();
@@ -240,7 +241,7 @@ public class SimulationService implements ISimulation
 	@Override
 	public boolean isRunning()
 	{
-		return _sessionContext.isRunning();
+		return _sessionContext.getStatus().equals(SimulationRuntimeStatus.RUNNING);
 	}
 
 	/*
@@ -252,7 +253,6 @@ public class SimulationService implements ISimulation
 	public String getSimulationConfig(URL simURL) throws GeppettoInitializationException
 	{
 		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
-
 		return simulationConfig;
 	}
 
@@ -286,10 +286,8 @@ public class SimulationService implements ISimulation
 		VariableList varsList = new VariableList();
 		List<AVariable> vars = new ArrayList<AVariable>();
 
-		for(String aspectID : _sessionContext.getAspectIds())
+		for(ISimulator simulator : _sessionContext.getSimulators().values())
 		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
 			if(simulator != null)
 			{
 				vars.addAll(isWatch ? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
@@ -301,16 +299,22 @@ public class SimulationService implements ISimulation
 		return varsList;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#addWatchLists(java.util.List)
+	 */
 	@Override
-	public void addWatchLists(List<WatchList> lists) throws GeppettoExecutionException
+	public void addWatchLists(List<WatchList> lists) throws GeppettoExecutionException, GeppettoInitializationException
 	{
 		// add to local container
 		_watchLists.addAll(lists);
 
 		// iterate through aspects and set variables to be watched for each
-		for(String aspectID : _sessionContext.getAspectIds())
+		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
 		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
+
+			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
 
 			if(simulator != null)
 			{
@@ -320,43 +324,29 @@ public class SimulationService implements ISimulation
 				{
 					for(String varPath : list.getVariablePaths())
 					{
-						// parse to extract aspect id from variable path
-						// NOTE: this kinda sucks
-						String aspectIDFromPath = null;
-						String nakedVarName = null;
 
-						if(varPath.contains("."))
+						for(Model model : _sessionContext.getModelsFromSimulator(simulatorModel))
 						{
-							// Split it.
-							String[] split = varPath.split("\\.", 2);
-
-							if(split.length != 2)
+							// A variable watch belongs to a specific simulator if the simulator
+							// is responsible for the specific model where this variable comes from
+							// The instance path here is used to perform this check
+							if(varPath.startsWith(model.getInstancePath()))
 							{
-								throw new GeppettoExecutionException("Error parsing variable path: unexpected format.");
+								variableNames.add(varPath);
 							}
-
-							aspectIDFromPath = split[0];
-							nakedVarName = split[1];
-						}
-						else
-						{
-							throw new GeppettoExecutionException("Error parsing variable path: unexpected format.");
-						}
-
-						// add only variables for the given aspect
-						if(aspectID.equals(aspectIDFromPath))
-						{
-							// TODO: check that those variables actually exists before adding them for watch
-							variableNames.add(nakedVarName);
 						}
 					}
 				}
-
 				simulator.addWatchVariables(variableNames);
 			}
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#startWatch()
+	 */
 	@Override
 	public void startWatch()
 	{
@@ -364,10 +354,8 @@ public class SimulationService implements ISimulation
 		_watching = true;
 
 		// iterate through aspects and instruct them to start watching
-		for(String aspectID : _sessionContext.getAspectIds())
+		for(ISimulator simulator : _sessionContext.getSimulators().values())
 		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
 			if(simulator != null)
 			{
 				simulator.startWatch();
@@ -375,6 +363,11 @@ public class SimulationService implements ISimulation
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#stopWatch()
+	 */
 	@Override
 	public void stopWatch()
 	{
@@ -382,9 +375,8 @@ public class SimulationService implements ISimulation
 		_watching = false;
 
 		// iterate through aspects and instruct them to stop watching
-		for(String aspectID : _sessionContext.getAspectIds())
+		for(ISimulator simulator : _sessionContext.getSimulators().values())
 		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
 
 			if(simulator != null)
 			{
@@ -394,6 +386,11 @@ public class SimulationService implements ISimulation
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#clearWatchLists()
+	 */
 	@Override
 	public void clearWatchLists()
 	{
@@ -401,10 +398,8 @@ public class SimulationService implements ISimulation
 		this.stopWatch();
 
 		// instruct aspects to clear watch variables
-		for(String aspectID : _sessionContext.getAspectIds())
+		for(ISimulator simulator : _sessionContext.getSimulators().values())
 		{
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
 			if(simulator != null)
 			{
 				simulator.clearWatchVariables();
@@ -415,31 +410,26 @@ public class SimulationService implements ISimulation
 		_watchLists.clear();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#getWatchLists()
+	 */
 	@Override
 	public List<WatchList> getWatchLists()
 	{
 		return _watchLists;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#getScripts()
+	 */
 	@Override
 	public List<URL> getScripts()
 	{
 		return _scripts;
-	}
-
-	/**
-	 * Starts simulation thread - under the hood the run method of the thread gets invoked.
-	 */
-	private void startSimulationThread()
-	{
-
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			// Load Model if it is still in initial conditions
-			logger.warn(aspectID + " : " + _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions());
-		}
-		_simThread = new SimulationThread(_sessionContext);
-		_simThread.start();
 	}
 
 	/**
@@ -453,15 +443,13 @@ public class SimulationService implements ISimulation
 			@Override
 			public void run()
 			{
-				try
-				{
-					update();
-				}
-				catch(GeppettoExecutionException e)
-				{
-					throw new RuntimeException(e);
-				}
+				CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor(_sessionContext);
+				_sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
 
+				if(checkSteppedSimulatorsVisitor.allStepped())
+				{
+					updateClient();
+				}
 			}
 		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
 	}
@@ -469,86 +457,14 @@ public class SimulationService implements ISimulation
 	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
 	 * 
-	 * @throws JsonProcessingException
 	 */
-	private void update() throws GeppettoExecutionException
+	private void updateClient()
 	{
-		StringBuilder sceneBuilder = new StringBuilder();
-		String variableWatchTree = null;
-		boolean updateAvailable = false;
+		BuildClientUpdateVisitor updateClientVisitor = new BuildClientUpdateVisitor(_sessionContext);
+		_sessionContext.getSimulation().accept(updateClientVisitor);
 
-		// STEP 1 - Visit the entities tree and start simulating them depth first
-		SimulationVisitor simulationVisitor = new SimulationVisitor(_sessionContext);
-		_sessionContext.getSimulation().accept(simulationVisitor);
-
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
-			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree() != null)
-			{
-				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();
-				CountTimeStepsVisitor countTimeStepsVisitor = new CountTimeStepsVisitor();
-				stateTree.apply(countTimeStepsVisitor);
-				// we send data to the frontend if it's either the first cycle or if there is a change in the state, i.e. something that might produce a frontend update
-				// putting the constraint to have at least two states buffered before starting sending updates to client, this is to avoid the scenario where one thread is
-				// about to remove one state from the tree because we are visualizing it) and we come here and we see there is one timestep so we go ahead but by
-				// the time we are trying to visualise it there is nothing there because the previous thread completed. In this way we wait to have at least two buffered.
-				if(countTimeStepsVisitor.getNumberOfTimeSteps() > 2 || _sessionContext.getSimulatorRuntimeByAspect(aspectID).getUpdatesProcessed() == 0)
-				{
-					logger.info("Available update found ");
-					updateAvailable = true;
-
-					try
-					{
-						if(_watching)
-						{
-							CompositeStateNode variableWatchRoot = stateTree.getSubTree(SUBTREE.WATCH_TREE);
-							CountTimeStepsVisitor countWatchVisitor = new CountTimeStepsVisitor();
-							variableWatchRoot.apply(countWatchVisitor);
-
-							if(countWatchVisitor.getNumberOfTimeSteps() > 2)
-							{
-								// serialize state tree for variable watch and store in a string
-								SerializeTreeVisitor visitor = new SerializeTreeVisitor();
-								variableWatchRoot.apply(visitor);
-								variableWatchTree = visitor.getSerializedTree();
-							}
-						}
-
-						// create scene
-						Scene scene;
-						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
-						ObjectMapper mapper = new ObjectMapper();
-
-						// a custom serializer is used to change what precision is used when serializing doubles in the scene
-						SimpleModule customSerializationModule = new SimpleModule("customSerializationModule");
-						customSerializationModule.addSerializer(new CustomSerializer(Double.class)); // assuming serializer declares correct class to bind to
-						mapper.registerModule(customSerializationModule);
-
-						sceneBuilder.append(mapper.writer().writeValueAsString(scene));
-						_sessionContext.getSimulatorRuntimeByAspect(aspectID).updateProcessed();
-					}
-					catch(ModelInterpreterException e)
-					{
-						throw new GeppettoExecutionException(e);
-					}
-					catch(JsonProcessingException e)
-					{
-						throw new GeppettoExecutionException(e);
-					}
-					catch(Exception e)
-					{
-						throw new GeppettoExecutionException(e);
-					}
-				}
-			}
-		}
-
-		if(updateAvailable)
-		{
-			logger.info("Update sent to listener");
-			_simulationListener.updateReady(sceneBuilder.toString(), variableWatchTree);
-		}
+		_simulationListener.updateReady(updateClientVisitor.getSerializedScene(), updateClientVisitor.getSerializedWatchTree());
+		_logger.info("Update sent to listener");
 	}
 
 	/**
@@ -569,13 +485,15 @@ public class SimulationService implements ISimulation
 			}
 			catch(MalformedURLException e)
 			{
-				throw new GeppettoInitializationException("Malformed script url " + script,e);
+				throw new GeppettoInitializationException("Malformed script url " + script, e);
 			}
 			_scripts.add(scriptURL);
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getSimulatorName()
 	 */
 	@Override
@@ -586,7 +504,9 @@ public class SimulationService implements ISimulation
 		return simulatorName;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getSimulationCapacity()
 	 */
 	@Override

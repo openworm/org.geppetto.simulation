@@ -34,6 +34,9 @@ package org.geppetto.simulation.visitor;
 
 import org.geppetto.simulation.model.Aspect;
 import org.geppetto.simulation.model.Entity;
+import org.geppetto.simulation.model.Model;
+import org.geppetto.simulation.model.Simulation;
+import org.geppetto.simulation.model.Simulator;
 
 import com.massfords.humantask.DepthFirstTraverserImpl;
 import com.massfords.humantask.Visitor;
@@ -44,21 +47,72 @@ import com.massfords.humantask.Visitor;
  */
 public class DepthFirstTraverserEntitiesFirst extends DepthFirstTraverserImpl
 {
-
+	protected boolean _stopVisiting=false;
+	
 	@Override
 	public void traverse(Entity aBean, Visitor aVisitor)
 	{
         for (Entity bean: aBean.getEntities()) {
             bean.accept(aVisitor);
+            if(_stopVisiting)
+            {
+            	return;
+            }
         }
         for (Aspect bean: aBean.getAspects()) {
             bean.accept(aVisitor);
+            if(_stopVisiting)
+            {
+            	return;
+            }
         }
         if (aBean.getPosition()!= null) {
             aBean.getPosition().accept(aVisitor);
+            if(_stopVisiting)
+            {
+            	return;
+            }
         }
 	}
 
 
+	public void traverse(Aspect aBean, Visitor aVisitor) {
+        if (aBean.getModel()!= null) {
+            aBean.getModel().accept(aVisitor);
+            if(_stopVisiting)
+            {
+            	return;
+            }
+        }
+        if (aBean.getSimulator()!= null) {
+            aBean.getSimulator().accept(aVisitor);
+            if(_stopVisiting)
+            {
+            	return;
+            }
+        }
+    }
+
+
+    public void traverse(Model aBean, Visitor aVisitor) {
+
+    }
+
+
+    public void traverse(Simulation aBean, Visitor aVisitor) {
+        for (Entity bean: aBean.getEntities()) {
+            bean.accept(aVisitor);
+            if(_stopVisiting)
+            {
+            	return;
+            }
+        }
+    }
+
+    public void traverse(Simulator aBean, Visitor aVisitor) {
+        if (aBean.getTimeStep()!= null) {
+            aBean.getTimeStep().accept(aVisitor);
+        }
+    }
 
 }

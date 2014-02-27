@@ -106,7 +106,6 @@ public class InstancePathDecoratorVisitor extends TraversingVisitor
 	@Override
 	public void visit(Model model)
 	{
-		super.visit(model);
 		model.setInstancePath(_currentPath);
 	}
 
@@ -118,7 +117,6 @@ public class InstancePathDecoratorVisitor extends TraversingVisitor
 	@Override
 	public void visit(Simulator simulator)
 	{
-		super.visit(simulator);
 		simulator.setInstancePath(_currentPath);
 	}
 

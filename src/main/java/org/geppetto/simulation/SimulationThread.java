@@ -33,141 +33,39 @@
 
 package org.geppetto.simulation;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.model.IModel;
-import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.simulation.TimeConfiguration;
-import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.simulation.visitor.SimulationVisitor;
 
 class SimulationThread extends Thread
 {
 
-	private static Log logger = LogFactory.getLog(SimulationThread.class);
+	private static Log _logger = LogFactory.getLog(SimulationThread.class);
 	private SessionContext _sessionContext = null;
 
+	/**
+	 * @param context
+	 */
 	public SimulationThread(SessionContext context)
 	{
 		this._sessionContext = context;
 	}
 
+	/**
+	 * @return
+	 */
 	private SessionContext getSessionContext()
 	{
 		return _sessionContext;
 	}
 
-	/**
-	 * Initializes the simulator with the model. Simulates one step only to load the model positions and state tree.
-	 * 
-	 * @throws GeppettoInitializationException
-	 * 
-	 */
-	public void loadModel() throws GeppettoInitializationException
-	{
-		for(String aspectID : _sessionContext.getAspectIds())
-		{
-			// reset processed elements counters
-			getSessionContext().setProcessedElements(aspectID, 0);
-
-			IModelInterpreter modelInterpreter = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter();
-			IModel model = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel();
-
-			// if we don't have a model fish it out of configuration
-			if(model == null)
-			{
-				try
-				{
-					model = modelInterpreter.readModel(new URL(_sessionContext.getConfigurationByAspect(aspectID).getUrl()));
-				}
-				catch(MalformedURLException e)
-				{
-					logger.error("Malformed URL for model");
-					throw new GeppettoInitializationException("Unable to load model for " + e);
-				}
-				catch(ModelInterpreterException e)
-				{
-					logger.error("Error Reading Model");
-					throw new GeppettoInitializationException("Unable to load model for " + e);
-				}
-
-				// set initial conditions
-				_sessionContext.getSimulatorRuntimeByAspect(aspectID).setModel(model);
-				_sessionContext.getSimulatorRuntimeByAspect(aspectID).setElementCount(1);
-			}
-
-			ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
-			if(simulator != null)
-			{
-				if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
-				{
-					try
-					{
-						// initialize simulator
-						simulator.initialize(model, new SimulationCallbackListener(aspectID, _sessionContext));
-					}
-					catch(GeppettoInitializationException e)
-					{
-						throw new GeppettoInitializationException(e);
-					}
-					catch(GeppettoExecutionException e)
-					{
-						throw new GeppettoInitializationException(e);
-					}
-				}
-			}
-		}
-	}
 
 	public void run()
 	{
-		while(getSessionContext().isRunning())
+		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext);
+		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING) )
 		{
-			if(!getSessionContext().isRunningCycleSemaphore())
-			{
-				// logger.info("Simulation thread cycle");
-				getSessionContext().setRunningCycleSemaphore(true);
-
-				for(String aspectID : _sessionContext.getAspectIds())
-				{
-					ISimulator simulator = _sessionContext.getConfigurationByAspect(aspectID).getSimulator();
-
-					if(simulator != null)
-					{
-						// reset processed elements counters
-						getSessionContext().setProcessedElements(aspectID, 0);
-
-						// Load Model if it is still in initial conditions
-						if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntimeByAspect(aspectID).isAtInitialConditions())
-						{
-							try
-							{
-								loadModel();
-							}
-							catch(GeppettoInitializationException e)
-							{
-								logger.warn("Load model error");
-							}
-						}
-
-						// TODO this is just saying "advance one step" at the moment
-						try
-						{
-							simulator.simulate(new TimeConfiguration(null, 1, 1));
-						}
-						catch(GeppettoExecutionException e)
-						{
-							throw new RuntimeException(e);
-						}
-					}
-				}
-			}
+				_sessionContext.getSimulation().accept(simulationVisitor);
 		}
 	}
 }

@@ -32,85 +32,82 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.visualisation.model.Scene;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.simulation.TimeConfiguration;
+import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
-import org.geppetto.simulation.model.Aspect;
-import org.geppetto.simulation.model.Entity;
-import org.geppetto.simulation.model.Model;
-import org.geppetto.simulation.model.Simulation;
+import org.geppetto.simulation.SimulatorRuntime;
+import org.geppetto.simulation.SimulatorRuntimeStatus;
 import org.geppetto.simulation.model.Simulator;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;
 
 /**
- * This is the simulation visitor which traverse the simulation tree and orchestrates
- * the simulation of the different models.
+ * This is the simulation visitor which traverse the simulation tree and orchestrates the simulation of the different models.
  * 
  * 
  * @author matteocantarelli
- *
+ * 
  */
 public class SimulationVisitor extends TraversingVisitor
 {
-	
+
 	private SessionContext _sessionContext;
-	private Scene _scene;
 
 	public SimulationVisitor(SessionContext sessionContext)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_sessionContext=sessionContext;
-		_scene=new Scene();
+		_sessionContext = sessionContext;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Aspect)
-	 */
-	@Override
-	public void visit(Aspect aspect)
-	{
-		super.visit(aspect);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Entity)
-	 */
-	@Override
-	public void visit(Entity entity)
-	{
-		//This happens before visiting the child entities
-		super.visit(entity);
-		//This happens after visiting the child entities
-	}
-
-	/* (non-Javadoc)
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Model)
-	 */
-	@Override
-	public void visit(Model model)
-	{
-		super.visit(model);
-		//IModelInterpreter modelInterpreter=_sessionContext.getModelInterpreter(model);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulation)
-	 */
-	@Override
-	public void visit(Simulation simulation)
-	{
-		super.visit(simulation);
-	}
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
 	@Override
-	public void visit(Simulator simulator)
+	public void visit(Simulator simulatorModel)
 	{
-		// TODO Auto-generated method stub
-		super.visit(simulator);
+		super.visit(simulatorModel);
+		try
+		{
+			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
+			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulatorModel);
+
+			//we proceed only if the simulator is not already stepping 
+			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
+			{
+				// Load Model if it is still in initial conditions
+				if(!simulator.isInitialized() || simulatorRuntime.isAtInitialConditions())
+				{
+					throw new RuntimeException("The simulator is not initialised");
+					// LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext);
+					// _sessionContext.getSimulation().accept(loadSimulationVisitor);
+				}
+
+				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())
+				{
+					// we advance the simulation for this simulator only if we don't have already
+					// too many steps in the buffer
+					try
+					{
+						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
+						simulator.simulate(new TimeConfiguration(null, 1, 1));
+					}
+					catch(GeppettoExecutionException e)
+					{
+						throw new RuntimeException(e);
+					}
+				}
+			}
+
+		}
+		catch(GeppettoInitializationException e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 
 }

@@ -1,0 +1,197 @@
+/*******************************************************************************
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2011, 2013 OpenWorm.
+ * http://openworm.org
+ * 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the MIT License
+ * which accompanies this distribution, and is available at
+ * http://opensource.org/licenses/MIT
+ *
+ * Contributors:
+ *     	OpenWorm - http://openworm.org/people.html
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights 
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+ * copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+ * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *******************************************************************************/
+package org.geppetto.simulation.visitor;
+
+import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.state.CompositeStateNode;
+import org.geppetto.core.model.state.StateTreeRoot;
+import org.geppetto.core.model.state.StateTreeRoot.SUBTREE;
+import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
+import org.geppetto.core.visualisation.model.CAspect;
+import org.geppetto.core.visualisation.model.CEntity;
+import org.geppetto.core.visualisation.model.Scene;
+import org.geppetto.core.visualisation.model.VisualModelUpdate;
+import org.geppetto.simulation.CustomSerializer;
+import org.geppetto.simulation.SessionContext;
+import org.geppetto.simulation.SimulatorRuntime;
+import org.geppetto.simulation.model.Aspect;
+import org.geppetto.simulation.model.Entity;
+import org.geppetto.simulation.model.Model;
+import org.geppetto.simulation.model.Simulator;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.massfords.humantask.BaseVisitor;
+import com.massfords.humantask.TraversingVisitor;
+
+/**
+ * @author matteocantarelli
+ * 
+ */
+public class BuildClientUpdateVisitor extends TraversingVisitor
+{
+
+	private SessionContext _sessionContext;
+
+	private Scene _scene = new Scene();
+	private CompositeStateNode _simulationStateTreeRoot = new CompositeStateNode("variable_watch");
+
+	private CEntity _currentClientEntity = null;
+
+	/**
+	 * @param sessionContext
+	 */
+	public BuildClientUpdateVisitor(SessionContext sessionContext)
+	{
+		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
+		_sessionContext = sessionContext;
+	}
+
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Aspect)
+	 */
+	@Override
+	public void visit(Aspect aspect)
+	{
+		Model model = aspect.getModel();
+		VisualModelUpdate visualUpdate = null;
+		if(model != null)
+		{
+			try
+			{
+				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
+				Simulator simulator = _sessionContext.getSimulatorFromModel(model);
+				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntime(simulator).getStateTree();
+
+				visualUpdate = modelInterpreter.getVisualUpdate(_sessionContext.getIModel(model.getInstancePath()), stateTree);
+			}
+			catch(GeppettoInitializationException e)
+			{
+				throw new RuntimeException(e);
+			}
+			catch(ModelInterpreterException e)
+			{
+				throw new RuntimeException(e);
+			}
+		}
+		else
+		{
+			visualUpdate = new VisualModelUpdate();
+		}
+
+		CAspect clientAspect = new CAspect();
+		clientAspect.setId(aspect.getId());
+		clientAspect.setVisualUpdate(visualUpdate);
+		_currentClientEntity.getAspects().add(clientAspect);
+
+		// Add the watch tree of this simulator to the root
+		Simulator simulator = aspect.getSimulator();
+		if(simulator != null)
+		{			
+			SimulatorRuntime simulatorRuntime=_sessionContext.getSimulatorRuntime(simulator);
+			simulatorRuntime.incrementStepsConsumed();
+			_simulationStateTreeRoot.addChild(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE));
+			
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Entity)
+	 */
+	@Override
+	public void visit(Entity entity)
+	{
+		CEntity beforeEntity = _currentClientEntity;
+
+		CEntity visualEntity = new CEntity();
+		visualEntity.setId(entity.getId());
+		if(entity.getParentEntity() == null)
+		{
+			// this is an entity in the root of the simulation
+			_scene.getEntities().add(visualEntity);
+		}
+		else
+		{
+			_currentClientEntity.getChildren().add(visualEntity);
+		}
+
+		_currentClientEntity = visualEntity;
+		super.visit(entity);
+		_currentClientEntity = beforeEntity;
+	}
+
+	
+	/**
+	 * @return
+	 */
+	public String getSerializedScene()
+	{
+		// a custom serializer is used to change what precision is used when serializing doubles in the scene
+		ObjectMapper mapper = new ObjectMapper();
+		SimpleModule customSerializationModule = new SimpleModule("customSerializationModule");
+		customSerializationModule.addSerializer(new CustomSerializer(Double.class)); // assuming serializer declares correct class to bind to
+		mapper.registerModule(customSerializationModule);
+		try
+		{
+			return mapper.writer().writeValueAsString(_scene);
+		}
+		catch(JsonProcessingException e)
+		{
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * NOTE: Currently the scene and the watch tree are separated. Theoretically the entire update could be part of the same
+	 * tree. This split is an heritage of a previous implementation, not changing it yet as it's not clear if there would be
+	 * a performance benefit or not
+	 * 
+	 * @return
+	 */
+	public String getSerializedWatchTree()
+	{
+		// serialize state tree for variable watch and store in a string
+		SerializeTreeVisitor visitor = new SerializeTreeVisitor();
+		_simulationStateTreeRoot.apply(visitor); 
+		return visitor.getSerializedTree();
+	}
+
+}

@@ -32,30 +32,28 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.simulation.ServiceCreator;
 import org.geppetto.simulation.SessionContext;
-import org.geppetto.simulation.model.Model;
+import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.model.Simulator;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;
 
 /**
- * This visitor discovers and instantiates the services for each model interpreter and simulator.
- * A thread is used to instantiate the services so that a new instance of the services is created
- * at each time (the services use a ThreadScope).
+ * This visitor checks if all the simulators have stepped Note: This visitor at the moment doesn't take into account that different simulators could have different time steps and in this case the
+ * check will have to be more sophisticated
  * 
  * @author matteocantarelli
  * 
  */
-public class CreateSimulationServicesVisitor extends TraversingVisitor
+public class CheckSteppedSimulatorsVisitor extends TraversingVisitor
 {
 
-	private SessionContext _sessionContext;
+	private SessionContext _sessionContext = null;
+	private boolean _allStepped = true;
+	private boolean _noneEverStepped = true;
 
-	public CreateSimulationServicesVisitor(SessionContext sessionContext)
+	public CheckSteppedSimulatorsVisitor(SessionContext sessionContext)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
@@ -64,33 +62,45 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Model)
-	 */
-	@Override
-	public void visit(Model model)
-	{
-		super.visit(model);
-		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
-				_sessionContext.getModelInterpreters());
-		Thread t = new Thread(sc);
-		t.start();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
 	@Override
-	public void visit(Simulator simulatorModel)
+	public void visit(Simulator simulator)
 	{
-		super.visit(simulatorModel);
-		ServiceCreator<Simulator, ISimulator> sc = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
-				_sessionContext.getSimulators());
-		Thread t = new Thread(sc);
-		t.start();
-		_sessionContext.addSimulatorRuntime(simulatorModel);
 		
+		if(_allStepped || _noneEverStepped)
+		{
+			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator);
+			
+			if(simulatorRuntime.getNonConsumedSteps() < 1)
+			{
+				// this simulator has no steps to consume
+				_allStepped = false;
+			}
+			
+			if(simulatorRuntime.getProcessedSteps() != 0)
+			{
+				// this simulator has steps to consume
+				_noneEverStepped = false;
+			}
+		}
+
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean allStepped()
+	{
+		return _allStepped;
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean noneEverStepped()
+	{
+		return _noneEverStepped;
 	}
 
 }

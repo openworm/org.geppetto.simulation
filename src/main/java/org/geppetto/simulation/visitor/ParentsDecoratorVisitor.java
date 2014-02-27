@@ -32,10 +32,8 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.simulation.ServiceCreator;
-import org.geppetto.simulation.SessionContext;
+import org.geppetto.simulation.model.Aspect;
+import org.geppetto.simulation.model.Entity;
 import org.geppetto.simulation.model.Model;
 import org.geppetto.simulation.model.Simulator;
 
@@ -43,22 +41,51 @@ import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;
 
 /**
- * This visitor discovers and instantiates the services for each model interpreter and simulator.
- * A thread is used to instantiate the services so that a new instance of the services is created
- * at each time (the services use a ThreadScope).
+ * This visitor decorates the simulation tree with a parent for the nodes
  * 
  * @author matteocantarelli
  * 
  */
-public class CreateSimulationServicesVisitor extends TraversingVisitor
+public class ParentsDecoratorVisitor extends TraversingVisitor
 {
-
-	private SessionContext _sessionContext;
-
-	public CreateSimulationServicesVisitor(SessionContext sessionContext)
+	
+	private Entity _currentEntityParent = null;
+	private Aspect _currentAspectParent = null;
+	
+	/**
+	 * 
+	 */
+	public ParentsDecoratorVisitor()
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_sessionContext = sessionContext;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Aspect)
+	 */
+	@Override
+	public void visit(Aspect aspect)
+	{
+		aspect.setParentEntity(_currentEntityParent);
+		_currentAspectParent=aspect;
+		super.visit(aspect);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Entity)
+	 */
+	@Override
+	public void visit(Entity entity)
+	{
+		entity.setParentEntity(_currentEntityParent);
+		Entity beforeEntity=_currentEntityParent;
+		_currentEntityParent=entity;
+		super.visit(entity);
+		_currentEntityParent=beforeEntity;
 	}
 
 	/*
@@ -69,11 +96,7 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	@Override
 	public void visit(Model model)
 	{
-		super.visit(model);
-		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
-				_sessionContext.getModelInterpreters());
-		Thread t = new Thread(sc);
-		t.start();
+		model.setParentAspect(_currentAspectParent);
 	}
 
 	/*
@@ -82,15 +105,9 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
 	@Override
-	public void visit(Simulator simulatorModel)
+	public void visit(Simulator simulator)
 	{
-		super.visit(simulatorModel);
-		ServiceCreator<Simulator, ISimulator> sc = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
-				_sessionContext.getSimulators());
-		Thread t = new Thread(sc);
-		t.start();
-		_sessionContext.addSimulatorRuntime(simulatorModel);
-		
+		simulator.setParentAspect(_currentAspectParent);
 	}
 
 }

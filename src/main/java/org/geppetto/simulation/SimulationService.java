@@ -45,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
+import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.IModelInterpreter;
@@ -292,6 +293,11 @@ public class SimulationService implements ISimulation
 
 			if(simulator != null)
 			{
+				SimpleVariable v = new SimpleVariable();
+				v.setAspect("aspect");
+				v.setName(aspectID);
+				
+				vars.add(v);
 				vars.addAll(isWatch ? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
 			}
 		}

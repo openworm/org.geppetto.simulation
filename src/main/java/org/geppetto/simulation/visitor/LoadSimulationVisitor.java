@@ -44,11 +44,11 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
-import org.geppetto.simulation.model.Model;
-import org.geppetto.simulation.model.Simulator;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;

@@ -32,10 +32,10 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.simulation.model.Aspect;
-import org.geppetto.simulation.model.Entity;
-import org.geppetto.simulation.model.Model;
-import org.geppetto.simulation.model.Simulator;
+import org.geppetto.core.model.simulation.Aspect;
+import org.geppetto.core.model.simulation.Entity;
+import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.simulation.Simulator;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;

@@ -7,8 +7,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.simulation.SimulationConfigReader;
-import org.geppetto.simulation.model.Simulation;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.junit.Assert;

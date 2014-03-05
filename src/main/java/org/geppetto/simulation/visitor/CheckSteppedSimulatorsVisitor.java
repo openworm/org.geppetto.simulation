@@ -32,9 +32,9 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorRuntime;
-import org.geppetto.simulation.model.Simulator;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;

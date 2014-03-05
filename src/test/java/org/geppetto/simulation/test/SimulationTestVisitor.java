@@ -3,8 +3,8 @@
  */
 package org.geppetto.simulation.test;
 
-import org.geppetto.simulation.model.Aspect;
-import org.geppetto.simulation.model.Entity;
+import org.geppetto.core.model.simulation.Aspect;
+import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.simulation.visitor.DepthFirstTraverserEntitiesFirst;
 import org.junit.Assert;
 

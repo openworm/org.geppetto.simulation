@@ -36,9 +36,9 @@ package org.geppetto.simulation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
-import org.geppetto.simulation.model.Simulator;
 
 public class SimulatorCallbackListener implements ISimulatorCallbackListener
 {

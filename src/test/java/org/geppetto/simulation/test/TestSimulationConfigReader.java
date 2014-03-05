@@ -41,9 +41,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.model.simulation.Entity;
+import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.simulation.SimulationConfigReader;
-import org.geppetto.simulation.model.Entity;
-import org.geppetto.simulation.model.Simulation;
 import org.junit.Assert;
 import org.junit.Test;
 

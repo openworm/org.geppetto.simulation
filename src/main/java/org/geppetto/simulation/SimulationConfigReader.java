@@ -44,7 +44,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.simulation.model.Simulation;
+import org.geppetto.core.model.simulation.Simulation;
 
 public class SimulationConfigReader {
 

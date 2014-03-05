@@ -42,10 +42,10 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.simulation.Simulation;
+import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.simulation.model.Model;
-import org.geppetto.simulation.model.Simulation;
-import org.geppetto.simulation.model.Simulator;
 
 /**
  * This class stores the context of a given session.

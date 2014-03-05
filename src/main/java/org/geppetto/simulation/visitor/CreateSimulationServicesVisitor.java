@@ -33,11 +33,11 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.ServiceCreator;
 import org.geppetto.simulation.SessionContext;
-import org.geppetto.simulation.model.Model;
-import org.geppetto.simulation.model.Simulator;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;

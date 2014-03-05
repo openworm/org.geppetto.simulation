@@ -32,9 +32,14 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.simulation.Aspect;
+import org.geppetto.core.model.simulation.Entity;
+import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.state.CompositeStateNode;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.model.state.StateTreeRoot.SUBTREE;
@@ -42,14 +47,9 @@ import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.visualisation.model.CAspect;
 import org.geppetto.core.visualisation.model.CEntity;
 import org.geppetto.core.visualisation.model.Scene;
-import org.geppetto.core.visualisation.model.VisualModelUpdate;
 import org.geppetto.simulation.CustomSerializer;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorRuntime;
-import org.geppetto.simulation.model.Aspect;
-import org.geppetto.simulation.model.Entity;
-import org.geppetto.simulation.model.Model;
-import org.geppetto.simulation.model.Simulator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -90,7 +90,10 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 	public void visit(Aspect aspect)
 	{
 		Model model = aspect.getModel();
-		VisualModelUpdate visualUpdate = null;
+		CEntity visualEntity = null;
+		CAspect clientAspect = new CAspect();
+		clientAspect.setId(aspect.getId());
+		
 		if(model != null)
 		{
 			try
@@ -99,7 +102,22 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 				Simulator simulator = _sessionContext.getSimulatorFromModel(model);
 				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntime(simulator).getStateTree();
 
-				visualUpdate = modelInterpreter.getVisualUpdate(_sessionContext.getIModel(model.getInstancePath()), stateTree);
+				visualEntity = modelInterpreter.getVisualEntity(_sessionContext.getIModel(model.getInstancePath()), aspect, stateTree);
+				
+				if(visualEntity.getAspects().size()==1)
+				{
+					//there is only going to be one aspect inside the entity that was returned by the model interpreter
+					clientAspect.getVisualModel().addAll(visualEntity.getAspects().get(0).getVisualModel());	
+					//we add all the entities that were added by the model interpreter
+					//the model specified for an entity in the Geppetto configuration file 
+					//could wrap inside multiple entities
+					_currentClientEntity.getChildren().addAll(visualEntity.getChildren());
+				}
+				else
+				{
+					throw new RuntimeException(new GeppettoExecutionException("The visual entity returned by the model interpreter has more than one aspect"));
+				}
+				
 			}
 			catch(GeppettoInitializationException e)
 			{
@@ -110,14 +128,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 				throw new RuntimeException(e);
 			}
 		}
-		else
-		{
-			visualUpdate = new VisualModelUpdate();
-		}
 
-		CAspect clientAspect = new CAspect();
-		clientAspect.setId(aspect.getId());
-		clientAspect.setVisualUpdate(visualUpdate);
 		_currentClientEntity.getAspects().add(clientAspect);
 
 		// Add the watch tree of this simulator to the root

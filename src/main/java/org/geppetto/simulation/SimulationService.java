@@ -57,6 +57,7 @@ import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.model.Aspect;
@@ -172,7 +173,7 @@ public class SimulationService implements ISimulation
 		_simThread.loadModel();
 		try
 		{
-			update();
+			update(SimulationEvents.LOAD_MODEL);
 		}
 		catch(GeppettoExecutionException e)
 		{
@@ -460,7 +461,7 @@ public class SimulationService implements ISimulation
 			{
 				try
 				{
-					update();
+					update(SimulationEvents.SCENE_UPDATE);
 				}
 				catch(GeppettoExecutionException e)
 				{
@@ -473,10 +474,11 @@ public class SimulationService implements ISimulation
 
 	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
+	 * @param event 
 	 * 
 	 * @throws JsonProcessingException
 	 */
-	private void update() throws GeppettoExecutionException
+	private void update(SimulationEvents event) throws GeppettoExecutionException
 	{
 		StringBuilder sceneBuilder = new StringBuilder();
 		String variableWatchTree = null;
@@ -548,7 +550,7 @@ public class SimulationService implements ISimulation
 		if(updateAvailable)
 		{
 			logger.info("Update sent to listener");
-			_simulationListener.updateReady(sceneBuilder.toString(), variableWatchTree);
+			_simulationListener.updateReady(event,sceneBuilder.toString(), variableWatchTree);
 		}
 	}
 

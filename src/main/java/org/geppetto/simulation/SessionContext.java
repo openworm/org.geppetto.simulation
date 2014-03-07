@@ -193,7 +193,7 @@ public class SessionContext
 	 */
 	public IModelInterpreter getModelInterpreter(Model model) throws GeppettoInitializationException
 	{
-		if(!_modelInterpreters.contains(model))
+		if(!_modelInterpreters.containsKey(model))
 		{
 			throw new GeppettoInitializationException("The model interpreter for "+model.getInstancePath()+ " was not found");
 		}
@@ -207,7 +207,7 @@ public class SessionContext
 	 */
 	public ISimulator getSimulator(Simulator simulatorModel) throws GeppettoInitializationException
 	{
-		if(!_simulators.contains(simulatorModel))
+		if(!_simulators.containsKey(simulatorModel))
 		{
 			throw new GeppettoInitializationException("The simulator for "+simulatorModel.getInstancePath()+ " was not found");
 		}

@@ -45,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
+import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.simulation.Model;
@@ -52,6 +53,7 @@ import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.visitor.BuildClientUpdateVisitor;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
@@ -173,7 +175,7 @@ public class SimulationService implements ISimulation
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext);
 		simulation.accept(loadSimulationVisitor);
 
-		updateClient();
+		updateClient(SimulationEvents.LOAD_MODEL);
 
 	}
 
@@ -286,10 +288,16 @@ public class SimulationService implements ISimulation
 		VariableList varsList = new VariableList();
 		List<AVariable> vars = new ArrayList<AVariable>();
 
-		for(ISimulator simulator : _sessionContext.getSimulators().values())
+		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
 		{
+			ISimulator simulator=_sessionContext.getSimulators().get(simulatorModel);
 			if(simulator != null)
 			{
+				SimpleVariable v = new SimpleVariable();
+				v.setAspect("aspect");
+				v.setName(simulatorModel.getParentAspect().getId());
+				
+				vars.add(v);
 				vars.addAll(isWatch ? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
 			}
 		}
@@ -448,7 +456,7 @@ public class SimulationService implements ISimulation
 
 				if(checkSteppedSimulatorsVisitor.allStepped())
 				{
-					updateClient();
+					updateClient(SimulationEvents.SCENE_UPDATE);
 				}
 			}
 		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
@@ -456,14 +464,15 @@ public class SimulationService implements ISimulation
 
 	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
+	 * @param event 
 	 * 
 	 */
-	private void updateClient()
+	private void updateClient(SimulationEvents event)
 	{
 		BuildClientUpdateVisitor updateClientVisitor = new BuildClientUpdateVisitor(_sessionContext);
 		_sessionContext.getSimulation().accept(updateClientVisitor);
 
-		_simulationListener.updateReady(updateClientVisitor.getSerializedScene(), updateClientVisitor.getSerializedWatchTree());
+		_simulationListener.updateReady(event, updateClientVisitor.getSerializedScene(), updateClientVisitor.getSerializedWatchTree());
 		_logger.info("Update sent to listener");
 	}
 

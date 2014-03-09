@@ -220,7 +220,7 @@ public class SessionContext
 	 */
 	public IModel getIModel(String instancePath)
 	{
-		if(!_models.contains(instancePath))
+		if(!_models.containsKey(instancePath))
 		{
 			return null;
 		}

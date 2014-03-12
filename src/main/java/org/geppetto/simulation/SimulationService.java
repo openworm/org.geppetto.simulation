@@ -219,7 +219,7 @@ public class SimulationService implements ISimulation
 	 * @see org.geppetto.core.simulation.ISimulation#stop()
 	 */
 	@Override
-	public void stop()
+	public void stop() throws GeppettoExecutionException
 	{
 
 		logger.warn("Stopping simulation");
@@ -482,6 +482,7 @@ public class SimulationService implements ISimulation
 	{
 		StringBuilder sceneBuilder = new StringBuilder();
 		String variableWatchTree = null;
+		String time = null;
 		boolean updateAvailable = false;
 
 		for(String aspectID : _sessionContext.getAspectIds())
@@ -490,6 +491,20 @@ public class SimulationService implements ISimulation
 			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree() != null)
 			{
 				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();
+				
+				CompositeStateNode timeNode = stateTree.getSubTree(SUBTREE.TIME_STEP);
+				
+				CountTimeStepsVisitor timeStepVisitor = new CountTimeStepsVisitor();
+				timeNode.apply(timeStepVisitor);
+				
+				if(timeStepVisitor.getNumberOfTimeSteps() > 2)
+				{
+				// serialize state tree for variable watch and store in a string
+				SerializeTreeVisitor timeVisitor = new SerializeTreeVisitor();
+				timeNode.apply(timeVisitor);
+				time = timeVisitor.getSerializedTree();
+				}
+				
 				CountTimeStepsVisitor countTimeStepsVisitor = new CountTimeStepsVisitor();
 				stateTree.apply(countTimeStepsVisitor);
 				// we send data to the frontend if it's either the first cycle or if there is a change in the state, i.e. something that might produce a frontend update
@@ -502,13 +517,14 @@ public class SimulationService implements ISimulation
 					updateAvailable = true;
 
 					try
-					{
+					{						
+						
 						if(_watching)
 						{
 							CompositeStateNode variableWatchRoot = stateTree.getSubTree(SUBTREE.WATCH_TREE);
 							CountTimeStepsVisitor countWatchVisitor = new CountTimeStepsVisitor();
 							variableWatchRoot.apply(countWatchVisitor);
-
+							
 							if(countWatchVisitor.getNumberOfTimeSteps() > 2)
 							{
 								// serialize state tree for variable watch and store in a string
@@ -550,7 +566,7 @@ public class SimulationService implements ISimulation
 		if(updateAvailable)
 		{
 			logger.info("Update sent to listener");
-			_simulationListener.updateReady(event,sceneBuilder.toString(), variableWatchTree);
+			_simulationListener.updateReady(event,sceneBuilder.toString(), variableWatchTree, time);
 		}
 	}
 

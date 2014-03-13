@@ -490,20 +490,7 @@ public class SimulationService implements ISimulation
 			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
 			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree() != null)
 			{
-				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();
-				
-				CompositeStateNode timeNode = stateTree.getSubTree(SUBTREE.TIME_STEP);
-				
-				CountTimeStepsVisitor timeStepVisitor = new CountTimeStepsVisitor();
-				timeNode.apply(timeStepVisitor);
-				
-				if(timeStepVisitor.getNumberOfTimeSteps() > 2)
-				{
-				// serialize state tree for variable watch and store in a string
-				SerializeTreeVisitor timeVisitor = new SerializeTreeVisitor();
-				timeNode.apply(timeVisitor);
-				time = timeVisitor.getSerializedTree();
-				}
+				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();			
 				
 				CountTimeStepsVisitor countTimeStepsVisitor = new CountTimeStepsVisitor();
 				stateTree.apply(countTimeStepsVisitor);
@@ -533,7 +520,16 @@ public class SimulationService implements ISimulation
 								variableWatchTree = visitor.getSerializedTree();
 							}
 						}
+						
+						CompositeStateNode timeNode = stateTree.getSubTree(SUBTREE.TIME_STEP);
+						
+						if(timeNode.getChildren().size() >0){
 
+							// serialize state tree for variable watch and store in a string
+							SerializeTreeVisitor timeVisitor = new SerializeTreeVisitor();
+							timeNode.apply(timeVisitor);
+							time = timeVisitor.getSerializedTree();	
+						}
 						// create scene
 						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);

@@ -97,6 +97,10 @@ public class SimulationService implements ISimulation
 	private boolean _watching = false;
 
 	private List<URL> _scripts = new ArrayList<URL>();
+	
+	private double _globalTime = 0.00;
+	
+	private double _globalTimeStep = 0.00;
 
 	public SimulationService(){
 		logger.warn("New Simulation Service created");
@@ -227,8 +231,10 @@ public class SimulationService implements ISimulation
 		_sessionContext.setRunning(false);
 		_sessionContext.setStopped(true);
 
-		// stop the timer that updates the client
-		_clientUpdateTimer.cancel();
+		if(_clientUpdateTimer != null){
+			// stop the timer that updates the client
+			_clientUpdateTimer.cancel();
+		}
 
 		// revert simulation to initial conditions
 		_sessionContext.revertToInitialConditions();
@@ -520,16 +526,16 @@ public class SimulationService implements ISimulation
 								variableWatchTree = visitor.getSerializedTree();
 							}
 						}
-						
-						CompositeStateNode timeNode = stateTree.getSubTree(SUBTREE.TIME_STEP);
-						
-						if(timeNode.getChildren().size() >0){
 
+						CompositeStateNode timeNode = stateTree.getSubTree(SUBTREE.TIME_STEP);
+
+						if(timeNode.getChildren().size() > 0){
 							// serialize state tree for variable watch and store in a string
 							SerializeTreeVisitor timeVisitor = new SerializeTreeVisitor();
 							timeNode.apply(timeVisitor);
 							time = timeVisitor.getSerializedTree();	
 						}
+						
 						// create scene
 						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
@@ -642,6 +648,13 @@ public class SimulationService implements ISimulation
 			throw new GeppettoInitializationException("No service found for id:" + discoveryId);
 		}
 		return service;
+	}
+
+	/**
+	 * Calculate global time, an average of all simulator
+	 */
+	private void updateTime(){
+		//TODO
 	}
 
 	@Override

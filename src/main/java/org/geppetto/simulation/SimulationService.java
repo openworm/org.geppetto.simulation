@@ -45,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
+import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.IModelInterpreter;
@@ -56,6 +57,7 @@ import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.model.Aspect;
@@ -95,6 +97,10 @@ public class SimulationService implements ISimulation
 	private boolean _watching = false;
 
 	private List<URL> _scripts = new ArrayList<URL>();
+	
+	private double _globalTime = 0.00;
+	
+	private double _globalTimeStep = 0.00;
 
 	public SimulationService(){
 		logger.warn("New Simulation Service created");
@@ -171,7 +177,7 @@ public class SimulationService implements ISimulation
 		_simThread.loadModel();
 		try
 		{
-			update();
+			update(SimulationEvents.LOAD_MODEL);
 		}
 		catch(GeppettoExecutionException e)
 		{
@@ -217,7 +223,7 @@ public class SimulationService implements ISimulation
 	 * @see org.geppetto.core.simulation.ISimulation#stop()
 	 */
 	@Override
-	public void stop()
+	public void stop() throws GeppettoExecutionException
 	{
 
 		logger.warn("Stopping simulation");
@@ -225,8 +231,10 @@ public class SimulationService implements ISimulation
 		_sessionContext.setRunning(false);
 		_sessionContext.setStopped(true);
 
-		// stop the timer that updates the client
-		_clientUpdateTimer.cancel();
+		if(_clientUpdateTimer != null){
+			// stop the timer that updates the client
+			_clientUpdateTimer.cancel();
+		}
 
 		// revert simulation to initial conditions
 		_sessionContext.revertToInitialConditions();
@@ -292,6 +300,11 @@ public class SimulationService implements ISimulation
 
 			if(simulator != null)
 			{
+				SimpleVariable v = new SimpleVariable();
+				v.setAspect("aspect");
+				v.setName(aspectID);
+				
+				vars.add(v);
 				vars.addAll(isWatch ? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
 			}
 		}
@@ -454,7 +467,7 @@ public class SimulationService implements ISimulation
 			{
 				try
 				{
-					update();
+					update(SimulationEvents.SCENE_UPDATE);
 				}
 				catch(GeppettoExecutionException e)
 				{
@@ -467,13 +480,15 @@ public class SimulationService implements ISimulation
 
 	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
+	 * @param event 
 	 * 
 	 * @throws JsonProcessingException
 	 */
-	private void update() throws GeppettoExecutionException
+	private void update(SimulationEvents event) throws GeppettoExecutionException
 	{
 		StringBuilder sceneBuilder = new StringBuilder();
 		String variableWatchTree = null;
+		String time = null;
 		boolean updateAvailable = false;
 
 		for(String aspectID : _sessionContext.getAspectIds())
@@ -481,7 +496,8 @@ public class SimulationService implements ISimulation
 			// get models Map for the given aspect String = modelId / List<IModel> = a given model at different time steps
 			if(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree() != null)
 			{
-				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();
+				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntimeByAspect(aspectID).getStateTree();			
+				
 				CountTimeStepsVisitor countTimeStepsVisitor = new CountTimeStepsVisitor();
 				stateTree.apply(countTimeStepsVisitor);
 				// we send data to the frontend if it's either the first cycle or if there is a change in the state, i.e. something that might produce a frontend update
@@ -494,13 +510,14 @@ public class SimulationService implements ISimulation
 					updateAvailable = true;
 
 					try
-					{
+					{						
+						
 						if(_watching)
 						{
 							CompositeStateNode variableWatchRoot = stateTree.getSubTree(SUBTREE.WATCH_TREE);
 							CountTimeStepsVisitor countWatchVisitor = new CountTimeStepsVisitor();
 							variableWatchRoot.apply(countWatchVisitor);
-
+							
 							if(countWatchVisitor.getNumberOfTimeSteps() > 2)
 							{
 								// serialize state tree for variable watch and store in a string
@@ -510,6 +527,15 @@ public class SimulationService implements ISimulation
 							}
 						}
 
+						CompositeStateNode timeNode = stateTree.getSubTree(SUBTREE.TIME_STEP);
+
+						if(timeNode.getChildren().size() > 0){
+							// serialize state tree for variable watch and store in a string
+							SerializeTreeVisitor timeVisitor = new SerializeTreeVisitor();
+							timeNode.apply(timeVisitor);
+							time = timeVisitor.getSerializedTree();	
+						}
+						
 						// create scene
 						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
@@ -542,7 +568,7 @@ public class SimulationService implements ISimulation
 		if(updateAvailable)
 		{
 			logger.info("Update sent to listener");
-			_simulationListener.updateReady(sceneBuilder.toString(), variableWatchTree);
+			_simulationListener.updateReady(event,sceneBuilder.toString(), variableWatchTree, time);
 		}
 	}
 
@@ -622,6 +648,13 @@ public class SimulationService implements ISimulation
 			throw new GeppettoInitializationException("No service found for id:" + discoveryId);
 		}
 		return service;
+	}
+
+	/**
+	 * Calculate global time, an average of all simulator
+	 */
+	private void updateTime(){
+		//TODO
 	}
 
 	@Override

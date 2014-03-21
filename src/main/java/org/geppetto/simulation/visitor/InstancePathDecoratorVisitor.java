@@ -58,7 +58,6 @@ public class InstancePathDecoratorVisitor extends TraversingVisitor
 	}
 
 	private static final String DOT = ".";
-	private static final String COLON = ":";
 	private String _currentPath = null;
 
 	/*
@@ -70,7 +69,7 @@ public class InstancePathDecoratorVisitor extends TraversingVisitor
 	public void visit(Aspect aspect)
 	{
 		String beforePath=_currentPath;
-		_currentPath+=COLON+aspect.getId();
+		_currentPath+=DOT+aspect.getId();
 		aspect.setInstancePath(_currentPath);
 		super.visit(aspect);
 		_currentPath=beforePath;

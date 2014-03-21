@@ -32,6 +32,9 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModelInterpreter;
@@ -41,11 +44,14 @@ import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.state.CompositeStateNode;
+import org.geppetto.core.model.state.SimpleStateNode;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.model.state.StateTreeRoot.SUBTREE;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
+import org.geppetto.core.model.values.AValue;
 import org.geppetto.core.visualisation.model.CAspect;
 import org.geppetto.core.visualisation.model.CEntity;
+import org.geppetto.core.visualisation.model.CValue;
 import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.CustomSerializer;
 import org.geppetto.simulation.SessionContext;
@@ -71,6 +77,8 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 
 	private CEntity _currentClientEntity = null;
 
+	private Map<Simulator, AValue> _timeSteps = new HashMap<Simulator, AValue>();
+
 	/**
 	 * @param sessionContext
 	 */
@@ -79,7 +87,6 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
 	}
-
 
 	/*
 	 * (non-Javadoc)
@@ -93,7 +100,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		CEntity visualEntity = null;
 		CAspect clientAspect = new CAspect();
 		clientAspect.setId(aspect.getId());
-		
+
 		if(model != null)
 		{
 			try
@@ -103,21 +110,22 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntime(simulator).getStateTree();
 
 				visualEntity = modelInterpreter.getVisualEntity(_sessionContext.getIModel(model.getInstancePath()), aspect, stateTree);
-				
-				if(visualEntity.getAspects().size()==1)
+
+				if(visualEntity.getAspects().size() == 1)
 				{
-					//there is only going to be one aspect inside the entity that was returned by the model interpreter
-					clientAspect.getVisualModel().addAll(visualEntity.getAspects().get(0).getVisualModel());	
-					//we add all the entities that were added by the model interpreter
-					//the model specified for an entity in the Geppetto configuration file 
-					//could wrap inside multiple entities
+					// there is only going to be one aspect inside the entity that was returned by the model interpreter
+					clientAspect.getVisualModel().addAll(visualEntity.getAspects().get(0).getVisualModel());
+
+					// we add all the entities that were added by the model interpreter
+					// the model specified for an entity in the Geppetto configuration file
+					// could wrap inside multiple entities
 					_currentClientEntity.getChildren().addAll(visualEntity.getChildren());
 				}
 				else
 				{
 					throw new RuntimeException(new GeppettoExecutionException("The visual entity returned by the model interpreter has more than one aspect"));
 				}
-				
+
 			}
 			catch(GeppettoInitializationException e)
 			{
@@ -134,11 +142,26 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		// Add the watch tree of this simulator to the root
 		Simulator simulator = aspect.getSimulator();
 		if(simulator != null)
-		{			
-			SimulatorRuntime simulatorRuntime=_sessionContext.getSimulatorRuntime(simulator);
+		{
+			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator);
 			simulatorRuntime.incrementStepsConsumed();
 			_simulationStateTreeRoot.addChild(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE));
-			
+
+			CValue time = new CValue();
+			CompositeStateNode timeNode = simulatorRuntime.getStateTree().getSubTree(SUBTREE.TIME_STEP);
+			if(timeNode.getChildren().size() > 0)
+			{
+				AValue timeValue = ((SimpleStateNode) timeNode.getChildren().get(0)).consumeFirstValue();
+				_timeSteps.put(simulator, timeValue);
+				time.setScale(timeValue.getScalingFactor());
+				time.setUnit(timeValue.getUnit());
+				time.setValue(timeValue.getStringValue());
+			}
+			else
+			{
+				throw new RuntimeException(new GeppettoExecutionException("The simulator" + simulator.getInstancePath() + " has no timestep information"));
+			}
+
 		}
 	}
 
@@ -169,7 +192,6 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		_currentClientEntity = beforeEntity;
 	}
 
-	
 	/**
 	 * @return
 	 */
@@ -180,6 +202,9 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		SimpleModule customSerializationModule = new SimpleModule("customSerializationModule");
 		customSerializationModule.addSerializer(new CustomSerializer(Double.class)); // assuming serializer declares correct class to bind to
 		mapper.registerModule(customSerializationModule);
+
+		_scene.setTime(getGlobalTime());
+
 		try
 		{
 			return mapper.writer().writeValueAsString(_scene);
@@ -189,11 +214,28 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	/**
-	 * NOTE: Currently the scene and the watch tree are separated. Theoretically the entire update could be part of the same
-	 * tree. This split is an heritage of a previous implementation, not changing it yet as it's not clear if there would be
-	 * a performance benefit or not
+	 * @return
+	 */
+	private CValue getGlobalTime()
+	{
+		//Just returns the first value of the list of time steps as the global time
+		//TODO: Add a check that all time steps are the same which should be the case
+		for(AValue timeValue : _timeSteps.values())
+		{
+			CValue time = new CValue();
+			time.setScale(timeValue.getScalingFactor());
+			time.setUnit(timeValue.getUnit());
+			time.setValue(timeValue.getStringValue());
+			return time;
+		}
+		return null;
+	}
+
+	/**
+	 * NOTE: Currently the scene and the watch tree are separated. Theoretically the entire update could be part of the same tree. This split is an heritage of a previous implementation, not changing
+	 * it yet as it's not clear if there would be a performance benefit or not
 	 * 
 	 * @return
 	 */
@@ -201,7 +243,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 	{
 		// serialize state tree for variable watch and store in a string
 		SerializeTreeVisitor visitor = new SerializeTreeVisitor();
-		_simulationStateTreeRoot.apply(visitor); 
+		_simulationStateTreeRoot.apply(visitor);
 		return visitor.getSerializedTree();
 	}
 

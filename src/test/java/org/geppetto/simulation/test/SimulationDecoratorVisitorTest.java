@@ -34,25 +34,25 @@ public class SimulationDecoratorVisitorTest
 		Assert.assertEquals("network.neuron2",sim.getEntities().get(0).getEntities().get(1).getInstancePath());
 		
 		//Test instancepath on aspect nodes
-		Assert.assertEquals("network:electrical",sim.getEntities().get(0).getAspects().get(0).getInstancePath());
-		Assert.assertEquals("network:mechanical",sim.getEntities().get(0).getAspects().get(1).getInstancePath());
+		Assert.assertEquals("network.electrical",sim.getEntities().get(0).getAspects().get(0).getInstancePath());
+		Assert.assertEquals("network.mechanical",sim.getEntities().get(0).getAspects().get(1).getInstancePath());
 		
-		Assert.assertEquals("network.neuron1:electrical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(0).getInstancePath());
-		Assert.assertEquals("network.neuron1:mechanical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(1).getInstancePath());
+		Assert.assertEquals("network.neuron1.electrical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(0).getInstancePath());
+		Assert.assertEquals("network.neuron1.mechanical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(1).getInstancePath());
 		
-		Assert.assertEquals("network.neuron2:mechanical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(0).getInstancePath());
-		Assert.assertEquals("network.neuron2:electrical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(1).getInstancePath());
+		Assert.assertEquals("network.neuron2.mechanical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(0).getInstancePath());
+		Assert.assertEquals("network.neuron2.electrical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(1).getInstancePath());
 		
 		//Test instancepath on model nodes
-		Assert.assertEquals("network.neuron1:electrical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(0).getModel().getInstancePath());
-		Assert.assertEquals("network.neuron1:mechanical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(1).getModel().getInstancePath());
+		Assert.assertEquals("network.neuron1.electrical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(0).getModel().getInstancePath());
+		Assert.assertEquals("network.neuron1.mechanical",sim.getEntities().get(0).getEntities().get(0).getAspects().get(1).getModel().getInstancePath());
 		
-		Assert.assertEquals("network.neuron2:mechanical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(0).getModel().getInstancePath());
-		Assert.assertEquals("network.neuron2:electrical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(1).getModel().getInstancePath());
+		Assert.assertEquals("network.neuron2.mechanical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(0).getModel().getInstancePath());
+		Assert.assertEquals("network.neuron2.electrical",sim.getEntities().get(0).getEntities().get(1).getAspects().get(1).getModel().getInstancePath());
 
 		//Test instancepath on simulator nodes
-		Assert.assertEquals("network:electrical",sim.getEntities().get(0).getAspects().get(0).getSimulator().getInstancePath());
-		Assert.assertEquals("network:mechanical",sim.getEntities().get(0).getAspects().get(1).getSimulator().getInstancePath());
+		Assert.assertEquals("network.electrical",sim.getEntities().get(0).getAspects().get(0).getSimulator().getInstancePath());
+		Assert.assertEquals("network.mechanical",sim.getEntities().get(0).getAspects().get(1).getSimulator().getInstancePath());
 		
 
 	}

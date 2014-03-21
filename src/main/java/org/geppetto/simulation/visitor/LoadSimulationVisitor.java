@@ -88,7 +88,9 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			if(model == null)
 			{
 				model = modelInterpreter.readModel(new URL(pModel.getModelURL()));
+				model.setInstancePath(pModel.getInstancePath());
 				_sessionContext.getModels().put(pModel.getInstancePath(), model);
+				
 			}
 			else
 			{

@@ -51,6 +51,7 @@ import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.state.CompositeStateNode;
+import org.geppetto.core.model.state.SimpleStateNode;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.model.state.StateTreeRoot.SUBTREE;
 import org.geppetto.core.model.state.visitors.CountTimeStepsVisitor;
@@ -98,9 +99,9 @@ public class SimulationService implements ISimulation
 
 	private List<URL> _scripts = new ArrayList<URL>();
 	
-	private double _globalTime = 0.00;
+	private double _globalTime = 0;
 	
-	private double _globalTimeStep = 0.00;
+	private double _globalTimeStep = 0;
 
 	public SimulationService(){
 		logger.warn("New Simulation Service created");
@@ -536,6 +537,8 @@ public class SimulationService implements ISimulation
 							time = timeVisitor.getSerializedTree();	
 						}
 						
+						updateTime(timeNode);
+						
 						// create scene
 						Scene scene;
 						scene = _sessionContext.getConfigurationByAspect(aspectID).getModelInterpreter().getSceneFromModel(_sessionContext.getSimulatorRuntimeByAspect(aspectID).getModel(), stateTree);
@@ -652,9 +655,20 @@ public class SimulationService implements ISimulation
 
 	/**
 	 * Calculate global time, an average of all simulator
+	 * @param timeNode 
 	 */
-	private void updateTime(){
-		//TODO
+	private void updateTime(CompositeStateNode timeNode){
+		if(timeNode.getChildren().size()> 0){
+			SimpleStateNode node = (SimpleStateNode) timeNode.getChildren().get(0);
+			String time = node.getValues().get(0).getStringValue();
+			double timeVal = Double.parseDouble(time);
+
+			//the lowest time step of the simulator becomes the global time step
+			//all simulators will execute with this time ste
+			if( this._globalTimeStep > 0 && this._globalTimeStep > timeVal){
+				this._globalTimeStep = timeVal;
+			}
+		}
 	}
 
 	@Override

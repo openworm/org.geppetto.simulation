@@ -515,7 +515,7 @@ public class SimulationService implements ISimulation
 	public String getSimulatorName()
 	{
 		String simulatorName = "Simulation";
-
+ 
 		return simulatorName;
 	}
 

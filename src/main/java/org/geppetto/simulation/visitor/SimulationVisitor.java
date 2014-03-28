@@ -32,9 +32,11 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
@@ -55,11 +57,13 @@ public class SimulationVisitor extends TraversingVisitor
 {
 
 	private SessionContext _sessionContext;
+	private ISimulationCallbackListener _simulationCallback;
 
-	public SimulationVisitor(SessionContext sessionContext)
+	public SimulationVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallback)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
+		_simulationCallback=simulationCallback;
 	}
 
 	/*
@@ -82,7 +86,8 @@ public class SimulationVisitor extends TraversingVisitor
 				// Load Model if it is still in initial conditions
 				if(!simulator.isInitialized() || simulatorRuntime.isAtInitialConditions())
 				{
-					throw new RuntimeException("The simulator is not initialised");
+					_simulationCallback.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),"The simulator is not initialised",null);
+
 					// LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext);
 					// _sessionContext.getSimulation().accept(loadSimulationVisitor);
 				}
@@ -98,7 +103,7 @@ public class SimulationVisitor extends TraversingVisitor
 					}
 					catch(GeppettoExecutionException e)
 					{
-						throw new RuntimeException(e);
+						_simulationCallback.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),"Error while stepping "+simulator.getName(),e);
 					}
 				}
 			}
@@ -106,7 +111,7 @@ public class SimulationVisitor extends TraversingVisitor
 		}
 		catch(GeppettoInitializationException e)
 		{
-			throw new RuntimeException(e);
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),null,e);
 		}
 	}
 

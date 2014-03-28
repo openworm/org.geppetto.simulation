@@ -32,9 +32,11 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.ServiceCreator;
 import org.geppetto.simulation.SessionContext;
@@ -54,11 +56,13 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 {
 
 	private SessionContext _sessionContext;
+	private ISimulationCallbackListener _simulationCallBack;
 
-	public CreateSimulationServicesVisitor(SessionContext sessionContext)
+	public CreateSimulationServicesVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallBack)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
+		_simulationCallBack=simulationCallBack;
 	}
 
 	/*
@@ -71,9 +75,18 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	{
 		super.visit(model);
 		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
-				_sessionContext.getModelInterpreters());
+				_sessionContext.getModelInterpreters(),_simulationCallBack);
 		Thread t = new Thread(sc);
 		t.start();
+
+		try
+		{
+			t.join();
+		}
+		catch(InterruptedException e)
+		{
+			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+		}
 	}
 
 	/*
@@ -86,9 +99,17 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	{
 		super.visit(simulatorModel);
 		ServiceCreator<Simulator, ISimulator> sc = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
-				_sessionContext.getSimulators());
+				_sessionContext.getSimulators(),_simulationCallBack);
 		Thread t = new Thread(sc);
 		t.start();
+		try
+		{
+			t.join();
+		}
+		catch(InterruptedException e)
+		{
+			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+		}
 		_sessionContext.addSimulatorRuntime(simulatorModel);
 		
 	}

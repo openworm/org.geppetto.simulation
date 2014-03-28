@@ -168,7 +168,7 @@ public class SimulationService implements ISimulation
 		_sessionContext.setSimulation(simulation);
 
 		// retrieve model interpreters and simulators
-		CreateSimulationServicesVisitor createServicesVisitor = new CreateSimulationServicesVisitor(_sessionContext);
+		CreateSimulationServicesVisitor createServicesVisitor = new CreateSimulationServicesVisitor(_sessionContext, _simulationListener);
 		simulation.accept(createServicesVisitor);
 
 		populateScripts(simulation);
@@ -176,7 +176,7 @@ public class SimulationService implements ISimulation
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
 		
-		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext);
+		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationListener);
 		simulation.accept(loadSimulationVisitor);
 
 		updateClient(SimulationEvents.LOAD_MODEL);
@@ -195,7 +195,7 @@ public class SimulationService implements ISimulation
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
 
-		_simulationThread = new SimulationThread(_sessionContext);
+		_simulationThread = new SimulationThread(_sessionContext,_simulationListener);
 		_simulationThread.start();
 		
 		
@@ -475,7 +475,7 @@ public class SimulationService implements ISimulation
 	 */
 	private void updateClient(SimulationEvents event)
 	{
-		BuildClientUpdateVisitor updateClientVisitor = new BuildClientUpdateVisitor(_sessionContext);
+		BuildClientUpdateVisitor updateClientVisitor = new BuildClientUpdateVisitor(_sessionContext, _simulationListener);
 		_sessionContext.getSimulation().accept(updateClientVisitor);
 
 		_simulationListener.updateReady(event, updateClientVisitor.getSerializedScene(), updateClientVisitor.getSerializedWatchTree());

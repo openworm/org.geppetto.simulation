@@ -49,6 +49,13 @@ import org.junit.Test;
 
 public class TestSimulationConfigReader {
 
+	
+	@Test
+	public void testReadSample1() throws MalformedURLException, GeppettoInitializationException {
+		Simulation sim = SimulationConfigReader.readConfig(new File("./src/test/resources/sample1.xml").toURI().toURL());
+		Assert.assertTrue(sim != null);
+	}
+	
 	@Test
 	public void testReadConfig() throws MalformedURLException, GeppettoInitializationException {
 		Simulation sim = SimulationConfigReader.readConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());

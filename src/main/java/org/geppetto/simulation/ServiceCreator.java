@@ -34,7 +34,9 @@ package org.geppetto.simulation;
 
 import java.util.Map;
 
+import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
@@ -62,14 +64,16 @@ public class ServiceCreator<M,S> implements Runnable
 	private Map<M,S> _map=null;
 	private String _discoveryId=null;
 	private String _type=null;
+	private ISimulationCallbackListener _simulationCallBack;
 	
-	public ServiceCreator(String discoveryId, String type, M model, Map<M,S> map)
+	public ServiceCreator(String discoveryId, String type, M model, Map<M,S> map, ISimulationCallbackListener simulationCallBack)
 	{
 		super();
 		this._discoveryId = discoveryId;
 		this._type = type;
 		this._map=map;
 		_model=model;
+		_simulationCallBack=simulationCallBack;
 	}
 
 
@@ -86,7 +90,7 @@ public class ServiceCreator<M,S> implements Runnable
 		}
 		catch(GeppettoInitializationException e)
 		{
-			throw new RuntimeException(e);
+			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
 		}
 
 	}
@@ -118,10 +122,6 @@ public class ServiceCreator<M,S> implements Runnable
 			service = (S) _bc.getService(sr[0]);
 		}
 
-		if(service == null)
-		{
-			throw new GeppettoInitializationException("No service was found for id:" + discoveryId);
-		}
 		return service;
 	}
 

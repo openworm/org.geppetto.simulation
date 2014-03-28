@@ -39,6 +39,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
@@ -46,6 +47,7 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
@@ -63,12 +65,14 @@ public class LoadSimulationVisitor extends TraversingVisitor
 {
 
 	private SessionContext _sessionContext;
+	private ISimulationCallbackListener _simulationCallback;
 	private static Log _logger = LogFactory.getLog(LoadSimulationVisitor.class);
 
-	public LoadSimulationVisitor(SessionContext sessionContext)
+	public LoadSimulationVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationListener)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
+		_simulationCallback=simulationListener;
 
 	}
 
@@ -94,23 +98,24 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			}
 			else
 			{
-				throw new RuntimeException(new GeppettoInitializationException("A model for " + pModel.getInstancePath() + " already exists, something did not get cleared"));
+				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A model for " + pModel.getInstancePath() + " already exists, something did not get cleared",null);
 			}
 
 		}
 		catch(GeppettoInitializationException e)
 		{
-			throw new RuntimeException(e);
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 		catch(MalformedURLException e)
 		{
 			_logger.error("Malformed URL for model");
-			throw new RuntimeException(new GeppettoInitializationException("Unable to load model for " + pModel.getInstancePath(), e));
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath() , e);
+
 		}
 		catch(ModelInterpreterException e)
 		{
 			_logger.error("Error Reading Model");
-			throw new RuntimeException(new GeppettoInitializationException("Unable to load model for " + pModel.getInstancePath(), e));
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath() , e);
 		}
 
 	}
@@ -155,16 +160,16 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			}
 			else
 			{
-				throw new RuntimeException(new GeppettoInitializationException("A simulator for " + simulatorModel.getInstancePath() + " already exists, something did not get cleared"));
+				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + simulatorModel.getInstancePath() + " already exists, something did not get cleared", null);
 			}
 		}
 		catch(GeppettoInitializationException e)
 		{
-			throw new RuntimeException(e);
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 		catch(GeppettoExecutionException e)
 		{
-			throw new RuntimeException(e);
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 		_sessionContext.getSimulatorRuntime(simulatorModel).setProcessedSteps(0);
 

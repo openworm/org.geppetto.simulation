@@ -35,6 +35,7 @@ package org.geppetto.simulation;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.simulation.visitor.SimulationVisitor;
 
 class SimulationThread extends Thread
@@ -42,13 +43,16 @@ class SimulationThread extends Thread
 
 	private static Log _logger = LogFactory.getLog(SimulationThread.class);
 	private SessionContext _sessionContext = null;
+	private ISimulationCallbackListener _simulationCallback;
 
 	/**
 	 * @param context
+	 * @param simulationListener 
 	 */
-	public SimulationThread(SessionContext context)
+	public SimulationThread(SessionContext context, ISimulationCallbackListener simulationListener)
 	{
 		this._sessionContext = context;
+		_simulationCallback=simulationListener;
 	}
 
 	/**
@@ -62,7 +66,7 @@ class SimulationThread extends Thread
 
 	public void run()
 	{
-		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext);
+		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext,_simulationCallback);
 		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING) )
 		{
 				_sessionContext.getSimulation().accept(simulationVisitor);

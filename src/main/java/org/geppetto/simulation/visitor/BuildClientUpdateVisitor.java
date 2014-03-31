@@ -146,7 +146,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		{
 			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator);
 			simulatorRuntime.incrementStepsConsumed();
-			_simulationStateTreeRoot.addChild(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE));
+			_simulationStateTreeRoot.addChildren(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE).getChildren());
 
 			CValue time = new CValue();
 			CompositeStateNode timeNode = simulatorRuntime.getStateTree().getSubTree(SUBTREE.TIME_STEP);

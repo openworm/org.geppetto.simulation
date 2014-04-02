@@ -87,10 +87,7 @@ public class SimulationService implements ISimulation
 	private boolean _watching = false;
 
 	private List<URL> _scripts = new ArrayList<URL>();
-	
-	private double _globalTime = 0.00;
-	
-	private double _globalTimeStep = 0.00;
+
 
 	/**
 	 * 
@@ -230,8 +227,7 @@ public class SimulationService implements ISimulation
 
 		_logger.warn("Stopping simulation");
 		// tell the thread to stop running the simulation
-		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
-
+		
 		if(_clientUpdateTimer != null){
 			// stop the timer that updates the client
 			_clientUpdateTimer.cancel();
@@ -239,6 +235,8 @@ public class SimulationService implements ISimulation
 
 		// revert simulation to initial conditions
 		_sessionContext.revertToInitialConditions();
+		
+		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
 	}
 
 	/*

@@ -101,6 +101,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		CEntity visualEntity = null;
 		CAspect clientAspect = new CAspect();
 		clientAspect.setId(aspect.getId());
+		clientAspect.setInstancePath(aspect.getInstancePath());
 
 		if(model != null)
 		{
@@ -167,7 +168,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 			}
 			else
 			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "The simulator" + simulator.getInstancePath() + " has no timestep information",null);
+				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "The simulator for " + simulator.getInstancePath() + " has no timestep information",null);
 			}
 
 		}
@@ -185,6 +186,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 
 		CEntity visualEntity = new CEntity();
 		visualEntity.setId(entity.getId());
+		visualEntity.setInstancePath(entity.getInstancePath());
 		if(entity.getParentEntity() == null)
 		{
 			// this is an entity in the root of the simulation

@@ -83,13 +83,11 @@ public class SimulationVisitor extends TraversingVisitor
 			//we proceed only if the simulator is not already stepping 
 			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 			{
-				// Load Model if it is still in initial conditions
+				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
 				if(!simulator.isInitialized() || simulatorRuntime.isAtInitialConditions())
 				{
-					_simulationCallback.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),"The simulator is not initialised",null);
-
-					// LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext);
-					// _sessionContext.getSimulation().accept(loadSimulationVisitor);
+					 LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallback);
+					 _sessionContext.getSimulation().accept(loadSimulationVisitor);
 				}
 
 				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())

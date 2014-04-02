@@ -98,7 +98,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			}
 			else
 			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A model for " + pModel.getInstancePath() + " already exists, something did not get cleared",null);
+				// the model is already loaded, we are coming here after a stop simulation which doesn't delete the model, do nothing.
 			}
 
 		}

@@ -72,7 +72,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
-		_simulationCallback=simulationListener;
+		_simulationCallback = simulationListener;
 
 	}
 
@@ -91,10 +91,19 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			IModel model = _sessionContext.getIModel(pModel.getInstancePath());
 			if(model == null)
 			{
-				model = modelInterpreter.readModel(new URL(pModel.getModelURL()));
+				List<URL> recordings = new ArrayList<URL>();
+				if(pModel.getRecordingURL() != null)
+				{
+					//add all the recordings found
+					for(String recording : pModel.getRecordingURL())
+					{
+						recordings.add(new URL(recording));
+					}
+				}
+				model = modelInterpreter.readModel(new URL(pModel.getModelURL()), recordings, pModel.getParentAspect().getInstancePath());
 				model.setInstancePath(pModel.getInstancePath());
 				_sessionContext.getModels().put(pModel.getInstancePath(), model);
-				
+
 			}
 			else
 			{
@@ -109,13 +118,13 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		catch(MalformedURLException e)
 		{
 			_logger.error("Malformed URL for model");
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath() , e);
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 
 		}
 		catch(ModelInterpreterException e)
 		{
 			_logger.error("Error Reading Model");
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath() , e);
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 		}
 
 	}
@@ -141,26 +150,27 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					// initialize simulator
 					GetModelsForSimulatorVisitor getModelsForSimulatorVisitor = new GetModelsForSimulatorVisitor(simulatorModel);
 					simulatorModel.getParentAspect().getParentEntity().accept(getModelsForSimulatorVisitor);
-					List<Model> models=getModelsForSimulatorVisitor.getModels();
-					
-					_sessionContext.mapSimulatorToModels(simulatorModel,models);
-					
-					//Builds a list with the IModel corresponding to the discovered models.
-					List<IModel> iModels=new ArrayList<IModel>();
-					for(Model m:models)
+					List<Model> models = getModelsForSimulatorVisitor.getModels();
+
+					_sessionContext.mapSimulatorToModels(simulatorModel, models);
+
+					// Builds a list with the IModel corresponding to the discovered models.
+					List<IModel> iModels = new ArrayList<IModel>();
+					for(Model m : models)
 					{
 						iModels.add(_sessionContext.getIModel(m.getInstancePath()));
-						//store in the session context what simulator is in charge of a given model
-						_sessionContext.mapModelToSimulator(m,simulatorModel);
+						// store in the session context what simulator is in charge of a given model
+						_sessionContext.mapModelToSimulator(m, simulatorModel);
 					}
-					
+
 					simulator.initialize(iModels, new SimulatorCallbackListener(simulatorModel, _sessionContext));
 				}
 
 			}
 			else
 			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + simulatorModel.getInstancePath() + " already exists, something did not get cleared", null);
+				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + simulatorModel.getInstancePath()
+						+ " already exists, something did not get cleared", null);
 			}
 		}
 		catch(GeppettoInitializationException e)

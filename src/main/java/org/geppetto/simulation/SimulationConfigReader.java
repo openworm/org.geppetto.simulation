@@ -44,33 +44,28 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.simulation.model.Simulation;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+import org.geppetto.core.model.simulation.Simulation;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class SimulationConfigReader
+{
 
-public class SimulationConfigReader {
+	public static Simulation readConfig(URL url) throws GeppettoInitializationException
+	{
 
-	public static Simulation readConfig(URL url) throws GeppettoInitializationException {
-		
-		
 		Simulation sim = null;
-		try {
+		try
+		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
 			sim = (Simulation) unmarshaller.unmarshal(url);
-		} catch (JAXBException e1) {
-			throw new GeppettoInitializationException("Unable to unmarshall simulation with ur : " + url.toString());
+		}
+		catch(JAXBException e1)
+		{
+			throw new GeppettoInitializationException("Unable to unmarshall simulation with url : " + url.toString(), e1);
 		}
 
 		return sim;
 	}
-	
+
 	/**
 	 * Takes a JSON object with simulation information and creates a Simulation out of it.
 	 * 
@@ -78,45 +73,53 @@ public class SimulationConfigReader {
 	 * @return
 	 * @throws GeppettoInitializationException
 	 */
-	public static Simulation readSimulationConfig(String simulationConfig) throws GeppettoInitializationException {
+	public static Simulation readSimulationConfig(String simulationConfig) throws GeppettoInitializationException
+	{
 
 		Simulation sim = null;
-		
+
 		StringReader reader = new StringReader(simulationConfig);
-		try {
+		try
+		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
 			sim = (Simulation) unmarshaller.unmarshal(reader);
-		} catch (JAXBException e) {
+		}
+		catch(JAXBException e)
+		{
 			throw new GeppettoInitializationException(e);
 		}
-		
+
 		return sim;
 	}
-	
+
 	/**
-	 * Takes a URL for simulation file and creates a json object out of it with the 
-	 * simulation information.
+	 * Takes a URL for simulation file and creates a json object out of it with the simulation information.
 	 * 
 	 * @param url
 	 * @return
-	 * @throws GeppettoInitializationException 
+	 * @throws GeppettoInitializationException
 	 */
-	public static String writeSimulationConfig(URL url) throws GeppettoInitializationException{
+	public static String writeSimulationConfig(URL url) throws GeppettoInitializationException
+	{
 
 		String line = null;
 		StringBuilder sb = new StringBuilder();
-		
-		try {
-			
+
+		try
+		{
+
 			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-			
-			while((line=br.readLine())!= null){
-			    sb.append(line.trim());
+
+			while((line = br.readLine()) != null)
+			{
+				sb.append(line.trim());
 			}
-		} catch (IOException e) {
+		}
+		catch(IOException e)
+		{
 			throw new GeppettoInitializationException("Error while attempting to read simulation's configuration");
 		}
-		
+
 		return sb.toString();
 	}
 }

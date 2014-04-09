@@ -46,7 +46,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
  */
 public class CustomSerializer extends StdSerializer<Double>
 {
-	protected CustomSerializer(Class<Double> t)
+	public CustomSerializer(Class<Double> t)
 	{
 		super(t);
 	}

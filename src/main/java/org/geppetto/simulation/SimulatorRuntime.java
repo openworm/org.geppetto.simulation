@@ -33,7 +33,6 @@
 
 package org.geppetto.simulation;
 
-import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.state.StateTreeRoot;
 
 /**
@@ -44,86 +43,117 @@ public class SimulatorRuntime
 {
 
 	private StateTreeRoot _stateTree;
-	private Integer _processedElements;
-	private Integer _elementCount;
-	private IModel _model;
-	private int _updatesSent=0;
+	private SimulatorRuntimeStatus _status=SimulatorRuntimeStatus.IDLE;
 	
-	public IModel getModel()
-	{
-		return _model;
-	}
+	//This is the number of steps this simulator has processed
+	private int _processedSteps=0;
+	//This is the number of steps that were processed by this simulator and that have been
+	//sent to the client
+	private int _stepsConsumed=0;
 
-	public void setModel(IModel model)
-	{
-		this._model = model;
-	}
-
+	
+	/**
+	 * @return
+	 */
 	public StateTreeRoot getStateTree()
 	{
 		return _stateTree;
 	}
 	
-	public void setStateSet(StateTreeRoot stateTree)
+	/**
+	 * @param stateTree
+	 */
+	public void setStateTree(StateTreeRoot stateTree)
 	{
 		this._stateTree = stateTree;
 	}
 	
-	public Integer getProcessedElements()
+	/**
+	 * @param status
+	 */
+	public void setStatus(SimulatorRuntimeStatus status)
 	{
-		return _processedElements;
+		_status=status;
 	}
 	
-	public void setProcessedElements(Integer processedElements)
+	/**
+	 * @return
+	 */
+	public SimulatorRuntimeStatus getStatus()
 	{
-		this._processedElements = processedElements;
+		return _status;
 	}
 	
-	public Integer getElementCount()
+	
+	/**
+	 * @return
+	 */
+	public Integer getProcessedSteps()
 	{
-		return _elementCount;
+		return _processedSteps;
 	}
 	
-	public void setElementCount(Integer elementCount)
+	/**
+	 * @param processedSteps
+	 */
+	public void setProcessedSteps(int processedSteps)
 	{
-		this._elementCount = elementCount;
-	}
-
-	public void increaseProcessedElements()
-	{
-		_processedElements++;
-	}
-
-	public boolean allElementsProcessed()
-	{
-		return _elementCount==_processedElements;
-	}
-
-	public int getUpdatesProcessed()
-	{
-		return _updatesSent;
-	}
-
-	public void updateProcessed()
-	{
-		_updatesSent++;
+		_processedSteps=processedSteps;
 	}
 	
-	/*
-	 * reset everything - only thing untouched is _model, representing initial conditions
-	 * */
+	/**
+	 * 
+	 */
+	public void incrementProcessedSteps()
+	{
+		_processedSteps++;
+	}
+
+
+	/**
+	 * @return the number of steps which have been processed but not yet consumed
+	 */
+	public int getNonConsumedSteps()
+	{
+		return _processedSteps-_stepsConsumed;
+	}
+	
+	/**
+	 * @return
+	 */
+	public int getStepsConsumed()
+	{
+		return _stepsConsumed;
+	}
+
+	/**
+	 * 
+	 */
+	public void incrementStepsConsumed()
+	{
+		_stepsConsumed++;
+	}
+	
+
+	/**
+	 * Revert the simulator to the initial conditions
+	 */
 	public void revertToInitialConditions(){
 		if(_stateTree != null){
 			_stateTree.getChildren().clear();
 			_stateTree = null;
 		}
+		_stepsConsumed=0;
+		_processedSteps=0;
 	}
 	
-	/*
-	 * Check if the runtime is at initial conditions
-	 * */
+	/**
+	 * @return true if the simulator is at initial conditions
+	 */
 	public boolean isAtInitialConditions()
 	{
 		return _stateTree == null;
 	}
+
+
 }

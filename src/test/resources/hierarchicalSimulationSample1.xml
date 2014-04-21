@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tns:simulation xmlns:tns="http://www.openworm.org/simulationSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="../../main/resources/schema/simulationSchema.xsd">
+
+	<tns:entity>
+		<tns:id>network</tns:id>
+		<tns:aspect>
+			<tns:id>electrical</tns:id>
+			<tns:simulator>
+				<tns:simulatorId>jLemsSimulator</tns:simulatorId>
+			</tns:simulator>
+		</tns:aspect>
+		<tns:aspect>
+			<tns:id>mechanical</tns:id>
+			<tns:simulator>
+				<tns:simulatorId>sphSimulator</tns:simulatorId>
+			</tns:simulator>
+		</tns:aspect>
+		<tns:entity>
+			<tns:id>neuron1</tns:id>
+			<tns:aspect>
+				<tns:id>electrical</tns:id>
+				<tns:model>
+	    			<tns:modelInterpreter>lemsModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
+				</tns:model>
+			</tns:aspect>
+			<tns:aspect>
+				<tns:id>mechanical</tns:id>
+				<tns:model>
+	    			<tns:modelInterpreter>sphModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
+				</tns:model>
+			</tns:aspect>
+		</tns:entity>
+		<tns:entity>
+			<tns:id>neuron2</tns:id>
+			<tns:aspect>
+				<tns:id>mechanical</tns:id>
+				<tns:model>
+	    			<tns:modelInterpreter>sphModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
+				</tns:model>
+			</tns:aspect>
+			<tns:aspect>
+				<tns:id>electrical</tns:id>
+				<tns:model>
+	    			<tns:modelInterpreter>lemsModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
+				</tns:model>
+			</tns:aspect>
+
+		</tns:entity>
+	</tns:entity>
+</tns:simulation>

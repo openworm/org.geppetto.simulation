@@ -109,7 +109,13 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 			{
 				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
 				Simulator simulator = _sessionContext.getSimulatorFromModel(model);
-				StateTreeRoot stateTree = _sessionContext.getSimulatorRuntime(simulator).getStateTree();
+				StateTreeRoot stateTree = null;
+				
+				if(simulator!=null)
+				{
+					stateTree = _sessionContext.getSimulatorRuntime(simulator).getStateTree();	
+				}
+				
 
 				visualEntity = modelInterpreter.getVisualEntity(_sessionContext.getIModel(model.getInstancePath()), aspect, stateTree);
 

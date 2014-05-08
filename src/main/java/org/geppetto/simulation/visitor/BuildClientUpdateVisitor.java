@@ -50,6 +50,7 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.visualisation.model.CAspect;
 import org.geppetto.core.visualisation.model.CEntity;
 import org.geppetto.core.visualisation.model.CValue;
+import org.geppetto.core.visualisation.model.Point;
 import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.CustomSerializer;
 import org.geppetto.simulation.SessionContext;
@@ -193,6 +194,13 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		CEntity visualEntity = new CEntity();
 		visualEntity.setId(entity.getId());
 		visualEntity.setInstancePath(entity.getInstancePath());
+		if(entity.getPosition()!=null){
+			Point position = new Point();
+			position.setX(new Double(entity.getPosition().getX()));
+			position.setY(new Double(entity.getPosition().getY()));
+			position.setZ(new Double(entity.getPosition().getZ()));
+			visualEntity.setPosition(position);
+		}
 		if(entity.getParentEntity() == null)
 		{
 			// this is an entity in the root of the simulation

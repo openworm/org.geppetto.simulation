@@ -40,8 +40,9 @@ import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
-import org.geppetto.core.model.state.CompositeStateNode;
-import org.geppetto.core.model.state.SimpleStateNode;
+import org.geppetto.core.model.state.ACompositeStateNode;
+import org.geppetto.core.model.state.ASimpleStateNode;
+import org.geppetto.core.model.state.CompositeVariableNode;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.model.state.StateTreeRoot.SUBTREE;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
@@ -73,7 +74,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 
 	private Scene _scene = new Scene();
 	
-	private CompositeStateNode _simulationStateTreeRoot = new CompositeStateNode("variable_watch");
+	private CompositeVariableNode _simulationStateTreeRoot = new CompositeVariableNode("variable_watch");
 
 	private CEntity _currentClientEntity = null;
 
@@ -157,10 +158,10 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 			_simulationStateTreeRoot.addChildren(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE).getChildren());
 
 			CValue time = new CValue();
-			CompositeStateNode timeNode = simulatorRuntime.getStateTree().getSubTree(SUBTREE.TIME_STEP);
+			ACompositeStateNode timeNode = simulatorRuntime.getStateTree().getSubTree(SUBTREE.TIME_STEP);
 			if(!timeNode.getChildren().isEmpty())
 			{
-				SimpleStateNode timeValueNode=((SimpleStateNode) timeNode.getChildren().get(0));
+				ASimpleStateNode timeValueNode=((ASimpleStateNode) timeNode.getChildren().get(0));
 				AValue timeValue = timeValueNode.consumeFirstValue();
 				time.setScale(timeValueNode.getScalingFactor());
 				time.setUnit(timeValueNode.getUnit());

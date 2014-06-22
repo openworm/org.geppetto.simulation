@@ -44,8 +44,8 @@ import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
-import org.geppetto.core.model.state.CompositeStateNode;
-import org.geppetto.core.model.state.SimpleStateNode;
+import org.geppetto.core.model.state.ACompositeStateNode;
+import org.geppetto.core.model.state.ASimpleStateNode;
 import org.geppetto.core.model.state.StateTreeRoot;
 import org.geppetto.core.model.values.DoubleValue;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
@@ -78,14 +78,14 @@ public class RecordingsSimulatorTest
 			@Override
 			public void stateTreeUpdated(StateTreeRoot stateTree) throws GeppettoExecutionException
 			{
-				CompositeStateNode wtree = (CompositeStateNode) stateTree.getChildren().get(0);
-				CompositeStateNode entity = (CompositeStateNode) wtree.getChildren().get(0);
-				CompositeStateNode model =(CompositeStateNode) entity.getChildren().get(0);
-				CompositeStateNode a =(CompositeStateNode) model.getChildren().get(1);
-				SimpleStateNode time =(SimpleStateNode) model.getChildren().get(0);
-				CompositeStateNode b =(CompositeStateNode) a.getChildren().get(0);
-				CompositeStateNode c =(CompositeStateNode) b.getChildren().get(0);
-				SimpleStateNode d =(SimpleStateNode) c.getChildren().get(0);
+				ACompositeStateNode wtree = (ACompositeStateNode) stateTree.getChildren().get(0);
+				ACompositeStateNode entity = (ACompositeStateNode) wtree.getChildren().get(0);
+				ACompositeStateNode model =(ACompositeStateNode) entity.getChildren().get(0);
+				ACompositeStateNode a =(ACompositeStateNode) model.getChildren().get(1);
+				ASimpleStateNode time =(ASimpleStateNode) model.getChildren().get(0);
+				ACompositeStateNode b =(ACompositeStateNode) a.getChildren().get(0);
+				ACompositeStateNode c =(ACompositeStateNode) b.getChildren().get(0);
+				ASimpleStateNode d =(ASimpleStateNode) c.getChildren().get(0);
 				Assert.assertEquals(expected[current], ((DoubleValue)d.consumeFirstValue()).getValue(),0);
 				Assert.assertEquals(expectedTime[current++], ((DoubleValue)time.consumeFirstValue()).getValue(),0);
 			}

@@ -42,17 +42,17 @@ import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.state.ACompositeStateNode;
 import org.geppetto.core.model.state.ASimpleStateNode;
+import org.geppetto.core.model.state.AspectNode;
+import org.geppetto.core.model.state.AspectTreeNode;
+import org.geppetto.core.model.state.AspectTreeNode.SUBTREE;
 import org.geppetto.core.model.state.CompositeVariableNode;
-import org.geppetto.core.model.state.StateTreeRoot;
-import org.geppetto.core.model.state.StateTreeRoot.SUBTREE;
+import org.geppetto.core.model.state.EntityNode;
+import org.geppetto.core.model.state.SceneNode;
+import org.geppetto.core.model.state.TimeNode;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.values.AValue;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.visualisation.model.CAspect;
-import org.geppetto.core.visualisation.model.CEntity;
-import org.geppetto.core.visualisation.model.CValue;
 import org.geppetto.core.visualisation.model.Point;
-import org.geppetto.core.visualisation.model.Scene;
 import org.geppetto.simulation.CustomSerializer;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorRuntime;
@@ -72,11 +72,11 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 
 	private SessionContext _sessionContext;
 
-	private Scene _scene = new Scene();
+	private SceneNode _scene = new SceneNode();
 	
 	private CompositeVariableNode _simulationStateTreeRoot = new CompositeVariableNode("variable_watch");
 
-	private CEntity _currentClientEntity = null;
+	private EntityNode _currentClientEntity = null;
 
 	private ISimulationCallbackListener _simulationCallback;
 
@@ -100,8 +100,8 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 	public void visit(Aspect aspect)
 	{
 		Model model = aspect.getModel();
-		CEntity visualEntity = null;
-		CAspect clientAspect = new CAspect();
+		EntityNode visualEntity = null;
+		AspectNode clientAspect = new AspectNode();
 		clientAspect.setId(aspect.getId());
 		clientAspect.setInstancePath(aspect.getInstancePath());
 
@@ -111,7 +111,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 			{
 				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
 				Simulator simulator = _sessionContext.getSimulatorFromModel(model);
-				StateTreeRoot stateTree = null;
+				AspectTreeNode stateTree = null;
 				
 				if(simulator!=null)
 				{
@@ -157,7 +157,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 			simulatorRuntime.incrementStepsConsumed();
 			_simulationStateTreeRoot.addChildren(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE).getChildren());
 
-			CValue time = new CValue();
+			TimeNode time = new TimeNode();
 			ACompositeStateNode timeNode = simulatorRuntime.getStateTree().getSubTree(SUBTREE.TIME_STEP);
 			if(!timeNode.getChildren().isEmpty())
 			{
@@ -190,9 +190,9 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 	@Override
 	public void visit(Entity entity)
 	{
-		CEntity beforeEntity = _currentClientEntity;
+		EntityNode beforeEntity = _currentClientEntity;
 
-		CEntity visualEntity = new CEntity();
+		EntityNode visualEntity = new EntityNode();
 		visualEntity.setId(entity.getId());
 		visualEntity.setInstancePath(entity.getInstancePath());
 		if(entity.getPosition()!=null){

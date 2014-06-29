@@ -46,7 +46,7 @@ import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.state.ACompositeStateNode;
 import org.geppetto.core.model.state.ASimpleStateNode;
-import org.geppetto.core.model.state.StateTreeRoot;
+import org.geppetto.core.model.state.AspectTreeNode;
 import org.geppetto.core.model.values.DoubleValue;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.recording.RecordingsSimulator;
@@ -76,7 +76,7 @@ public class RecordingsSimulatorTest
 			final double[] expectedTime={0.1, 0.2, 0.5, 0.51, 0.52, 0.6, 0.7};
 			
 			@Override
-			public void stateTreeUpdated(StateTreeRoot stateTree) throws GeppettoExecutionException
+			public void stateTreeUpdated(AspectTreeNode stateTree) throws GeppettoExecutionException
 			{
 				ACompositeStateNode wtree = (ACompositeStateNode) stateTree.getChildren().get(0);
 				ACompositeStateNode entity = (ACompositeStateNode) wtree.getChildren().get(0);

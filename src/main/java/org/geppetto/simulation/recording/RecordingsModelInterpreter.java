@@ -43,9 +43,9 @@ import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.simulation.Aspect;
-import org.geppetto.core.model.state.StateTreeRoot;
-import org.geppetto.core.visualisation.model.CAspect;
-import org.geppetto.core.visualisation.model.CEntity;
+import org.geppetto.core.model.state.AspectNode;
+import org.geppetto.core.model.state.AspectTreeNode;
+import org.geppetto.core.model.state.EntityNode;
 import org.springframework.stereotype.Service;
 
 import ucar.nc2.NetcdfFile;
@@ -93,14 +93,32 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	 * @see org.geppetto.core.model.IModelInterpreter#getVisualEntity(org.geppetto.core.model.IModel, org.geppetto.core.model.simulation.Aspect, org.geppetto.core.model.state.StateTreeRoot)
 	 */
 	@Override
-	public CEntity getVisualEntity(IModel model, Aspect aspect, StateTreeRoot stateTree) throws ModelInterpreterException
+	public EntityNode getVisualEntity(IModel model, Aspect aspect, AspectTreeNode stateTree) throws ModelInterpreterException
 	{
 		// A generic recording does not have a visual representation, we return an empty entity
-		CEntity empty = new CEntity();
-		CAspect visualAspect = new CAspect();
+		EntityNode empty = new EntityNode();
+		AspectNode visualAspect = new AspectNode();
 		visualAspect.setId(aspect.getId());
 		empty.getAspects().add(visualAspect);
 		return empty;
+	}
+
+	@Override
+	public boolean populateVisualTree(AspectNode aspectNode) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean populateModelTree(AspectNode aspectNode) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean populateRuntimeTree(AspectNode aspectNode) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

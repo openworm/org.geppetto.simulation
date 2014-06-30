@@ -44,7 +44,7 @@ import org.geppetto.core.model.state.ACompositeStateNode;
 import org.geppetto.core.model.state.ASimpleStateNode;
 import org.geppetto.core.model.state.AspectNode;
 import org.geppetto.core.model.state.AspectTreeNode;
-import org.geppetto.core.model.state.AspectTreeNode.SUBTREE;
+import org.geppetto.core.model.state.ANode.SUBTREE;
 import org.geppetto.core.model.state.CompositeVariableNode;
 import org.geppetto.core.model.state.EntityNode;
 import org.geppetto.core.model.state.SceneNode;

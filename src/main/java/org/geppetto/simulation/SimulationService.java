@@ -476,8 +476,11 @@ public class SimulationService implements ISimulation
 		BuildClientUpdateVisitor updateClientVisitor = new BuildClientUpdateVisitor(_sessionContext, _simulationListener);
 		_sessionContext.getSimulation().accept(updateClientVisitor);
 
-		_simulationListener.updateReady(event, updateClientVisitor.getSerializedScene(), updateClientVisitor.getSerializedWatchTree());
-		_logger.info("Update sent to listener");
+		String scene = updateClientVisitor.getSerializedScene();
+		if(scene!=null){
+			_simulationListener.updateReady(event, scene, updateClientVisitor.getSerializedWatchTree());
+			_logger.info("Update sent to listener");
+		}
 	}
 
 	/**

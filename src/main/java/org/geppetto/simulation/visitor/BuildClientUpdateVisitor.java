@@ -47,8 +47,8 @@ import org.geppetto.core.model.state.AspectTreeNode;
 import org.geppetto.core.model.state.ANode.SUBTREE;
 import org.geppetto.core.model.state.CompositeVariableNode;
 import org.geppetto.core.model.state.EntityNode;
-import org.geppetto.core.model.state.SceneNode;
-import org.geppetto.core.model.state.TimeNode;
+import org.geppetto.core.model.state.RuntimeTreeRoot;
+import org.geppetto.core.model.state.StateVariableNode;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.values.AValue;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -72,7 +72,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 
 	private SessionContext _sessionContext;
 
-	private SceneNode _scene = new SceneNode();
+	private RuntimeTreeRoot _scene = new RuntimeTreeRoot();
 	
 	private CompositeVariableNode _simulationStateTreeRoot = new CompositeVariableNode("variable_watch");
 
@@ -157,15 +157,15 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 			simulatorRuntime.incrementStepsConsumed();
 			_simulationStateTreeRoot.addChildren(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE).getChildren());
 
-			TimeNode time = new TimeNode();
+			StateVariableNode time = new StateVariableNode("time step");
 			ACompositeStateNode timeNode = simulatorRuntime.getStateTree().getSubTree(SUBTREE.TIME_STEP);
 			if(!timeNode.getChildren().isEmpty())
 			{
 				ASimpleStateNode timeValueNode=((ASimpleStateNode) timeNode.getChildren().get(0));
 				AValue timeValue = timeValueNode.consumeFirstValue();
-				time.setScale(timeValueNode.getScalingFactor());
+				time.setScalingFactor(timeValueNode.getScalingFactor());
 				time.setUnit(timeValueNode.getUnit());
-				time.setValue(timeValue.getStringValue());
+				time.addValue(timeValue);
 				clientAspect.setTime(time);
 				//Note: The line below will stop working in case there will be a simulation in which the update to the frontend
 				//for all the simulators will not happen at the same time step for all of them (note this doesn't 

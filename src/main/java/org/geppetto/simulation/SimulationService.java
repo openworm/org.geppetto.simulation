@@ -61,6 +61,7 @@ import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
+import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -175,6 +176,9 @@ public class SimulationService implements ISimulation
 		
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationListener);
 		simulation.accept(loadSimulationVisitor);
+		
+		PopulateVisualTreeVisitor visualVisitor = new PopulateVisualTreeVisitor(_sessionContext, _simulationListener);
+		simulation.accept(visualVisitor);
 
 		updateClient(SimulationEvents.LOAD_MODEL);
 

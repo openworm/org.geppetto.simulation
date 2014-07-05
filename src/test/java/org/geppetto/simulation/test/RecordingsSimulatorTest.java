@@ -44,9 +44,9 @@ import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
-import org.geppetto.core.model.state.ACompositeStateNode;
-import org.geppetto.core.model.state.ASimpleStateNode;
-import org.geppetto.core.model.state.AspectTreeNode;
+import org.geppetto.core.model.runtime.ACompositeNode;
+import org.geppetto.core.model.runtime.ASimpleStateNode;
+import org.geppetto.core.model.runtime.AspectTreeNode;
 import org.geppetto.core.model.values.DoubleValue;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.recording.RecordingsSimulator;
@@ -78,13 +78,13 @@ public class RecordingsSimulatorTest
 			@Override
 			public void stateTreeUpdated(AspectTreeNode stateTree) throws GeppettoExecutionException
 			{
-				ACompositeStateNode wtree = (ACompositeStateNode) stateTree.getChildren().get(0);
-				ACompositeStateNode entity = (ACompositeStateNode) wtree.getChildren().get(0);
-				ACompositeStateNode model =(ACompositeStateNode) entity.getChildren().get(0);
-				ACompositeStateNode a =(ACompositeStateNode) model.getChildren().get(1);
+				ACompositeNode wtree = (ACompositeNode) stateTree.getChildren().get(0);
+				ACompositeNode entity = (ACompositeNode) wtree.getChildren().get(0);
+				ACompositeNode model =(ACompositeNode) entity.getChildren().get(0);
+				ACompositeNode a =(ACompositeNode) model.getChildren().get(1);
 				ASimpleStateNode time =(ASimpleStateNode) model.getChildren().get(0);
-				ACompositeStateNode b =(ACompositeStateNode) a.getChildren().get(0);
-				ACompositeStateNode c =(ACompositeStateNode) b.getChildren().get(0);
+				ACompositeNode b =(ACompositeNode) a.getChildren().get(0);
+				ACompositeNode c =(ACompositeNode) b.getChildren().get(0);
 				ASimpleStateNode d =(ASimpleStateNode) c.getChildren().get(0);
 				Assert.assertEquals(expected[current], ((DoubleValue)d.consumeFirstValue()).getValue(),0);
 				Assert.assertEquals(expectedTime[current++], ((DoubleValue)time.consumeFirstValue()).getValue(),0);

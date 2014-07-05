@@ -36,19 +36,19 @@ import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.runtime.ACompositeNode;
+import org.geppetto.core.model.runtime.ASimpleStateNode;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectTreeNode;
+import org.geppetto.core.model.runtime.CompositeVariableNode;
+import org.geppetto.core.model.runtime.EntityNode;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.StateVariableNode;
+import org.geppetto.core.model.runtime.AspectTreeNode.ASPECTTREE;
 import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
-import org.geppetto.core.model.state.ACompositeStateNode;
-import org.geppetto.core.model.state.ASimpleStateNode;
-import org.geppetto.core.model.state.AspectNode;
-import org.geppetto.core.model.state.AspectTreeNode;
-import org.geppetto.core.model.state.ANode.SUBTREE;
-import org.geppetto.core.model.state.CompositeVariableNode;
-import org.geppetto.core.model.state.EntityNode;
-import org.geppetto.core.model.state.RuntimeTreeRoot;
-import org.geppetto.core.model.state.StateVariableNode;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.values.AValue;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -155,10 +155,10 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		{
 			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator);
 			simulatorRuntime.incrementStepsConsumed();
-			_simulationStateTreeRoot.addChildren(simulatorRuntime.getStateTree().getSubTree(SUBTREE.WATCH_TREE).getChildren());
+			_simulationStateTreeRoot.addChildren(simulatorRuntime.getStateTree().getSubTree(ASPECTTREE.WATCH_TREE).getChildren());
 
 			StateVariableNode time = new StateVariableNode("time step");
-			ACompositeStateNode timeNode = simulatorRuntime.getStateTree().getSubTree(SUBTREE.TIME_STEP);
+			ACompositeNode timeNode = new CompositeVariableNode("time tree");
 			if(!timeNode.getChildren().isEmpty())
 			{
 				ASimpleStateNode timeValueNode=((ASimpleStateNode) timeNode.getChildren().get(0));
@@ -205,7 +205,7 @@ public class BuildClientUpdateVisitor extends TraversingVisitor
 		if(entity.getParentEntity() == null)
 		{
 			// this is an entity in the root of the simulation
-			_scene.getEntities().add(visualEntity);
+			_scene.addChild(visualEntity);
 		}
 		else
 		{

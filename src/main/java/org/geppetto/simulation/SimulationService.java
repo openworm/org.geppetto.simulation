@@ -48,6 +48,7 @@ import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
@@ -57,10 +58,12 @@ import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.visitor.BuildClientUpdateVisitor;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
+import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
+import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -172,14 +175,21 @@ public class SimulationService implements ISimulation
 		populateScripts(simulation);
 
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
-
 		
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationListener);
 		simulation.accept(loadSimulationVisitor);
 		
-		PopulateVisualTreeVisitor visualVisitor = new PopulateVisualTreeVisitor(_sessionContext, _simulationListener);
-		simulation.accept(visualVisitor);
+		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, _simulationListener);
+		simulation.accept(runtimeTreeVisitor);
+		
+		RuntimeTreeRoot runtimeModel = runtimeTreeVisitor.getRuntimeModel();
+		
+		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_sessionContext, _simulationListener);
+		runtimeModel.apply(populateVisualVisitor);
 
+		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_sessionContext, _simulationListener);
+		runtimeModel.apply(populateModelVisitor);
+		
 		updateClient(SimulationEvents.LOAD_MODEL);
 
 	}

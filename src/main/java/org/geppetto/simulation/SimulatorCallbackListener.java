@@ -36,7 +36,7 @@ package org.geppetto.simulation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.model.runtime.AspectTreeNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
@@ -57,13 +57,13 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	}
 
 	@Override
-	public void stateTreeUpdated(AspectTreeNode stateTree) throws GeppettoExecutionException
+	public void stateTreeUpdated(AspectSubTreeNode stateTree) throws GeppettoExecutionException
 	{
 		
 		_simulatorRuntime.incrementProcessedSteps();
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
 		
-		AspectTreeNode sessionStateTree = _simulatorRuntime.getStateTree();
+		AspectSubTreeNode sessionStateTree = _simulatorRuntime.getStateTree();
 		
 		if(sessionStateTree == null)
 		{

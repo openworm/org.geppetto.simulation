@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
@@ -85,6 +86,18 @@ public class SessionContext
 
 	//The status of the current simulation
 	private SimulationRuntimeStatus _status=SimulationRuntimeStatus.IDLE;
+	
+	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("Scene Tree");
+	
+	public RuntimeTreeRoot get_runtimeTreeRoot()
+	{
+		return _runtimeTreeRoot;
+	}
+
+	public void set_runtimeTreeRoot(RuntimeTreeRoot _runtimeTreeRoot)
+	{
+		this._runtimeTreeRoot = _runtimeTreeRoot;
+	}
 
 	/**
 	 * @return
@@ -131,6 +144,7 @@ public class SessionContext
 		_simulators.clear();
 		_models.clear();
 		_simulation=null;
+		_runtimeTreeRoot = new RuntimeTreeRoot("Scene Tree");
 		setSimulationStatus(SimulationRuntimeStatus.IDLE);
 	}
 	

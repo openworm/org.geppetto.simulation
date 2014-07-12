@@ -44,7 +44,7 @@ import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.AspectTreeNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.simulation.Aspect;
 import org.springframework.stereotype.Service;
@@ -90,19 +90,19 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 		return recordingsModel;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.geppetto.core.model.IModelInterpreter#getVisualEntity(org.geppetto.core.model.IModel, org.geppetto.core.model.simulation.Aspect, org.geppetto.core.model.state.StateTreeRoot)
-	 */
-	@Override
-	public EntityNode getVisualEntity(IModel model, Aspect aspect, AspectTreeNode stateTree) throws ModelInterpreterException
-	{
-		// A generic recording does not have a visual representation, we return an empty entity
-		EntityNode empty = new EntityNode();
-		AspectNode visualAspect = new AspectNode();
-		visualAspect.setId(aspect.getId());
-		empty.getAspects().add(visualAspect);
-		return empty;
-	}
+//	/* (non-Javadoc)
+//	 * @see org.geppetto.core.model.IModelInterpreter#getVisualEntity(org.geppetto.core.model.IModel, org.geppetto.core.model.simulation.Aspect, org.geppetto.core.model.state.StateTreeRoot)
+//	 */
+//	@Override
+//	public EntityNode getVisualEntity(IModel model, Aspect aspect, AspectSubTreeNode stateTree) throws ModelInterpreterException
+//	{
+//		// A generic recording does not have a visual representation, we return an empty entity
+//		EntityNode empty = new EntityNode();
+//		AspectNode visualAspect = new AspectNode();
+//		visualAspect.setId(aspect.getId());
+//		empty.getAspects().add(visualAspect);
+//		return empty;
+//	}
 
 	@Override
 	public boolean populateVisualTree(AspectNode aspectNode) {

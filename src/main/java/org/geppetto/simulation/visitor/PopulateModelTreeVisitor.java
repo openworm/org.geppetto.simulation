@@ -3,6 +3,11 @@ package org.geppetto.simulation.visitor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.StateVariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
@@ -13,13 +18,12 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor{
 
 	private static Log _logger = LogFactory.getLog(PopulateModelTreeVisitor.class);
 
-	private SessionContext _sessionContext;
-	private ISimulationCallbackListener _simulationCallback;
+	private ISimulationCallbackListener _simulationCallBack;
 
-	public PopulateModelTreeVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallback)
+
+	public PopulateModelTreeVisitor(ISimulationCallbackListener simulationListener)
 	{
-		_sessionContext = sessionContext;
-		_simulationCallback=simulationCallback;
+		this._simulationCallBack = simulationListener;
 	}
 
 	/* (non-Javadoc)
@@ -28,6 +32,15 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor{
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
+		IModelInterpreter modelInterpreter = node.getModelInterpreter();
+		try
+		{
+			modelInterpreter.populateModelTree(node);
+		}
+		catch(ModelInterpreterException e)
+		{
+			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+		}
 		return super.inAspectNode(node);
 	}
 

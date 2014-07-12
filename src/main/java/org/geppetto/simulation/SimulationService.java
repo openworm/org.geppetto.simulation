@@ -48,15 +48,16 @@ import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.simulation.visitor.BuildClientUpdateVisitor;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
@@ -92,7 +93,6 @@ public class SimulationService implements ISimulation
 
 	private List<URL> _scripts = new ArrayList<URL>();
 
-
 	/**
 	 * 
 	 */
@@ -117,7 +117,7 @@ public class SimulationService implements ISimulation
 		{
 			load(sim);
 		}
-		catch(GeppettoExecutionException e)
+		catch(GeppettoInitializationException e)
 		{
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
@@ -125,6 +125,7 @@ public class SimulationService implements ISimulation
 
 	/**
 	 * Initializes simulation with JSON object containing simulation.
+	 * @throws ModelInterpreterException 
 	 */
 	@Override
 	public void init(String simulationConfig, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
@@ -136,7 +137,7 @@ public class SimulationService implements ISimulation
 		{
 			load(simulation);
 		}
-		catch(GeppettoExecutionException e)
+		catch(GeppettoInitializationException e)
 		{
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
@@ -146,8 +147,9 @@ public class SimulationService implements ISimulation
 	 * @param simulation
 	 * @throws GeppettoInitializationException
 	 * @throws GeppettoExecutionException
+	 * @throws ModelInterpreterException 
 	 */
-	public void load(Simulation simulation) throws GeppettoInitializationException, GeppettoExecutionException
+	public void load(Simulation simulation) throws GeppettoInitializationException
 	{
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
@@ -184,10 +186,10 @@ public class SimulationService implements ISimulation
 		
 		RuntimeTreeRoot runtimeModel = runtimeTreeVisitor.getRuntimeModel();
 		
-		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_sessionContext, _simulationListener);
+		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
 		runtimeModel.apply(populateVisualVisitor);
 
-		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_sessionContext, _simulationListener);
+		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener);
 		runtimeModel.apply(populateModelVisitor);
 		
 		updateClient(SimulationEvents.LOAD_MODEL);
@@ -205,7 +207,7 @@ public class SimulationService implements ISimulation
 		_logger.info("Starting simulation");
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
-
+http://en.wikipedia.org/wiki/2009_UEFA_Super_Cup
 		_simulationThread = new SimulationThread(_sessionContext,_simulationListener);
 		_simulationThread.start();
 		
@@ -483,16 +485,19 @@ public class SimulationService implements ISimulation
 	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
 	 * @param event 
+	 * @throws GeppettoExecutionException 
+	 * @throws ModelInterpreterException 
 	 * 
 	 */
-	private void updateClient(SimulationEvents event)
+	private void updateClient(SimulationEvents event) 
 	{
-		BuildClientUpdateVisitor updateClientVisitor = new BuildClientUpdateVisitor(_sessionContext, _simulationListener);
-		_sessionContext.getSimulation().accept(updateClientVisitor);
+		
+		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+		this._sessionContext.get_runtimeTreeRoot().apply(updateClientVisitor);
 
-		String scene = updateClientVisitor.getSerializedScene();
+		String scene = updateClientVisitor.getSerializedTree();
 		if(scene!=null){
-			_simulationListener.updateReady(event, scene, updateClientVisitor.getSerializedWatchTree());
+			_simulationListener.updateReady(event, scene, updateClientVisitor.getSerializedTree());
 			_logger.info("Update sent to listener");
 		}
 	}

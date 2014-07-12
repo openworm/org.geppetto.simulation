@@ -45,8 +45,8 @@ import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;
-import org.geppetto.core.model.runtime.ASimpleStateNode;
-import org.geppetto.core.model.runtime.AspectTreeNode;
+import org.geppetto.core.model.runtime.ASimpleNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.values.DoubleValue;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.recording.RecordingsSimulator;
@@ -76,16 +76,16 @@ public class RecordingsSimulatorTest
 			final double[] expectedTime={0.1, 0.2, 0.5, 0.51, 0.52, 0.6, 0.7};
 			
 			@Override
-			public void stateTreeUpdated(AspectTreeNode stateTree) throws GeppettoExecutionException
+			public void stateTreeUpdated(AspectSubTreeNode stateTree) throws GeppettoExecutionException
 			{
 				ACompositeNode wtree = (ACompositeNode) stateTree.getChildren().get(0);
 				ACompositeNode entity = (ACompositeNode) wtree.getChildren().get(0);
 				ACompositeNode model =(ACompositeNode) entity.getChildren().get(0);
 				ACompositeNode a =(ACompositeNode) model.getChildren().get(1);
-				ASimpleStateNode time =(ASimpleStateNode) model.getChildren().get(0);
+				ASimpleNode time =(ASimpleNode) model.getChildren().get(0);
 				ACompositeNode b =(ACompositeNode) a.getChildren().get(0);
 				ACompositeNode c =(ACompositeNode) b.getChildren().get(0);
-				ASimpleStateNode d =(ASimpleStateNode) c.getChildren().get(0);
+				ASimpleNode d =(ASimpleNode) c.getChildren().get(0);
 				Assert.assertEquals(expected[current], ((DoubleValue)d.consumeFirstValue()).getValue(),0);
 				Assert.assertEquals(expectedTime[current++], ((DoubleValue)time.consumeFirstValue()).getValue(),0);
 			}

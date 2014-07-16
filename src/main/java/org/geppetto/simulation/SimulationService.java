@@ -207,7 +207,6 @@ public class SimulationService implements ISimulation
 		_logger.info("Starting simulation");
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
-http://en.wikipedia.org/wiki/2009_UEFA_Super_Cup
 		_simulationThread = new SimulationThread(_sessionContext,_simulationListener);
 		_simulationThread.start();
 		
@@ -493,7 +492,7 @@ http://en.wikipedia.org/wiki/2009_UEFA_Super_Cup
 	{
 		
 		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-		this._sessionContext.get_runtimeTreeRoot().apply(updateClientVisitor);
+		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
 		String scene = updateClientVisitor.getSerializedTree();
 		if(scene!=null){

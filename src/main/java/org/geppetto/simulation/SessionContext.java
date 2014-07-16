@@ -87,16 +87,12 @@ public class SessionContext
 	//The status of the current simulation
 	private SimulationRuntimeStatus _status=SimulationRuntimeStatus.IDLE;
 	
-	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("Scene Tree");
+	//Head node that holds the entities
+	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
 	
-	public RuntimeTreeRoot get_runtimeTreeRoot()
+	public RuntimeTreeRoot getRuntimeTreeRoot()
 	{
 		return _runtimeTreeRoot;
-	}
-
-	public void set_runtimeTreeRoot(RuntimeTreeRoot _runtimeTreeRoot)
-	{
-		this._runtimeTreeRoot = _runtimeTreeRoot;
 	}
 
 	/**
@@ -144,7 +140,7 @@ public class SessionContext
 		_simulators.clear();
 		_models.clear();
 		_simulation=null;
-		_runtimeTreeRoot = new RuntimeTreeRoot("Scene Tree");
+		_runtimeTreeRoot = new RuntimeTreeRoot("scene");
 		setSimulationStatus(SimulationRuntimeStatus.IDLE);
 	}
 	

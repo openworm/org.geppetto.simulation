@@ -1,16 +1,46 @@
+/*******************************************************************************
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2011, 2013 OpenWorm.
+ * http://openworm.org
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the MIT License
+ * which accompanies this distribution, and is available at
+ * http://opensource.org/licenses/MIT
+ *
+ * Contributors:
+ *     	OpenWorm - http://openworm.org/people.html
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.UUID;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.EntityNode;
@@ -26,6 +56,13 @@ import org.geppetto.simulation.SessionContext;
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;
 
+/**
+ * Visitor used for retrieving entities and aspects from simulation file. a
+ * Entity and Aspect nodes are created, and used to create skeleton of run time tree.
+ * 
+ * @author  Jesus R. Martinez (jesus@metacell.us)
+ *
+ */
 public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 
 	private SessionContext _sessionContext;
@@ -46,6 +83,9 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 	@Override
 	public void visit(Aspect aspect)
 	{
+		/*
+		 * Extract information from aspect and create local aspect node
+		 */
 		Model model = aspect.getModel();
 		Simulator simulator = aspect.getSimulator();
 		AspectNode clientAspect = new AspectNode();
@@ -60,11 +100,11 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		{
 			try
 			{
+				//use model interpreter from aspect to populate runtime tree
 				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
 				modelInterpreter.populateRuntimeTree(clientAspect);
 				
-				IModel wrapper = modelInterpreter.readModel(new URL(model.getModelURL()), null, model.getParentAspect().getInstancePath());
-				
+				IModel wrapper = modelInterpreter.readModel(new URL(model.getModelURL()), null, model.getParentAspect().getInstancePath());		
 						
 				clientAspect.setModel(wrapper);
 				clientAspect.setModelInterpreter(modelInterpreter);
@@ -75,22 +115,22 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 			}
 			catch(MalformedURLException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null,e);
 			}
 			catch(ModelInterpreterException e)
 			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null,e);
 			}
 		}
 		
+		/*
+		 * Extract simulator from aspect and set it to client aspect node
+		 */
 		if(simulator != null)
 		{
 			try
 			{
-				ISimulator simulatorService = _sessionContext.getSimulator(simulator);
-				
+				ISimulator simulatorService = _sessionContext.getSimulator(simulator);				
 				clientAspect.setSimulator(simulatorService);
 			}
 			catch(GeppettoInitializationException e)
@@ -137,6 +177,6 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 	}
 	
 	public RuntimeTreeRoot getRuntimeModel(){
-		return _sessionContext.get_runtimeTreeRoot();
+		return _sessionContext.getRuntimeTreeRoot();
 	}
 }

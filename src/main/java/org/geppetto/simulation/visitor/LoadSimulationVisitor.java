@@ -144,7 +144,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 
 			if(simulator != null)
 			{
-				if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntime(simulatorModel).isAtInitialConditions())
+				if(!simulator.isInitialized() || _sessionContext.getSimulatorRuntime(simulatorModel.getSimulatorId()).isAtInitialConditions())
 				{
 
 					// initialize simulator
@@ -181,7 +181,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		{
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
-		_sessionContext.getSimulatorRuntime(simulatorModel).setProcessedSteps(0);
+		_sessionContext.getSimulatorRuntime(simulatorModel.getSimulatorId()).setProcessedSteps(0);
 
 	}
 

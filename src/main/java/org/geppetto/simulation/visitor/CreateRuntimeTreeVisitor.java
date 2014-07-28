@@ -51,6 +51,7 @@ import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.core.visualisation.model.Point;
 import org.geppetto.simulation.SessionContext;
 
 import com.massfords.humantask.BaseVisitor;
@@ -152,7 +153,13 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		clientEntity.setName(entity.getId());
 		clientEntity.setId(entity.getId());
 		clientEntity.setInstancePath(entity.getInstancePath());
-		
+		if(entity.getPosition()!=null){
+			Point position = new Point();
+			position.setX(new Double(entity.getPosition().getX()));
+			position.setY(new Double(entity.getPosition().getY()));
+			position.setZ(new Double(entity.getPosition().getZ()));
+			clientEntity.setPosition(position);
+		}
 		getRuntimeModel().addChild(clientEntity);
 		
 		super.visit(entity);

@@ -33,7 +33,7 @@
 
 package org.geppetto.simulation;
 
-import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectNode;
 
 /**
  * @author matteocantarelli
@@ -42,7 +42,7 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode;
 public class SimulatorRuntime
 {
 
-	private AspectSubTreeNode _stateTree;
+	private AspectNode _stateTree;
 	private SimulatorRuntimeStatus _status=SimulatorRuntimeStatus.IDLE;
 	
 	//This is the number of steps this simulator has processed
@@ -55,7 +55,7 @@ public class SimulatorRuntime
 	/**
 	 * @return
 	 */
-	public AspectSubTreeNode getStateTree()
+	public AspectNode getStateTree()
 	{
 		return _stateTree;
 	}
@@ -63,7 +63,7 @@ public class SimulatorRuntime
 	/**
 	 * @param stateTree
 	 */
-	public void setStateTree(AspectSubTreeNode stateTree)
+	public void setStateTree(AspectNode stateTree)
 	{
 		this._stateTree = stateTree;
 	}

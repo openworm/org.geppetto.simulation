@@ -69,7 +69,7 @@ class SimulationThread extends Thread
 		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext,_simulationCallback);
 		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING) )
 		{
-				_sessionContext.getSimulation().accept(simulationVisitor);
+				_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
 		}
 	}
 }

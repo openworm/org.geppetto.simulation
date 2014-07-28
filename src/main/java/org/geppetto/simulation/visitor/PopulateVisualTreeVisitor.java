@@ -33,6 +33,7 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
@@ -68,6 +69,10 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 			simulator.populateVisualTree(node);
 		}
 		catch(ModelInterpreterException e)
+		{
+			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+		}
+		catch(GeppettoExecutionException e)
 		{
 			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
 		}

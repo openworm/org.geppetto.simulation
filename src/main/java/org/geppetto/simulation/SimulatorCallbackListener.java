@@ -36,7 +36,7 @@ package org.geppetto.simulation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
@@ -53,27 +53,21 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	{
 		_simulatorModel = simulatorModel;
 		_sessionContext = context;
-		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel);
+		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
 	}
 
 	@Override
-	public void stateTreeUpdated(AspectSubTreeNode stateTree) throws GeppettoExecutionException
+	public void stateTreeUpdated(AspectNode stateTree) throws GeppettoExecutionException
 	{
-		
 		_simulatorRuntime.incrementProcessedSteps();
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
 		
-		AspectSubTreeNode sessionStateTree = _simulatorRuntime.getStateTree();
+		AspectNode sessionStateTree = _simulatorRuntime.getStateTree();
 		
 		if(sessionStateTree == null)
 		{
 			sessionStateTree = stateTree;
 			_simulatorRuntime.setStateTree(sessionStateTree);
-		}
-		// we throw an exception if the tree is a different object, this should not happen.
-		if(!sessionStateTree.equals(stateTree))
-		{
-			throw new GeppettoExecutionException("Out of sync! The state tree received is different from the one stored in the session context");
 		}
 				
 		//A scheduled event could have taken place ms prior to simulation being stopped, make sure 

@@ -70,7 +70,7 @@ public class CheckSteppedSimulatorsVisitor extends TraversingVisitor
 		
 		if(_allStepped || _noneEverStepped)
 		{
-			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator);
+			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator.getSimulatorId());
 			
 			if(simulatorRuntime.getNonConsumedSteps() < 1)
 			{

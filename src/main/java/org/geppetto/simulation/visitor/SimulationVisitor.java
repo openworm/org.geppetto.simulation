@@ -34,17 +34,15 @@ package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.VariableNode;
+import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.SimulatorRuntimeStatus;
-
-import com.massfords.humantask.BaseVisitor;
-import com.massfords.humantask.TraversingVisitor;
 
 /**
  * This is the simulation visitor which traverse the simulation tree and orchestrates the simulation of the different models.
@@ -53,32 +51,26 @@ import com.massfords.humantask.TraversingVisitor;
  * @author matteocantarelli
  * 
  */
-public class SimulationVisitor extends TraversingVisitor
+public class SimulationVisitor extends DefaultStateVisitor
 {
-
+	private ISimulationCallbackListener _simulationCallBack;
 	private SessionContext _sessionContext;
-	private ISimulationCallbackListener _simulationCallback;
 
-	public SimulationVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallback)
+	public SimulationVisitor(SessionContext _sessionContext, ISimulationCallbackListener simulationListener)
 	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_sessionContext = sessionContext;
-		_simulationCallback=simulationCallback;
+		this._simulationCallBack = simulationListener;
+		this._sessionContext = _sessionContext;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
-	public void visit(Simulator simulatorModel)
+	public boolean inAspectNode(AspectNode node)
 	{
-		super.visit(simulatorModel);
-		try
-		{
-			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
-			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulatorModel);
+
+			ISimulator simulator = node.getSimulator();
+			SimulatorRuntime simulatorRuntime = this._sessionContext.getSimulatorRuntime(simulator.getId());
 
 			//we proceed only if the simulator is not already stepping 
 			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
@@ -86,7 +78,7 @@ public class SimulationVisitor extends TraversingVisitor
 				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
 				if(!simulator.isInitialized() || simulatorRuntime.isAtInitialConditions())
 				{
-					 LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallback);
+					 LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
 					 _sessionContext.getSimulation().accept(loadSimulationVisitor);
 				}
 
@@ -97,20 +89,33 @@ public class SimulationVisitor extends TraversingVisitor
 					try
 					{
 						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
-						simulator.simulate(new TimeConfiguration(null, 1, 1));
+						simulator.simulate(new TimeConfiguration(null, 1, 1), node);
 					}
 					catch(GeppettoExecutionException e)
 					{
-						_simulationCallback.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),"Error while stepping "+simulator.getName(),e);
+						_simulationCallBack.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),"Error while stepping "+simulator.getName(),e);
 					}
 				}
 			}
 
-		}
-		catch(GeppettoInitializationException e)
-		{
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),null,e);
-		}
+		return super.inAspectNode(node);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
+	 */
+	@Override
+	public boolean outAspectNode(AspectNode node)
+	{
+		return super.outAspectNode(node);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#visitSimpleStateNode(org.geppetto.core.model.state.SimpleStateNode)
+	 */
+	@Override
+	public boolean visitVariableNode(VariableNode node)
+	{
+		return super.visitVariableNode(node);
+	}
 }

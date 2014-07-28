@@ -34,7 +34,6 @@ package org.geppetto.simulation.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +45,7 @@ import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;
 import org.geppetto.core.model.runtime.ATimeSeriesNode;
-import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.values.DoubleValue;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.recording.RecordingsSimulator;
@@ -76,7 +75,7 @@ public class RecordingsSimulatorTest
 			final double[] expectedTime={0.1, 0.2, 0.5, 0.51, 0.52, 0.6, 0.7};
 			
 			@Override
-			public void stateTreeUpdated(AspectSubTreeNode stateTree) throws GeppettoExecutionException
+			public void stateTreeUpdated(AspectNode stateTree) throws GeppettoExecutionException
 			{
 				ACompositeNode wtree = (ACompositeNode) stateTree.getChildren().get(0);
 				ACompositeNode entity = (ACompositeNode) wtree.getChildren().get(0);
@@ -101,12 +100,13 @@ public class RecordingsSimulatorTest
 		variablesToWatch.add("entity.model.time");
 		simulator.addWatchVariables(variablesToWatch);
 		simulator.startWatch();
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
+		AspectNode aspectNode = new AspectNode();
+		simulator.simulate(null,aspectNode);
+		simulator.simulate(null,aspectNode);
+		simulator.simulate(null,aspectNode);
+		simulator.simulate(null,aspectNode);
+		simulator.simulate(null,aspectNode);
+		simulator.simulate(null,aspectNode);
 		file.close();
 	}
 

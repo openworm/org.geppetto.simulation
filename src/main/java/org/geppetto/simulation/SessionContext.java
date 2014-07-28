@@ -67,7 +67,7 @@ public class SessionContext
 	private ConcurrentHashMap<Simulator,ISimulator> _simulators=new ConcurrentHashMap<Simulator,ISimulator>();
 	
 	//This map contains the simulator runtime for each one of the simulators
-	private ConcurrentHashMap<Simulator,SimulatorRuntime> _simulatorRuntimes= new ConcurrentHashMap<Simulator,SimulatorRuntime>();
+	private ConcurrentHashMap<String,SimulatorRuntime> _simulatorRuntimes= new ConcurrentHashMap<String,SimulatorRuntime>();
 	
 	//The string in the map below is the instancepath for a specific model specified in a simulation file
 	private ConcurrentHashMap<String,IModel> _models=new ConcurrentHashMap<String,IModel>();
@@ -157,7 +157,7 @@ public class SessionContext
 	 * @param simulatorModel
 	 * @return
 	 */
-	public SimulatorRuntime getSimulatorRuntime(Simulator simulatorModel)
+	public SimulatorRuntime getSimulatorRuntime(String simulatorModel)
 	{
 		return _simulatorRuntimes.get(simulatorModel);
 	}
@@ -174,7 +174,7 @@ public class SessionContext
 	/**
 	 * @param simulatorModel
 	 */
-	public void addSimulatorRuntime(Simulator simulatorModel)
+	public void addSimulatorRuntime(String simulatorModel)
 	{
 		SimulatorRuntime simulatorRuntime=new SimulatorRuntime();
 		_simulatorRuntimes.put(simulatorModel, simulatorRuntime);

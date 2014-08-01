@@ -49,6 +49,7 @@ import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
@@ -76,21 +77,13 @@ public class SimulationService implements ISimulation
 
 	@Autowired 
 	public AppConfig appConfig;
-
 	private static Log _logger = LogFactory.getLog(SimulationService.class);
-
 	private final SessionContext _sessionContext = new SessionContext();
-
 	private Timer _clientUpdateTimer;
-
 	private SimulationThread _simulationThread;
-
 	private ISimulationCallbackListener _simulationListener;
-
 	private List<WatchList> _watchLists = new ArrayList<WatchList>();
-
 	private boolean _watching = false;
-
 	private List<URL> _scripts = new ArrayList<URL>();
 
 	/**
@@ -188,9 +181,6 @@ public class SimulationService implements ISimulation
 		
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
 		runtimeModel.apply(populateVisualVisitor);
-
-		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener);
-		runtimeModel.apply(populateModelVisitor);
 		
 		updateClient(SimulationEvents.LOAD_MODEL);
 
@@ -550,5 +540,25 @@ public class SimulationService implements ISimulation
 		int capacity = this.appConfig.getSimulationCapacity();
 
 		return capacity;
+	}
+	
+	/**
+	 * Takes the id of aspect, and uses that to populate it's corresponding aspect node with nodes
+	 * for the model tree.
+	 * 
+	 * @param aspectID
+	 * @return 
+	 */
+	@Override
+	public String getModelTree(String instancePath){
+		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener, instancePath);
+		this._sessionContext.getRuntimeTreeRoot().apply(populateModelVisitor);
+		
+		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+		populateModelVisitor.getPopulatedModelTree().apply(updateClientVisitor);
+
+		String modelTree = updateClientVisitor.getSerializedTree();
+		
+		return modelTree;
 	}
 }

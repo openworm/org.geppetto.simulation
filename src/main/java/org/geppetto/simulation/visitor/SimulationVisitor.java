@@ -35,6 +35,7 @@ package org.geppetto.simulation.visitor;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -76,7 +77,7 @@ public class SimulationVisitor extends DefaultStateVisitor
 			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 			{
 				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
-				if(!simulator.isInitialized() || simulatorRuntime.isAtInitialConditions())
+				if(!simulator.isInitialized() || (node.getSubTree(AspectTreeType.VISUALIZATION_TREE)==null))
 				{
 					 LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
 					 _sessionContext.getSimulation().accept(loadSimulationVisitor);

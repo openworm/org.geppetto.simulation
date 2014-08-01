@@ -61,14 +61,6 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	{
 		_simulatorRuntime.incrementProcessedSteps();
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
-		
-		AspectNode sessionStateTree = _simulatorRuntime.getStateTree();
-		
-		if(sessionStateTree == null)
-		{
-			sessionStateTree = stateTree;
-			_simulatorRuntime.setStateTree(sessionStateTree);
-		}
 				
 		//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
 		//to revert tree to initial conditions is simulation has been stopped

@@ -39,6 +39,8 @@ import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -54,12 +56,16 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor{
 
 	private static Log _logger = LogFactory.getLog(PopulateModelTreeVisitor.class);
 
+	//Listener used to send back errors 
 	private ISimulationCallbackListener _simulationCallBack;
+	//The id of aspect we will be populating
+	private String _instancePath;
+	private AspectSubTreeNode _populateModelTree;
 
-
-	public PopulateModelTreeVisitor(ISimulationCallbackListener simulationListener)
+	public PopulateModelTreeVisitor(ISimulationCallbackListener simulationListener,String instancePath)
 	{
 		this._simulationCallBack = simulationListener;
+		this._instancePath = instancePath;
 	}
 
 	/* (non-Javadoc)
@@ -68,33 +74,24 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor{
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		IModelInterpreter modelInterpreter = node.getModelInterpreter();
-		try
-		{
-			modelInterpreter.populateModelTree(node);
+		if(this._instancePath.equals(node.getInstancePath())){
+			IModelInterpreter modelInterpreter = node.getModelInterpreter();
+			try
+			{
+				modelInterpreter.populateModelTree(node);
+			}
+			catch(ModelInterpreterException e)
+			{
+				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+			}		
+			
+			this._populateModelTree = (AspectSubTreeNode) node.getSubTree(AspectTreeType.MODEL_TREE);
 		}
-		catch(ModelInterpreterException e)
-		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-		}
+
 		return super.inAspectNode(node);
 	}
-
-	/* (non-Javadoc)
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
-	 */
-	@Override
-	public boolean outAspectNode(AspectNode node)
-	{
-		return super.outAspectNode(node);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#visitSimpleStateNode(org.geppetto.core.model.state.SimpleStateNode)
-	 */
-	@Override
-	public boolean visitVariableNode(VariableNode node)
-	{
-		return super.visitVariableNode(node);
+	
+	public AspectSubTreeNode getPopulatedModelTree(){
+		return this._populateModelTree;
 	}
 }

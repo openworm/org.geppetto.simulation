@@ -49,7 +49,6 @@ import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
@@ -144,6 +143,10 @@ public class SimulationService implements ISimulation
 	 */
 	public void load(Simulation simulation) throws GeppettoInitializationException
 	{
+
+		// refresh simulation context
+		_sessionContext.reset();
+		
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		simulation.accept(instancePathdecoratorVisitor);
@@ -157,9 +160,6 @@ public class SimulationService implements ISimulation
 			// stop the watching - will cause all previous stored watch values to be flushed
 			this.stopWatch();
 		}
-
-		// refresh simulation context
-		_sessionContext.reset();
 
 		_sessionContext.setSimulation(simulation);
 
@@ -480,15 +480,19 @@ public class SimulationService implements ISimulation
 	 */
 	private void updateClient(SimulationEvents event) 
 	{
-		
+	
+		long start = System.currentTimeMillis();
 		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
 		String scene = updateClientVisitor.getSerializedTree();
 		if(scene!=null){
-			_simulationListener.updateReady(event, scene, updateClientVisitor.getSerializedTree());
+			_simulationListener.updateReady(event, scene);
 			_logger.info("Update sent to listener");
 		}
+		long end = System.currentTimeMillis();
+		
+		_logger.info("Update build time " + (end-start));
 	}
 
 	/**

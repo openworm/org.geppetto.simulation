@@ -146,28 +146,23 @@ public class LoadSimulationVisitor extends TraversingVisitor
 
 			if(simulator != null)
 			{
-				if(!simulator.isInitialized())
+				// initialize simulator
+				GetModelsForSimulatorVisitor getModelsForSimulatorVisitor = new GetModelsForSimulatorVisitor(simulatorModel);
+				simulatorModel.getParentAspect().getParentEntity().accept(getModelsForSimulatorVisitor);
+				List<Model> models = getModelsForSimulatorVisitor.getModels();
+
+				_sessionContext.mapSimulatorToModels(simulatorModel, models);
+
+				// Builds a list with the IModel corresponding to the discovered models.
+				List<IModel> iModels = new ArrayList<IModel>();
+				for(Model m : models)
 				{
-
-					// initialize simulator
-					GetModelsForSimulatorVisitor getModelsForSimulatorVisitor = new GetModelsForSimulatorVisitor(simulatorModel);
-					simulatorModel.getParentAspect().getParentEntity().accept(getModelsForSimulatorVisitor);
-					List<Model> models = getModelsForSimulatorVisitor.getModels();
-
-					_sessionContext.mapSimulatorToModels(simulatorModel, models);
-
-					// Builds a list with the IModel corresponding to the discovered models.
-					List<IModel> iModels = new ArrayList<IModel>();
-					for(Model m : models)
-					{
-						iModels.add(_sessionContext.getIModel(m.getInstancePath()));
-						// store in the session context what simulator is in charge of a given model
-						_sessionContext.mapModelToSimulator(m, simulatorModel);
-					}
-
-					simulator.initialize(iModels, new SimulatorCallbackListener(simulatorModel, _sessionContext));
+					iModels.add(_sessionContext.getIModel(m.getInstancePath()));
+					// store in the session context what simulator is in charge of a given model
+					_sessionContext.mapModelToSimulator(m, simulatorModel);
 				}
 
+				simulator.initialize(iModels, new SimulatorCallbackListener(simulatorModel, _sessionContext));
 			}
 			else
 			{

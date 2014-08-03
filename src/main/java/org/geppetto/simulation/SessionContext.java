@@ -42,7 +42,12 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.runtime.ACompositeNode;
+import org.geppetto.core.model.runtime.ANode;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
@@ -124,7 +129,27 @@ public class SessionContext
 			simulatorRuntime.revertToInitialConditions();
 		}
 		
+		this.resetRuntimeTree(this.getRuntimeTreeRoot().getChildren());
+		
 		_logger.info("Simulation reverted to initial conditions");
+	}
+	
+	/**
+	 * Resets the visualization and simulation tree for each aspect. 
+	 * Used when resetting simulation after stopping it. 
+	 * 
+	 * @param nodes
+	 */
+	private void resetRuntimeTree(List<ANode> nodes){
+		for(ANode node : nodes){
+			if(node instanceof EntityNode){
+				resetRuntimeTree(((ACompositeNode)node).getChildren());
+			}
+			if(node instanceof AspectNode){
+				((AspectNode) node).flushSubTree(AspectTreeType.VISUALIZATION_TREE);
+				((AspectNode) node).flushSubTree(AspectTreeType.WATCH_TREE);
+			}
+		}
 	}
 	
 	/**

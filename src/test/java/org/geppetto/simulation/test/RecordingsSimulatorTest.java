@@ -61,6 +61,8 @@ import ucar.nc2.NetcdfFile;
 public class RecordingsSimulatorTest
 {
 
+	AspectNode aspectNode = new AspectNode();
+
 	@Test
 	public void test() throws GeppettoExecutionException, GeppettoInitializationException, IOException
 	{
@@ -68,6 +70,7 @@ public class RecordingsSimulatorTest
 		RecordingModel recording=new RecordingModel(file);
 		recording.setInstancePath("entity.model");
 		RecordingsSimulator simulator=new RecordingsSimulator();
+
 		ISimulatorCallbackListener listener=new ISimulatorCallbackListener()
 		{
 			int current=0;
@@ -75,9 +78,9 @@ public class RecordingsSimulatorTest
 			final double[] expectedTime={0.1, 0.2, 0.5, 0.51, 0.52, 0.6, 0.7};
 			
 			@Override
-			public void stateTreeUpdated(AspectNode stateTree) throws GeppettoExecutionException
+			public void stateTreeUpdated() throws GeppettoExecutionException
 			{
-				ACompositeNode wtree = (ACompositeNode) stateTree.getChildren().get(0);
+				ACompositeNode wtree = (ACompositeNode) aspectNode.getChildren().get(0);
 				ACompositeNode entity = (ACompositeNode) wtree.getChildren().get(0);
 				ACompositeNode model =(ACompositeNode) entity.getChildren().get(0);
 				ACompositeNode a =(ACompositeNode) model.getChildren().get(1);
@@ -100,7 +103,6 @@ public class RecordingsSimulatorTest
 		variablesToWatch.add("entity.model.time");
 		simulator.addWatchVariables(variablesToWatch);
 		simulator.startWatch();
-		AspectNode aspectNode = new AspectNode();
 		simulator.simulate(null,aspectNode);
 		simulator.simulate(null,aspectNode);
 		simulator.simulate(null,aspectNode);

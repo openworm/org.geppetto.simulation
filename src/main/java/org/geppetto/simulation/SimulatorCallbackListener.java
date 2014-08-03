@@ -57,7 +57,7 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	}
 
 	@Override
-	public void stateTreeUpdated(AspectNode stateTree) throws GeppettoExecutionException
+	public void stateTreeUpdated() throws GeppettoExecutionException
 	{
 		_simulatorRuntime.incrementProcessedSteps();
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);

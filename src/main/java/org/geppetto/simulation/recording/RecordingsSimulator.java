@@ -64,7 +64,7 @@ public class RecordingsSimulator extends ASimulator
 	public void simulate(IRunConfiguration runConfiguration, AspectNode aspect) throws GeppettoExecutionException
 	{
 		advanceRecordings(aspect);
-		notifyStateTreeUpdated(aspect);
+		notifyStateTreeUpdated();
 	}
 
 

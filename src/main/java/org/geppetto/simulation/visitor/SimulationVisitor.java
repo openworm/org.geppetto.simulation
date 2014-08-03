@@ -77,10 +77,14 @@ public class SimulationVisitor extends DefaultStateVisitor
 			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 			{
 				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
-				if(!simulator.isInitialized() || (node.getSubTree(AspectTreeType.VISUALIZATION_TREE)==null))
+				if(!simulator.isInitialized() || (node.getSubTree(AspectTreeType.VISUALIZATION_TREE).getChildren().isEmpty()))
 				{
 					 LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
 					 _sessionContext.getSimulation().accept(loadSimulationVisitor);
+					 
+					 //populate visual tree
+					 PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationCallBack);
+					 node.apply(populateVisualVisitor);
 				}
 
 				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())

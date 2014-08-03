@@ -45,14 +45,12 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
-import org.geppetto.simulation.SimulatorRuntime;
 
 import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;
@@ -178,8 +176,6 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		{
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
-		_sessionContext.getSimulatorRuntime(simulatorModel.getSimulatorId()).setProcessedSteps(0);
-
 	}
 
 }

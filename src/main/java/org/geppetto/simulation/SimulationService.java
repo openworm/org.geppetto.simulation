@@ -492,7 +492,7 @@ public class SimulationService implements ISimulation
 		}
 		long end = System.currentTimeMillis();
 		
-		_logger.info("Update build time " + ((end-start)/1000) + " seconds");
+		_logger.info("Update build time " + (end-start) + " ms");
 	}
 
 	/**

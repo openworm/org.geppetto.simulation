@@ -58,7 +58,6 @@ import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
@@ -78,7 +77,6 @@ public class SimulationService implements ISimulation
 	public AppConfig appConfig;
 	private static Log _logger = LogFactory.getLog(SimulationService.class);
 	private final SessionContext _sessionContext = new SessionContext();
-	private Timer _clientUpdateTimer;
 	private SimulationThread _simulationThread;
 	private ISimulationCallbackListener _simulationListener;
 	private List<WatchList> _watchLists = new ArrayList<WatchList>();
@@ -182,7 +180,7 @@ public class SimulationService implements ISimulation
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
 		runtimeModel.apply(populateVisualVisitor);
 		
-		updateClient(SimulationEvents.LOAD_MODEL);
+		updateClientWithSimulation();
 
 	}
 
@@ -197,12 +195,8 @@ public class SimulationService implements ISimulation
 		_logger.info("Starting simulation");
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
-		_simulationThread = new SimulationThread(_sessionContext,_simulationListener);
+		_simulationThread = new SimulationThread(_sessionContext,_simulationListener, appConfig.getUpdateCycle());
 		_simulationThread.start();
-		
-		
-
-		startClientUpdateTimer();
 	}
 
 	/*
@@ -216,9 +210,6 @@ public class SimulationService implements ISimulation
 		_logger.info("Pausing simulation");
 		// tell the thread to pause the simulation, but don't stop it
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.PAUSED);
-
-		// stop the timer that updates the client
-		_clientUpdateTimer.cancel();
 	}
 
 	/*
@@ -232,11 +223,6 @@ public class SimulationService implements ISimulation
 
 		_logger.warn("Stopping simulation");
 		// tell the thread to stop running the simulation
-		
-		if(_clientUpdateTimer != null){
-			// stop the timer that updates the client
-			_clientUpdateTimer.cancel();
-		}
 
 		// revert simulation to initial conditions
 		_sessionContext.revertToInitialConditions();
@@ -450,49 +436,23 @@ public class SimulationService implements ISimulation
 	}
 
 	/**
-	 * Starts client updates on a timer.
-	 */
-	private void startClientUpdateTimer()
-	{
-		_clientUpdateTimer = new Timer(SimulationService.class.getSimpleName() + " - Timer - " + new java.util.Date().getTime());
-		_clientUpdateTimer.scheduleAtFixedRate(new TimerTask()
-		{
-			@Override
-			public void run()
-			{
-				CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor(_sessionContext);
-				_sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
-
-				if(checkSteppedSimulatorsVisitor.allStepped())
-				{
-					updateClient(SimulationEvents.SCENE_UPDATE);
-				}
-			}
-		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
-	}
-
-	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
 	 * @param event 
 	 * @throws GeppettoExecutionException 
 	 * @throws ModelInterpreterException 
 	 * 
 	 */
-	private void updateClient(SimulationEvents event) 
+	private void updateClientWithSimulation() 
 	{
 	
-		long start = System.currentTimeMillis();
 		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
 		String scene = updateClientVisitor.getSerializedTree();
 		if(scene!=null){
-			_simulationListener.updateReady(event, scene);
-			_logger.info("Update sent to listener");
+			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, scene);
+			_logger.info("Simulation sent to callback listener");
 		}
-		long end = System.currentTimeMillis();
-		
-		_logger.info("Update build time " + (end-start) + " ms");
 	}
 
 	/**

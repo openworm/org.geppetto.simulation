@@ -36,7 +36,6 @@ package org.geppetto.simulation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 

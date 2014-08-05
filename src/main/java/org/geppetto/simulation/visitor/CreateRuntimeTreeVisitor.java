@@ -91,7 +91,6 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		Simulator simulator = aspect.getSimulator();
 		AspectNode clientAspect = new AspectNode();
 		clientAspect.setId(aspect.getId());
-		clientAspect.setInstancePath(aspect.getInstancePath());
 		clientAspect.setName(aspect.getId());
 		
 		//attach to parent entity before populating skeleton of aspect node
@@ -152,7 +151,6 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		EntityNode clientEntity = new EntityNode();
 		clientEntity.setName(entity.getId());
 		clientEntity.setId(entity.getId());
-		clientEntity.setInstancePath(entity.getInstancePath());
 		if(entity.getPosition()!=null){
 			Point position = new Point();
 			position.setX(new Double(entity.getPosition().getX()));

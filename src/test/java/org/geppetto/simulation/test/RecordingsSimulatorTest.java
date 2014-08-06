@@ -44,9 +44,11 @@ import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;
-import org.geppetto.core.model.runtime.ATimeSeriesNode;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.values.DoubleValue;
+import org.geppetto.core.model.runtime.CompositeNode;
+import org.geppetto.core.model.runtime.EntityNode;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.recording.RecordingsSimulator;
 import org.junit.Assert;
@@ -60,12 +62,19 @@ import ucar.nc2.NetcdfFile;
  */
 public class RecordingsSimulatorTest
 {
-
-	AspectNode aspectNode = new AspectNode();
+	private RuntimeTreeRoot runtime;
+	private EntityNode entity;
+	private AspectNode aspectNode;
 
 	@Test
 	public void test() throws GeppettoExecutionException, GeppettoInitializationException, IOException
 	{
+		
+		runtime = new RuntimeTreeRoot("runtime");
+		entity = new EntityNode("Entity");
+		aspectNode = new AspectNode("Aspect");
+		System.out.println("new aspect");
+		
 		NetcdfFile file=HDF5Reader.readHDF5File(new File("./src/test/resources/example2.h5").toURI().toURL());
 		RecordingModel recording=new RecordingModel(file);
 		recording.setInstancePath("entity.model");
@@ -81,15 +90,19 @@ public class RecordingsSimulatorTest
 			public void stateTreeUpdated() throws GeppettoExecutionException
 			{
 				ACompositeNode wtree = (ACompositeNode) aspectNode.getChildren().get(0);
-				ACompositeNode entity = (ACompositeNode) wtree.getChildren().get(0);
-				ACompositeNode model =(ACompositeNode) entity.getChildren().get(0);
-				ACompositeNode a =(ACompositeNode) model.getChildren().get(1);
-				ATimeSeriesNode time =(ATimeSeriesNode) model.getChildren().get(0);
-				ACompositeNode b =(ACompositeNode) a.getChildren().get(0);
-				ACompositeNode c =(ACompositeNode) b.getChildren().get(0);
-				ATimeSeriesNode d =(ATimeSeriesNode) c.getChildren().get(0);
-				Assert.assertEquals(expected[current], ((DoubleValue)d.consumeFirstValue().getValue()).getValue(),0);
-				Assert.assertEquals(expectedTime[current++], ((DoubleValue)time.consumeFirstValue().getValue()).getValue(),0);
+				VariableNode time = (VariableNode) wtree.getChildren().get(0);
+				CompositeNode a =  (CompositeNode) wtree.getChildren().get(1);
+				CompositeNode b = (CompositeNode) a.getChildren().get(0);
+				CompositeNode c = (CompositeNode) b.getChildren().get(0);
+				VariableNode d = (VariableNode) c.getChildren().get(0);
+
+				
+				double value = Double.valueOf(time.getTimeSeries().get(0).getValue().getStringValue());
+				double value2 = Double.valueOf(d.getTimeSeries().get(0).getValue().getStringValue());
+
+				System.out.println(value + " : " + value2);
+				Assert.assertEquals(expectedTime[current], value,0);
+				Assert.assertEquals(expected[current], value2,0);
 			}
 		};
 		List<IModel> models=new ArrayList<IModel>();
@@ -99,15 +112,12 @@ public class RecordingsSimulatorTest
 		Assert.assertNotNull(vlist);
 		Assert.assertFalse(vlist.getVariables().isEmpty());
 		List<String> variablesToWatch=new ArrayList<String>();
-		variablesToWatch.add("entity.model.a.b.c.d");
-		variablesToWatch.add("entity.model.time");
+		variablesToWatch.add("Entity.Aspect.SimulationTree.a.b.c.d");
+		variablesToWatch.add("Entity.Aspect.SimulationTree.time");
 		simulator.addWatchVariables(variablesToWatch);
 		simulator.startWatch();
-		simulator.simulate(null,aspectNode);
-		simulator.simulate(null,aspectNode);
-		simulator.simulate(null,aspectNode);
-		simulator.simulate(null,aspectNode);
-		simulator.simulate(null,aspectNode);
+		runtime.addChild(entity);
+		entity.addChild(aspectNode);
 		simulator.simulate(null,aspectNode);
 		file.close();
 	}

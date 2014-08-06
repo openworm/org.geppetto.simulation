@@ -66,7 +66,9 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 		ISimulator simulator = node.getSimulator();
 		try
 		{
-			simulator.populateVisualTree(node);
+			if(simulator!=null){
+				simulator.populateVisualTree(node);
+			}
 		}
 		catch(ModelInterpreterException e)
 		{

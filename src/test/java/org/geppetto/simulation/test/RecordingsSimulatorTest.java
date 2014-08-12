@@ -34,7 +34,6 @@ package org.geppetto.simulation.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,10 +43,12 @@ import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
-import org.geppetto.core.model.state.CompositeStateNode;
-import org.geppetto.core.model.state.SimpleStateNode;
-import org.geppetto.core.model.state.StateTreeRoot;
-import org.geppetto.core.model.values.DoubleValue;
+import org.geppetto.core.model.runtime.ACompositeNode;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.CompositeNode;
+import org.geppetto.core.model.runtime.EntityNode;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.recording.RecordingsSimulator;
 import org.junit.Assert;
@@ -61,14 +62,24 @@ import ucar.nc2.NetcdfFile;
  */
 public class RecordingsSimulatorTest
 {
+	private RuntimeTreeRoot runtime;
+	private EntityNode entity;
+	private AspectNode aspectNode;
 
 	@Test
 	public void test() throws GeppettoExecutionException, GeppettoInitializationException, IOException
 	{
+		
+		runtime = new RuntimeTreeRoot("runtime");
+		entity = new EntityNode("Entity");
+		aspectNode = new AspectNode("Aspect");
+		System.out.println("new aspect");
+		
 		NetcdfFile file=HDF5Reader.readHDF5File(new File("./src/test/resources/example2.h5").toURI().toURL());
 		RecordingModel recording=new RecordingModel(file);
 		recording.setInstancePath("entity.model");
 		RecordingsSimulator simulator=new RecordingsSimulator();
+
 		ISimulatorCallbackListener listener=new ISimulatorCallbackListener()
 		{
 			int current=0;
@@ -76,18 +87,22 @@ public class RecordingsSimulatorTest
 			final double[] expectedTime={0.1, 0.2, 0.5, 0.51, 0.52, 0.6, 0.7};
 			
 			@Override
-			public void stateTreeUpdated(StateTreeRoot stateTree) throws GeppettoExecutionException
+			public void stateTreeUpdated() throws GeppettoExecutionException
 			{
-				CompositeStateNode wtree = (CompositeStateNode) stateTree.getChildren().get(0);
-				CompositeStateNode entity = (CompositeStateNode) wtree.getChildren().get(0);
-				CompositeStateNode model =(CompositeStateNode) entity.getChildren().get(0);
-				CompositeStateNode a =(CompositeStateNode) model.getChildren().get(1);
-				SimpleStateNode time =(SimpleStateNode) model.getChildren().get(0);
-				CompositeStateNode b =(CompositeStateNode) a.getChildren().get(0);
-				CompositeStateNode c =(CompositeStateNode) b.getChildren().get(0);
-				SimpleStateNode d =(SimpleStateNode) c.getChildren().get(0);
-				Assert.assertEquals(expected[current], ((DoubleValue)d.consumeFirstValue()).getValue(),0);
-				Assert.assertEquals(expectedTime[current++], ((DoubleValue)time.consumeFirstValue()).getValue(),0);
+				ACompositeNode wtree = (ACompositeNode) aspectNode.getChildren().get(0);
+				VariableNode time = (VariableNode) wtree.getChildren().get(0);
+				CompositeNode a =  (CompositeNode) wtree.getChildren().get(1);
+				CompositeNode b = (CompositeNode) a.getChildren().get(0);
+				CompositeNode c = (CompositeNode) b.getChildren().get(0);
+				VariableNode d = (VariableNode) c.getChildren().get(0);
+
+				
+				double value = Double.valueOf(time.getTimeSeries().get(0).getValue().getStringValue());
+				double value2 = Double.valueOf(d.getTimeSeries().get(0).getValue().getStringValue());
+
+				System.out.println(value + " : " + value2);
+				Assert.assertEquals(expectedTime[current], value,0);
+				Assert.assertEquals(expected[current], value2,0);
 			}
 		};
 		List<IModel> models=new ArrayList<IModel>();
@@ -97,16 +112,13 @@ public class RecordingsSimulatorTest
 		Assert.assertNotNull(vlist);
 		Assert.assertFalse(vlist.getVariables().isEmpty());
 		List<String> variablesToWatch=new ArrayList<String>();
-		variablesToWatch.add("entity.model.a.b.c.d");
-		variablesToWatch.add("entity.model.time");
+		variablesToWatch.add("Entity.Aspect.SimulationTree.a.b.c.d");
+		variablesToWatch.add("Entity.Aspect.SimulationTree.time");
 		simulator.addWatchVariables(variablesToWatch);
 		simulator.startWatch();
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
-		simulator.simulate(null);
+		runtime.addChild(entity);
+		entity.addChild(aspectNode);
+		simulator.simulate(null,aspectNode);
 		file.close();
 	}
 

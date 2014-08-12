@@ -33,7 +33,7 @@
 
 package org.geppetto.simulation;
 
-import org.geppetto.core.model.state.StateTreeRoot;
+import org.geppetto.core.model.runtime.AspectNode;
 
 /**
  * @author matteocantarelli
@@ -42,7 +42,6 @@ import org.geppetto.core.model.state.StateTreeRoot;
 public class SimulatorRuntime
 {
 
-	private StateTreeRoot _stateTree;
 	private SimulatorRuntimeStatus _status=SimulatorRuntimeStatus.IDLE;
 	
 	//This is the number of steps this simulator has processed
@@ -50,23 +49,6 @@ public class SimulatorRuntime
 	//This is the number of steps that were processed by this simulator and that have been
 	//sent to the client
 	private int _stepsConsumed=0;
-
-	
-	/**
-	 * @return
-	 */
-	public StateTreeRoot getStateTree()
-	{
-		return _stateTree;
-	}
-	
-	/**
-	 * @param stateTree
-	 */
-	public void setStateTree(StateTreeRoot stateTree)
-	{
-		this._stateTree = stateTree;
-	}
 	
 	/**
 	 * @param status
@@ -139,21 +121,7 @@ public class SimulatorRuntime
 	 * Revert the simulator to the initial conditions
 	 */
 	public void revertToInitialConditions(){
-		if(_stateTree != null){
-			_stateTree.getChildren().clear();
-			_stateTree = null;
-		}
 		_stepsConsumed=0;
 		_processedSteps=0;
 	}
-	
-	/**
-	 * @return true if the simulator is at initial conditions
-	 */
-	public boolean isAtInitialConditions()
-	{
-		return _stateTree == null;
-	}
-
-
 }

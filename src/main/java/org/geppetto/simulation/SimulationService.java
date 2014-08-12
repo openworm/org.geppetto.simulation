@@ -48,19 +48,23 @@ import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
+import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.simulation.visitor.BuildClientUpdateVisitor;
-import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
+import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
+import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
+import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -71,23 +75,13 @@ public class SimulationService implements ISimulation
 
 	@Autowired 
 	public AppConfig appConfig;
-
 	private static Log _logger = LogFactory.getLog(SimulationService.class);
-
 	private final SessionContext _sessionContext = new SessionContext();
-
-	private Timer _clientUpdateTimer;
-
 	private SimulationThread _simulationThread;
-
 	private ISimulationCallbackListener _simulationListener;
-
 	private List<WatchList> _watchLists = new ArrayList<WatchList>();
-
 	private boolean _watching = false;
-
 	private List<URL> _scripts = new ArrayList<URL>();
-
 
 	/**
 	 * 
@@ -113,7 +107,7 @@ public class SimulationService implements ISimulation
 		{
 			load(sim);
 		}
-		catch(GeppettoExecutionException e)
+		catch(GeppettoInitializationException e)
 		{
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
@@ -121,6 +115,7 @@ public class SimulationService implements ISimulation
 
 	/**
 	 * Initializes simulation with JSON object containing simulation.
+	 * @throws ModelInterpreterException 
 	 */
 	@Override
 	public void init(String simulationConfig, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
@@ -132,7 +127,7 @@ public class SimulationService implements ISimulation
 		{
 			load(simulation);
 		}
-		catch(GeppettoExecutionException e)
+		catch(GeppettoInitializationException e)
 		{
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
@@ -142,9 +137,14 @@ public class SimulationService implements ISimulation
 	 * @param simulation
 	 * @throws GeppettoInitializationException
 	 * @throws GeppettoExecutionException
+	 * @throws ModelInterpreterException 
 	 */
-	public void load(Simulation simulation) throws GeppettoInitializationException, GeppettoExecutionException
+	public void load(Simulation simulation) throws GeppettoInitializationException
 	{
+
+		// refresh simulation context
+		_sessionContext.reset();
+		
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		simulation.accept(instancePathdecoratorVisitor);
@@ -159,9 +159,6 @@ public class SimulationService implements ISimulation
 			this.stopWatch();
 		}
 
-		// refresh simulation context
-		_sessionContext.reset();
-
 		_sessionContext.setSimulation(simulation);
 
 		// retrieve model interpreters and simulators
@@ -171,12 +168,19 @@ public class SimulationService implements ISimulation
 		populateScripts(simulation);
 
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
-
 		
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationListener);
 		simulation.accept(loadSimulationVisitor);
-
-		updateClient(SimulationEvents.LOAD_MODEL);
+		
+		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, _simulationListener);
+		simulation.accept(runtimeTreeVisitor);
+		
+		RuntimeTreeRoot runtimeModel = runtimeTreeVisitor.getRuntimeModel();
+		
+		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
+		runtimeModel.apply(populateVisualVisitor);
+		
+		updateClientWithSimulation();
 
 	}
 
@@ -191,13 +195,8 @@ public class SimulationService implements ISimulation
 		_logger.info("Starting simulation");
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
-
-		_simulationThread = new SimulationThread(_sessionContext,_simulationListener);
+		_simulationThread = new SimulationThread(_sessionContext,_simulationListener, appConfig.getUpdateCycle());
 		_simulationThread.start();
-		
-		
-
-		startClientUpdateTimer();
 	}
 
 	/*
@@ -211,9 +210,6 @@ public class SimulationService implements ISimulation
 		_logger.info("Pausing simulation");
 		// tell the thread to pause the simulation, but don't stop it
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.PAUSED);
-
-		// stop the timer that updates the client
-		_clientUpdateTimer.cancel();
 	}
 
 	/*
@@ -227,11 +223,6 @@ public class SimulationService implements ISimulation
 
 		_logger.warn("Stopping simulation");
 		// tell the thread to stop running the simulation
-		
-		if(_clientUpdateTimer != null){
-			// stop the timer that updates the client
-			_clientUpdateTimer.cancel();
-		}
 
 		// revert simulation to initial conditions
 		_sessionContext.revertToInitialConditions();
@@ -445,39 +436,23 @@ public class SimulationService implements ISimulation
 	}
 
 	/**
-	 * Starts client updates on a timer.
-	 */
-	private void startClientUpdateTimer()
-	{
-		_clientUpdateTimer = new Timer(SimulationService.class.getSimpleName() + " - Timer - " + new java.util.Date().getTime());
-		_clientUpdateTimer.scheduleAtFixedRate(new TimerTask()
-		{
-			@Override
-			public void run()
-			{
-				CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor(_sessionContext);
-				_sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
-
-				if(checkSteppedSimulatorsVisitor.allStepped())
-				{
-					updateClient(SimulationEvents.SCENE_UPDATE);
-				}
-			}
-		}, appConfig.getUpdateCycle(), appConfig.getUpdateCycle());
-	}
-
-	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
 	 * @param event 
+	 * @throws GeppettoExecutionException 
+	 * @throws ModelInterpreterException 
 	 * 
 	 */
-	private void updateClient(SimulationEvents event)
+	private void updateClientWithSimulation() 
 	{
-		BuildClientUpdateVisitor updateClientVisitor = new BuildClientUpdateVisitor(_sessionContext, _simulationListener);
-		_sessionContext.getSimulation().accept(updateClientVisitor);
+	
+		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
-		_simulationListener.updateReady(event, updateClientVisitor.getSerializedScene(), updateClientVisitor.getSerializedWatchTree());
-		_logger.info("Update sent to listener");
+		String scene = updateClientVisitor.getSerializedTree();
+		if(scene!=null){
+			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, scene);
+			_logger.info("Simulation sent to callback listener");
+		}
 	}
 
 	/**
@@ -529,5 +504,25 @@ public class SimulationService implements ISimulation
 		int capacity = this.appConfig.getSimulationCapacity();
 
 		return capacity;
+	}
+	
+	/**
+	 * Takes the id of aspect, and uses that to populate it's corresponding aspect node with nodes
+	 * for the model tree.
+	 * 
+	 * @param aspectID
+	 * @return 
+	 */
+	@Override
+	public String getModelTree(String instancePath){
+		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener, instancePath);
+		this._sessionContext.getRuntimeTreeRoot().apply(populateModelVisitor);
+		
+		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+		populateModelVisitor.getPopulatedModelTree().apply(updateClientVisitor);
+
+		String modelTree = updateClientVisitor.getSerializedTree();
+		
+		return modelTree;
 	}
 }

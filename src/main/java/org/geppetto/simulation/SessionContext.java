@@ -42,6 +42,12 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.runtime.ACompositeNode;
+import org.geppetto.core.model.runtime.ANode;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.EntityNode;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
@@ -66,7 +72,7 @@ public class SessionContext
 	private ConcurrentHashMap<Simulator,ISimulator> _simulators=new ConcurrentHashMap<Simulator,ISimulator>();
 	
 	//This map contains the simulator runtime for each one of the simulators
-	private ConcurrentHashMap<Simulator,SimulatorRuntime> _simulatorRuntimes= new ConcurrentHashMap<Simulator,SimulatorRuntime>();
+	private ConcurrentHashMap<String,SimulatorRuntime> _simulatorRuntimes= new ConcurrentHashMap<String,SimulatorRuntime>();
 	
 	//The string in the map below is the instancepath for a specific model specified in a simulation file
 	private ConcurrentHashMap<String,IModel> _models=new ConcurrentHashMap<String,IModel>();
@@ -85,6 +91,14 @@ public class SessionContext
 
 	//The status of the current simulation
 	private SimulationRuntimeStatus _status=SimulationRuntimeStatus.IDLE;
+	
+	//Head node that holds the entities
+	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
+	
+	public RuntimeTreeRoot getRuntimeTreeRoot()
+	{
+		return _runtimeTreeRoot;
+	}
 
 	/**
 	 * @return
@@ -115,7 +129,27 @@ public class SessionContext
 			simulatorRuntime.revertToInitialConditions();
 		}
 		
+		this.resetRuntimeTree(this.getRuntimeTreeRoot().getChildren());
+		
 		_logger.info("Simulation reverted to initial conditions");
+	}
+	
+	/**
+	 * Resets the visualization and simulation tree for each aspect. 
+	 * Used when resetting simulation after stopping it. 
+	 * 
+	 * @param nodes
+	 */
+	private void resetRuntimeTree(List<ANode> nodes){
+		for(ANode node : nodes){
+			if(node instanceof EntityNode){
+				resetRuntimeTree(((ACompositeNode)node).getChildren());
+			}
+			if(node instanceof AspectNode){
+				((AspectNode) node).flushSubTree(AspectTreeType.VISUALIZATION_TREE);
+				((AspectNode) node).flushSubTree(AspectTreeType.WATCH_TREE);
+			}
+		}
 	}
 	
 	/**
@@ -131,6 +165,7 @@ public class SessionContext
 		_simulators.clear();
 		_models.clear();
 		_simulation=null;
+		_runtimeTreeRoot = new RuntimeTreeRoot("scene");
 		setSimulationStatus(SimulationRuntimeStatus.IDLE);
 	}
 	
@@ -147,7 +182,7 @@ public class SessionContext
 	 * @param simulatorModel
 	 * @return
 	 */
-	public SimulatorRuntime getSimulatorRuntime(Simulator simulatorModel)
+	public SimulatorRuntime getSimulatorRuntime(String simulatorModel)
 	{
 		return _simulatorRuntimes.get(simulatorModel);
 	}
@@ -164,7 +199,7 @@ public class SessionContext
 	/**
 	 * @param simulatorModel
 	 */
-	public void addSimulatorRuntime(Simulator simulatorModel)
+	public void addSimulatorRuntime(String simulatorModel)
 	{
 		SimulatorRuntime simulatorRuntime=new SimulatorRuntime();
 		_simulatorRuntimes.put(simulatorModel, simulatorRuntime);

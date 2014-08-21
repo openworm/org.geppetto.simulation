@@ -94,7 +94,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		clientAspect.setName(aspect.getId());
 		
 		//attach to parent entity before populating skeleton of aspect node
-		addAspectToEntity(clientAspect, aspect.getParentEntity());
+		addAspectToEntity(clientAspect, aspect.getParentEntity(), this._sessionContext.getRuntimeTreeRoot().getChildren());
 
 		if(model != null)
 		{
@@ -158,7 +158,15 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 			position.setZ(new Double(entity.getPosition().getZ()));
 			clientEntity.setPosition(position);
 		}
-		getRuntimeModel().addChild(clientEntity);
+		if(entity.getParentEntity()!=null){
+			for(ANode node : getRuntimeModel().getChildren()){
+				if(node.getId().equals(entity.getParentEntity().getId())){
+					((EntityNode)node).addChild(clientEntity);
+				}
+			}
+		}else{
+			getRuntimeModel().addChild(clientEntity);
+		}
 		
 		super.visit(entity);
 	}
@@ -169,18 +177,28 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 	 * @param aspectNode - Runtime Aspect Node
 	 * @param entity - Persistent model Entity
 	 */
-	private void addAspectToEntity(AspectNode aspectNode, Entity entity){
-		List<ANode> children = this.getRuntimeModel().getChildren();
+	private void addAspectToEntity(AspectNode aspectNode, Entity entity, List<ANode> children){		
+		String entityPath = getInstancePath(entity);
 		
 		//traverse through runtimetree entities to find the parent of aspectNode
 		for(int i =0; i<children.size(); i++){
 			EntityNode currentEntity = ((EntityNode)children.get(i));
-			if(currentEntity.getId().equals(entity.getId())){
+			String currentEntityPath = currentEntity.getInstancePath();
+			if(currentEntityPath.equals(entityPath)){
 				currentEntity.addChild(aspectNode);
+			}
+			else if(currentEntity.getChildren().size()>0){
+				addAspectToEntity(aspectNode, entity, currentEntity.getChildren());
 			}
 		}
 	}
 	
+	private String getInstancePath(Entity entity) {
+		String instancePath = entity.getInstancePath();
+		
+		return instancePath;
+	}
+
 	public RuntimeTreeRoot getRuntimeModel(){
 		return _sessionContext.getRuntimeTreeRoot();
 	}

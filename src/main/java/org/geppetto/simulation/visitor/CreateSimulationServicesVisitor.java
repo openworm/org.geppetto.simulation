@@ -110,8 +110,9 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 		{
 			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
 		}
-		_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
-		
+		if(simulatorModel.getSimulatorId()!=null){
+			_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
+		}
 	}
 
 }

@@ -39,6 +39,8 @@ import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
+import org.geppetto.simulation.visitor.ExitVisitor;
+import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.geppetto.simulation.visitor.SimulationVisitor;
 
 class SimulationThread extends Thread
@@ -105,7 +107,10 @@ class SimulationThread extends Thread
 			if(scene!=null){
 				_simulationCallback.updateReady(SimulationEvents.SCENE_UPDATE, scene);
 				_logger.info("Update sent to Simulation Callback Listener");
-			}	
+			}
+			
+			ExitVisitor exitVisitor = new ExitVisitor(_simulationCallback);
+			_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
 		}
 	}
 }

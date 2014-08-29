@@ -61,7 +61,7 @@ public class ExitVisitor extends DefaultStateVisitor{
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
-	public boolean inAspectSubTreeNode(AspectSubTreeNode node)
+	public boolean outAspectSubTreeNode(AspectSubTreeNode node)
 	{
 		node.setModified(false);
 		return super.inAspectSubTreeNode(node);

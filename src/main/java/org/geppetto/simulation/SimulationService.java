@@ -58,6 +58,7 @@ import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
+import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
@@ -451,6 +452,9 @@ public class SimulationService implements ISimulation
 			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, scene);
 			_logger.info("Simulation sent to callback listener");
 		}
+		
+		ExitVisitor exitVisitor = new ExitVisitor(_simulationListener);
+		_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
 	}
 
 	/**

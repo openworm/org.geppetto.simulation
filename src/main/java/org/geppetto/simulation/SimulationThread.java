@@ -108,6 +108,9 @@ class SimulationThread extends Thread
 			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
+			ExitVisitor exitVisitor = new ExitVisitor(_simulationCallback);
+			_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
+			
 			String scene = updateClientVisitor.getSerializedTree();
 			if(scene!=null){
 				if(!this._simulationStarted){
@@ -119,9 +122,6 @@ class SimulationThread extends Thread
 					_logger.info("Update sent to Simulation Callback Listener");
 				}
 			}
-			
-			ExitVisitor exitVisitor = new ExitVisitor(_simulationCallback);
-			_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
 		}
 	}
 }

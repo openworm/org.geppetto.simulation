@@ -182,13 +182,15 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		
 		//traverse through runtimetree entities to find the parent of aspectNode
 		for(int i =0; i<children.size(); i++){
-			EntityNode currentEntity = ((EntityNode)children.get(i));
-			String currentEntityPath = currentEntity.getInstancePath();
-			if(currentEntityPath.equals(entityPath)){
-				currentEntity.addChild(aspectNode);
-			}
-			else if(currentEntity.getChildren().size()>0){
-				addAspectToEntity(aspectNode, entity, currentEntity.getChildren());
+			if(children.get(i).getMetaType().equals("EntityNode")){
+				EntityNode currentEntity = ((EntityNode)children.get(i));
+				String currentEntityPath = currentEntity.getInstancePath();
+				if(currentEntityPath.equals(entityPath)){
+					currentEntity.addChild(aspectNode);
+				}
+				else if(currentEntity.getChildren().size()>0){
+					addAspectToEntity(aspectNode, entity, currentEntity.getChildren());
+				}
 			}
 		}
 	}

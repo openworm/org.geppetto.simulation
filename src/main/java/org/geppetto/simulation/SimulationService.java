@@ -447,14 +447,15 @@ public class SimulationService implements ISimulation
 		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
+		ExitVisitor exitVisitor = new ExitVisitor(_simulationListener);
+		_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
+		
 		String scene = updateClientVisitor.getSerializedTree();
+		
 		if(scene!=null){
 			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, requestID, scene);
 			_logger.info("Simulation sent to callback listener");
 		}
-		
-		ExitVisitor exitVisitor = new ExitVisitor(_simulationListener);
-		_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
 	}
 
 	/**

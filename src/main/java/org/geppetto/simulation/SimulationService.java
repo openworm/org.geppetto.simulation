@@ -96,7 +96,7 @@ public class SimulationService implements ISimulation
 	 * @see org.geppetto.core.simulation.ISimulation#init(java.net.URL, org.geppetto.core.simulation.ISimulationCallbackListener)
 	 */
 	@Override
-	public void init(URL simConfigURL, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
+	public void init(URL simConfigURL, String requestID, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		_logger.info("Initializing simulation");
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
@@ -104,7 +104,7 @@ public class SimulationService implements ISimulation
 
 		try
 		{
-			load(sim);
+			load(sim, requestID);
 		}
 		catch(GeppettoInitializationException e)
 		{
@@ -117,14 +117,14 @@ public class SimulationService implements ISimulation
 	 * @throws ModelInterpreterException 
 	 */
 	@Override
-	public void init(String simulationConfig, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
+	public void init(String simulationConfig, String requestID, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		Simulation simulation = SimulationConfigReader.readSimulationConfig(simulationConfig);
 		_simulationListener = simulationListener;
 
 		try
 		{
-			load(simulation);
+			load(simulation, requestID);
 		}
 		catch(GeppettoInitializationException e)
 		{
@@ -138,7 +138,7 @@ public class SimulationService implements ISimulation
 	 * @throws GeppettoExecutionException
 	 * @throws ModelInterpreterException 
 	 */
-	public void load(Simulation simulation) throws GeppettoInitializationException
+	public void load(Simulation simulation, String requestID) throws GeppettoInitializationException
 	{
 
 		// refresh simulation context
@@ -179,7 +179,7 @@ public class SimulationService implements ISimulation
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
 		runtimeModel.apply(populateVisualVisitor);
 		
-		updateClientWithSimulation();
+		updateClientWithSimulation(requestID);
 
 	}
 
@@ -189,12 +189,12 @@ public class SimulationService implements ISimulation
 	 * @see org.geppetto.core.simulation.ISimulation#start()
 	 */
 	@Override
-	public void start()
+	public void start(String requestId)
 	{
 		_logger.info("Starting simulation");
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
-		_simulationThread = new SimulationThread(_sessionContext,_simulationListener, appConfig.getUpdateCycle());
+		_simulationThread = new SimulationThread(_sessionContext,_simulationListener, requestId, appConfig.getUpdateCycle());
 		_simulationThread.start();
 	}
 
@@ -441,20 +441,21 @@ public class SimulationService implements ISimulation
 	 * @throws ModelInterpreterException 
 	 * 
 	 */
-	private void updateClientWithSimulation() 
+	private void updateClientWithSimulation(String requestID) 
 	{
 	
 		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
-		String scene = updateClientVisitor.getSerializedTree();
-		if(scene!=null){
-			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, scene);
-			_logger.info("Simulation sent to callback listener");
-		}
-		
 		ExitVisitor exitVisitor = new ExitVisitor(_simulationListener);
 		_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
+		
+		String scene = updateClientVisitor.getSerializedTree();
+		
+		if(scene!=null){
+			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, requestID, scene);
+			_logger.info("Simulation sent to callback listener");
+		}
 	}
 
 	/**

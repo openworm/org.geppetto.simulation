@@ -77,7 +77,7 @@ public class SimulationVisitor extends DefaultStateVisitor
 			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 			{
 				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
-				if(!simulator.isInitialized() || (node.getSubTree(AspectTreeType.VISUALIZATION_TREE).getChildren().isEmpty()))
+				if(!simulator.isInitialized())
 				{
 					 LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
 					 _sessionContext.getSimulation().accept(loadSimulationVisitor);

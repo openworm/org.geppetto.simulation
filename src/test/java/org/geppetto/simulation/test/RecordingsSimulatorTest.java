@@ -50,7 +50,7 @@ import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
-import org.geppetto.simulation.recording.RecordingsSimulator;
+import org.geppetto.simulation.recording.RecordingsSimulatorService;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -78,7 +78,7 @@ public class RecordingsSimulatorTest
 		NetcdfFile file=HDF5Reader.readHDF5File(new File("./src/test/resources/example2.h5").toURI().toURL());
 		RecordingModel recording=new RecordingModel(file);
 		recording.setInstancePath("entity.model");
-		RecordingsSimulator simulator=new RecordingsSimulator();
+		RecordingsSimulatorService simulator=new RecordingsSimulatorService();
 
 		ISimulatorCallbackListener listener=new ISimulatorCallbackListener()
 		{

@@ -34,6 +34,8 @@ package org.geppetto.simulation;
 
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -65,6 +67,7 @@ public class ServiceCreator<M,S> implements Runnable
 	private String _discoveryId=null;
 	private String _type=null;
 	private ISimulationCallbackListener _simulationCallBack;
+	private static Log _logger = LogFactory.getLog(ServiceCreator.class);
 	
 	public ServiceCreator(String discoveryId, String type, M model, Map<M,S> map, ISimulationCallbackListener simulationCallBack)
 	{
@@ -86,6 +89,7 @@ public class ServiceCreator<M,S> implements Runnable
 		try
 		{
 			S service=getService(_discoveryId, _type);
+			_logger.info("Service creation attempt, discoveryId="+_discoveryId+" type="+_type+" resulting service="+service);
 			_map.put(_model, service);
 		}
 		catch(GeppettoInitializationException e)

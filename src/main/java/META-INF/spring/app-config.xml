@@ -15,5 +15,14 @@
 		<property name="updateCycle" value="20" />
 		<property name="simulationCapacity" value="10" />
 	</bean>
+	
+	<bean id="recordingsSimulatorConfig" class="org.geppetto.core.beans.SimulatorConfig"> 
+		<property name="simulatorName" value="Recordings Simulator" />
+		<property name="simulatorID" value="recordingsSimulator" />
+	</bean> 
+	
+	<bean id="recordingsModelInterpreterConfig" class="org.geppetto.core.beans.ModelInterpreterConfig"> 
+		<property name="modelInterpreterName" value="Recordings Model Interpreter" />
+	</bean>
 
 </beans>

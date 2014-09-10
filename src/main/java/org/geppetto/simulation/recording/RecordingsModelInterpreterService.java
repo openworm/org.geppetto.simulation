@@ -37,6 +37,7 @@ import java.util.List;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
+import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -53,10 +54,9 @@ import ucar.nc2.NetcdfFile;
  * 
  */
 @Service
-public class RecordingsModelInterpreter implements IModelInterpreter
+public class RecordingsModelInterpreterService extends AModelInterpreter
 {
 
-	private static final String ID="RECORDING_";
 	
 	/* (non-Javadoc)
 	 * @see org.geppetto.core.model.IModelInterpreter#readModel(java.net.URL, java.util.List)
@@ -66,24 +66,7 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	{
 		//the model URL is ignored in a recordings model interpreter
 		ModelWrapper recordingsModel = new ModelWrapper(null);
-		try
-		{
-			if(recordings != null)
-			{
-				int i=1;
-				for(URL recording : recordings)
-				{
-					NetcdfFile file = HDF5Reader.readHDF5File(recording);
-					RecordingModel recordingModel = new RecordingModel(file);
-					recordingModel.setInstancePath(instancePath);
-					recordingsModel.wrapModel(ID+i++, recordingModel);
-				}
-			}
-		}
-		catch(GeppettoExecutionException e)
-		{
-			throw new ModelInterpreterException(e);
-		}
+		addRecordings(recordings, instancePath, recordingsModel);
 		return recordingsModel;
 	}
 

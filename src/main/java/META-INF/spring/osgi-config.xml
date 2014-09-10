@@ -15,4 +15,24 @@
 	<bean id="simulationService" scope="session" class="org.geppetto.simulation.SimulationService">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
+	
+	<osgi:service id="RecordingsSimulatorExporter" ref="recordingsSimulatorService"
+		interface="org.geppetto.core.simulator.ISimulator">
+		<osgi:service-properties>
+			<entry key="discoverableID" value="recordingsSimulator" />
+		</osgi:service-properties>
+	</osgi:service>
+	<bean id="recordingsSimulatorService" scope="thread" class="org.geppetto.simulation.recording.RecordingsSimulatorService">
+	<aop:scoped-proxy proxy-target-class="false"/>
+	</bean>
+	
+		<osgi:service id="RecordingsModelExporter" ref="RecordingsModelInterpreterService"
+		interface="org.geppetto.core.model.IModelInterpreter">
+		<osgi:service-properties>
+			<entry key="discoverableID" value="recordingsModelInterpreter" />
+		</osgi:service-properties>
+	</osgi:service>
+	<bean id="RecordingsModelInterpreterService" scope="thread" class="org.geppetto.simulation.recording.RecordingsModelInterpreterService">
+	<aop:scoped-proxy proxy-target-class="false"/>
+	</bean>
 </beans>

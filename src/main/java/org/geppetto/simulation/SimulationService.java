@@ -226,6 +226,15 @@ public class SimulationService implements ISimulation
 		// revert simulation to initial conditions
 		_sessionContext.revertToInitialConditions();
 		
+		// iterate through aspects and instruct them to stop
+		for(ISimulator simulator : _sessionContext.getSimulators().values())
+		{
+			if(simulator != null)
+			{
+				simulator.setInitialized(false);
+			}
+		}
+
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
 	}
 

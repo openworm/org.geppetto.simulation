@@ -104,22 +104,14 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
 				modelInterpreter.populateRuntimeTree(clientAspect);
 				
-				IModel wrapper = modelInterpreter.readModel(new URL(model.getModelURL()), null, model.getParentAspect().getInstancePath());		
-						
+				IModel wrapper = _sessionContext.getModels().get(model.getInstancePath());
+				
 				clientAspect.setModel(wrapper);
 				clientAspect.setModelInterpreter(modelInterpreter);
 			}
 			catch(GeppettoInitializationException e)
 			{
 				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null,e);
-			}
-			catch(MalformedURLException e)
-			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null,e);
-			}
-			catch(ModelInterpreterException e)
-			{
-				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null,e);
 			}
 		}
 		

@@ -100,10 +100,16 @@ public class LoadSimulationVisitor extends TraversingVisitor
 						recordings.add(new URL(recording));
 					}
 				}
+				
+				long start = System.currentTimeMillis();
+
 				model = modelInterpreter.readModel(new URL(pModel.getModelURL()), recordings, pModel.getParentAspect().getInstancePath());
 				model.setInstancePath(pModel.getInstancePath());
 				_sessionContext.getModels().put(pModel.getInstancePath(), model);
 
+				long end = System.currentTimeMillis();
+				_logger.info("Finished reading model, took " + (end-start) + " ms ");
+				
 			}
 			else
 			{
@@ -160,7 +166,12 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					_sessionContext.mapModelToSimulator(m, simulatorModel);
 				}
 
+				long start = System.currentTimeMillis();
+
 				simulator.initialize(iModels, new SimulatorCallbackListener(simulatorModel, _sessionContext));
+				long end = System.currentTimeMillis();
+				_logger.info("Finished initializing simulator, took " + (end-start) + " ms ");
+				
 			}
 			else
 			{

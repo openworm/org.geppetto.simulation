@@ -119,17 +119,18 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		}
 		catch(GeppettoInitializationException e)
 		{
+			_logger.error("Error: ", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 		catch(MalformedURLException e)
 		{
-			_logger.error("Malformed URL for model");
+			_logger.error("Malformed URL for model",e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 
 		}
 		catch(ModelInterpreterException e)
 		{
-			_logger.error("Error Reading Model");
+			_logger.error("Error Reading Model",e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 		}
 
@@ -181,10 +182,12 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		}
 		catch(GeppettoInitializationException e)
 		{
+			_logger.error("Error: ", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 		catch(GeppettoExecutionException e)
 		{
+			_logger.error("Error: ", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 	}

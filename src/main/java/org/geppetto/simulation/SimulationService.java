@@ -111,6 +111,7 @@ public class SimulationService implements ISimulation
 		}
 		catch(GeppettoInitializationException e)
 		{
+			_logger.error("Error: ", e);
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
 	}
@@ -131,6 +132,7 @@ public class SimulationService implements ISimulation
 		}
 		catch(GeppettoInitializationException e)
 		{
+			_logger.error("Error: ", e);
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
 	}
@@ -249,8 +251,15 @@ public class SimulationService implements ISimulation
 	{
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
-
-		_logger.warn("Stopping simulation");
+		
+		//join threads prior to stopping to avoid concurentmodification exceptions of watchtree 
+		try {
+			_simulationThread.join();
+		} catch (InterruptedException e) {
+			_logger.error("Error: ", e);
+		}
+				
+		_logger.warn("Stopping simulation ");
 		// tell the thread to stop running the simulation
 
 		// revert simulation to initial conditions

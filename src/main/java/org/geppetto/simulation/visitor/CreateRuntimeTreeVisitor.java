@@ -32,8 +32,6 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
@@ -112,6 +110,10 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 			catch(GeppettoInitializationException e)
 			{
 				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null,e);
+			}
+			catch(ModelInterpreterException e)
+			{
+				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null,e);
 			}
 		}
 		

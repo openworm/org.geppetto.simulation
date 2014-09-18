@@ -103,7 +103,7 @@ public class SimulationService implements ISimulation
 		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
 		_simulationListener = simulationListener;
 		long end = System.currentTimeMillis();
-		_logger.info("Finished reading configuration file, took " + (end-start) + " ms ");
+		_logger.info("Reading configuration file, took " + (end-start) + " ms ");
 		
 		try
 		{
@@ -111,8 +111,11 @@ public class SimulationService implements ISimulation
 		}
 		catch(GeppettoInitializationException e)
 		{
+			_logger.error("Error: ", e);
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
+		end = System.currentTimeMillis();
+		_logger.info("Total initialization time took " + (end-start) + " ms ");
 	}
 
 	/**
@@ -122,17 +125,23 @@ public class SimulationService implements ISimulation
 	@Override
 	public void init(String simulationConfig, String requestID, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
+		long start = System.currentTimeMillis();
+		_logger.info("Initializing simulation");
 		Simulation simulation = SimulationConfigReader.readSimulationConfig(simulationConfig);
 		_simulationListener = simulationListener;
-
+		long end = System.currentTimeMillis();
+		_logger.info("Reading configuration file, took " + (end-start) + " ms ");
 		try
 		{
 			load(simulation, requestID);
 		}
 		catch(GeppettoInitializationException e)
 		{
+			_logger.error("Error: ", e);
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
+		end = System.currentTimeMillis();
+		_logger.info("Total initialization time took " + (end-start) + " ms ");
 	}
 
 	/**
@@ -146,18 +155,13 @@ public class SimulationService implements ISimulation
 
 		// refresh simulation context
 		_sessionContext.reset();
-		
-		long start = System.currentTimeMillis();
-		
+				
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		simulation.accept(instancePathdecoratorVisitor);
 		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
 		simulation.accept(parentDecoratorVisitor);
 		
-		long end = System.currentTimeMillis();
-		_logger.info("Finished traversing instance path simulation visitor, took " + (end-start) + " ms ");
-
 		// clear watch lists
 		this.clearWatchLists();
 		if(_watching)
@@ -167,48 +171,27 @@ public class SimulationService implements ISimulation
 		}
 
 		_sessionContext.setSimulation(simulation);
-
-		start = System.currentTimeMillis();
 		
 		// retrieve model interpreters and simulators
 		CreateSimulationServicesVisitor createServicesVisitor = new CreateSimulationServicesVisitor(_sessionContext, _simulationListener);
 		simulation.accept(createServicesVisitor);
 		
-		end = System.currentTimeMillis();
-		_logger.info("Finished traversing create simulation visitor, took " + (end-start) + " ms ");
-
 		populateScripts(simulation);
 
 		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 		
-		start = System.currentTimeMillis();
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationListener);
 		simulation.accept(loadSimulationVisitor);
 		
-		end = System.currentTimeMillis();
-		_logger.info("Finished traversing load simulation visitor, took " + (end-start) + " ms ");
-		
-		start = System.currentTimeMillis();
 		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, _simulationListener);
 		simulation.accept(runtimeTreeVisitor);
 		
-		end = System.currentTimeMillis();
-		_logger.info("Finished traversing runtime visitor, took " + (end-start) + " ms ");
-		
 		RuntimeTreeRoot runtimeModel = runtimeTreeVisitor.getRuntimeModel();
-		
-		start = System.currentTimeMillis();
-		
+				
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
 		runtimeModel.apply(populateVisualVisitor);
 		
-		end = System.currentTimeMillis();
-		_logger.info("Finished traversing populate visual visitor, took " + (end-start) + " ms ");
-		
-		start = System.currentTimeMillis();
 		updateClientWithSimulation(requestID);
-		end = System.currentTimeMillis();
-		_logger.info("Finished sending first update to client " + (end-start) + " ms ");
 	}
 
 	/*
@@ -249,8 +232,17 @@ public class SimulationService implements ISimulation
 	{
 
 		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
-
-		_logger.warn("Stopping simulation");
+		
+		//join threads prior to stopping to avoid concurentmodification exceptions of watchtree 
+		try {
+			if(_simulationThread != null){
+				_simulationThread.join();
+			}
+		} catch (InterruptedException e) {
+			_logger.error("Error: ", e);
+		}
+				
+		_logger.warn("Stopping simulation ");
 		// tell the thread to stop running the simulation
 
 		// revert simulation to initial conditions

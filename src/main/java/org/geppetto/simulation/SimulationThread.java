@@ -40,7 +40,6 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
-import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.geppetto.simulation.visitor.SimulationVisitor;
 
 class SimulationThread extends Thread
@@ -103,7 +102,7 @@ class SimulationThread extends Thread
 		CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor(_sessionContext);
 		_sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
 
-		if(checkSteppedSimulatorsVisitor.allStepped())
+		if(checkSteppedSimulatorsVisitor.allStepped() && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 		{
 			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);

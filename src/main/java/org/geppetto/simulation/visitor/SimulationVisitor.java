@@ -32,6 +32,8 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.runtime.AspectNode;
@@ -42,6 +44,7 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
+import org.geppetto.simulation.SimulatorCallbackListener;
 import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.SimulatorRuntimeStatus;
 
@@ -56,6 +59,8 @@ public class SimulationVisitor extends DefaultStateVisitor
 {
 	private ISimulationCallbackListener _simulationCallBack;
 	private SessionContext _sessionContext;
+
+	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
 	public SimulationVisitor(SessionContext _sessionContext, ISimulationCallbackListener simulationListener)
 	{
@@ -99,6 +104,7 @@ public class SimulationVisitor extends DefaultStateVisitor
 					}
 					catch(GeppettoExecutionException e)
 					{
+						_logger.error("Error: ", e);
 						_simulationCallBack.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),"Error while stepping "+simulator.getName(),e);
 					}
 				}

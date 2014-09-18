@@ -188,10 +188,8 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 				String currentEntityPath = currentEntity.getInstancePath();
 				if(currentEntityPath.equals(entity.getInstancePath()))
 				{
-					currentEntity.addChild(aspectNode);
-					//Matteo: The line above should be replaced with the following
-					//currentEntity.getAspects().add(aspectNode);
-					//aspectNode.setParent(currentEntity);
+					currentEntity.getAspects().add(aspectNode);
+					aspectNode.setParent(currentEntity);
 				}
 				else if(currentEntity.getChildren().size() > 0)
 				{

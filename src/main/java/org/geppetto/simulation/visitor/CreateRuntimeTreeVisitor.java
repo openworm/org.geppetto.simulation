@@ -56,24 +56,24 @@ import com.massfords.humantask.BaseVisitor;
 import com.massfords.humantask.TraversingVisitor;
 
 /**
- * Visitor used for retrieving entities and aspects from simulation file. a
- * Entity and Aspect nodes are created, and used to create skeleton of run time tree.
+ * Visitor used for retrieving entities and aspects from simulation file. a Entity and Aspect nodes are created, and used to create skeleton of run time tree.
  * 
- * @author  Jesus R. Martinez (jesus@metacell.us)
- *
+ * @author Jesus R. Martinez (jesus@metacell.us)
+ * 
  */
-public class CreateRuntimeTreeVisitor extends TraversingVisitor{
+public class CreateRuntimeTreeVisitor extends TraversingVisitor
+{
 
 	private SessionContext _sessionContext;
 	private ISimulationCallbackListener _simulationCallback;
-	
+
 	public CreateRuntimeTreeVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallback)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		this._sessionContext = sessionContext;
-		this._simulationCallback=simulationCallback;
+		this._simulationCallback = simulationCallback;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -90,33 +90,31 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		AspectNode clientAspect = new AspectNode();
 		clientAspect.setId(aspect.getId());
 		clientAspect.setName(aspect.getId());
-		
-		//attach to parent entity before populating skeleton of aspect node
+
+		// attach to parent entity before populating skeleton of aspect node
 		addAspectToEntity(clientAspect, aspect.getParentEntity(), this._sessionContext.getRuntimeTreeRoot().getChildren());
 
 		if(model != null)
 		{
 			try
 			{
-				//use model interpreter from aspect to populate runtime tree
+				// use model interpreter from aspect to populate runtime tree
 				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
-				modelInterpreter.populateRuntimeTree(clientAspect);
-				
 				IModel wrapper = _sessionContext.getModels().get(model.getInstancePath());
-				
 				clientAspect.setModel(wrapper);
 				clientAspect.setModelInterpreter(modelInterpreter);
+				modelInterpreter.populateRuntimeTree(clientAspect);
 			}
 			catch(GeppettoInitializationException e)
 			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null,e);
+				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null,e);
+				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null, e);
 			}
 		}
-		
+
 		/*
 		 * Extract simulator from aspect and set it to client aspect node
 		 */
@@ -124,16 +122,16 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		{
 			try
 			{
-				ISimulator simulatorService = _sessionContext.getSimulator(simulator);				
+				ISimulator simulatorService = _sessionContext.getSimulator(simulator);
 				clientAspect.setSimulator(simulatorService);
 			}
 			catch(GeppettoInitializationException e)
 			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null,e);
+				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 			}
 		}
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -145,57 +143,67 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor{
 		EntityNode clientEntity = new EntityNode();
 		clientEntity.setName(entity.getId());
 		clientEntity.setId(entity.getId());
-		if(entity.getPosition()!=null){
+		if(entity.getPosition() != null)
+		{
 			Point position = new Point();
 			position.setX(new Double(entity.getPosition().getX()));
 			position.setY(new Double(entity.getPosition().getY()));
 			position.setZ(new Double(entity.getPosition().getZ()));
 			clientEntity.setPosition(position);
 		}
-		if(entity.getParentEntity()!=null){
-			for(ANode node : getRuntimeModel().getChildren()){
-				if(node.getId().equals(entity.getParentEntity().getId())){
-					((EntityNode)node).addChild(clientEntity);
+		if(entity.getParentEntity() != null)
+		{
+			for(ANode node : getRuntimeModel().getChildren())
+			{
+				if(node.getId().equals(entity.getParentEntity().getId()))
+				{
+					((EntityNode) node).addChild(clientEntity);
 				}
 			}
-		}else{
+		}
+		else
+		{
 			getRuntimeModel().addChild(clientEntity);
 		}
-		
+
 		super.visit(entity);
 	}
 
 	/**
 	 * Attaches AspectNode to its client parent EntityNode
 	 * 
-	 * @param aspectNode - Runtime Aspect Node
-	 * @param entity - Persistent model Entity
+	 * @param aspectNode
+	 *            - Runtime Aspect Node
+	 * @param entity
+	 *            - Persistent model Entity
 	 */
-	private void addAspectToEntity(AspectNode aspectNode, Entity entity, List<ANode> children){		
-		String entityPath = getInstancePath(entity);
-		
-		//traverse through runtimetree entities to find the parent of aspectNode
-		for(int i =0; i<children.size(); i++){
-			if(children.get(i).getMetaType().equals("EntityNode")){
-				EntityNode currentEntity = ((EntityNode)children.get(i));
+	private void addAspectToEntity(AspectNode aspectNode, Entity entity, List<ANode> children)
+	{
+		// traverse through runtimetree entities to find the parent of aspectNode
+		for(int i = 0; i < children.size(); i++)
+		{
+			if(children.get(i).getMetaType().equals("EntityNode"))
+			{
+				EntityNode currentEntity = ((EntityNode) children.get(i));
 				String currentEntityPath = currentEntity.getInstancePath();
-				if(currentEntityPath.equals(entityPath)){
+				if(currentEntityPath.equals(entity.getInstancePath()))
+				{
 					currentEntity.addChild(aspectNode);
+					//Matteo: The line above should be replaced with the following
+					//currentEntity.getAspects().add(aspectNode);
+					//aspectNode.setParent(currentEntity);
 				}
-				else if(currentEntity.getChildren().size()>0){
+				else if(currentEntity.getChildren().size() > 0)
+				{
 					addAspectToEntity(aspectNode, entity, currentEntity.getChildren());
 				}
 			}
 		}
 	}
-	
-	private String getInstancePath(Entity entity) {
-		String instancePath = entity.getInstancePath();
-		
-		return instancePath;
-	}
 
-	public RuntimeTreeRoot getRuntimeModel(){
+
+	public RuntimeTreeRoot getRuntimeModel()
+	{
 		return _sessionContext.getRuntimeTreeRoot();
 	}
 }

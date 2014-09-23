@@ -32,16 +32,18 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
+import org.geppetto.simulation.SimulatorCallbackListener;
 import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.SimulatorRuntimeStatus;
 
@@ -57,34 +59,40 @@ public class SimulationVisitor extends DefaultStateVisitor
 	private ISimulationCallbackListener _simulationCallBack;
 	private SessionContext _sessionContext;
 
+	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
+
 	public SimulationVisitor(SessionContext _sessionContext, ISimulationCallbackListener simulationListener)
 	{
 		this._simulationCallBack = simulationListener;
 		this._sessionContext = _sessionContext;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
 
-			ISimulator simulator = node.getSimulator();
+		ISimulator simulator = node.getSimulator();
+		if(simulator != null)
+		{
 			SimulatorRuntime simulatorRuntime = this._sessionContext.getSimulatorRuntime(simulator.getId());
 
-			//we proceed only if the simulator is not already stepping 
+			// we proceed only if the simulator is not already stepping
 			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 			{
 				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
-				if(!simulator.isInitialized() || (node.getSubTree(AspectTreeType.VISUALIZATION_TREE).getChildren().isEmpty()))
+				if(!simulator.isInitialized())
 				{
-					 LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
-					 _sessionContext.getSimulation().accept(loadSimulationVisitor);
-					 
-					 //populate visual tree
-					 PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationCallBack);
-					 node.apply(populateVisualVisitor);
+					LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
+					_sessionContext.getSimulation().accept(loadSimulationVisitor);
+
+					// populate visual tree
+					PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationCallBack);
+					node.apply(populateVisualVisitor);
 				}
 
 				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())
@@ -99,15 +107,18 @@ public class SimulationVisitor extends DefaultStateVisitor
 					}
 					catch(GeppettoExecutionException e)
 					{
-						_simulationCallBack.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(),"Error while stepping "+simulator.getName(),e);
+						_logger.error("Error: ", e);
+						_simulationCallBack.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(), "Error while stepping " + simulator.getName(), e);
 					}
 				}
 			}
-
+		}
 		return super.inAspectNode(node);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
@@ -116,7 +127,9 @@ public class SimulationVisitor extends DefaultStateVisitor
 		return super.outAspectNode(node);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#visitSimpleStateNode(org.geppetto.core.model.state.SimpleStateNode)
 	 */
 	@Override

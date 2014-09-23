@@ -39,6 +39,7 @@ import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
+import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.SimulationVisitor;
 
 class SimulationThread extends Thread
@@ -49,16 +50,20 @@ class SimulationThread extends Thread
 	private ISimulationCallbackListener _simulationCallback;
 	private int _updateCycles = 0;
 	private long _timeElapsed;
+	private boolean _simulationStarted = false;
+	private String _requestID;
 
 	/**
 	 * @param context
 	 * @param simulationListener 
 	 */
-	public SimulationThread(SessionContext context, ISimulationCallbackListener simulationListener, int cycle)
+	public SimulationThread(SessionContext context, ISimulationCallbackListener simulationListener, 
+			String requestID, int cycle)
 	{
 		this._sessionContext = context;
 		_simulationCallback=simulationListener;
 		_updateCycles = cycle;
+		_requestID = requestID;
 		_timeElapsed = System.currentTimeMillis();
 	}
 
@@ -83,6 +88,7 @@ class SimulationThread extends Thread
 				//the update cycle of application.
 				if( calculateTime >= _updateCycles){
 					updateRuntimeTreeClient();
+
 					_timeElapsed = System.currentTimeMillis();
 					_logger.info("Updating after " + calculateTime + " ms");
 				}
@@ -96,16 +102,25 @@ class SimulationThread extends Thread
 		CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor(_sessionContext);
 		_sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
 
-		if(checkSteppedSimulatorsVisitor.allStepped())
+		if(checkSteppedSimulatorsVisitor.allStepped() && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 		{
 			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
 
+			ExitVisitor exitVisitor = new ExitVisitor(_simulationCallback);
+			_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
+			
 			String scene = updateClientVisitor.getSerializedTree();
 			if(scene!=null){
-				_simulationCallback.updateReady(SimulationEvents.SCENE_UPDATE, scene);
-				_logger.info("Update sent to Simulation Callback Listener");
-			}	
+				if(!this._simulationStarted){
+					_simulationCallback.updateReady(SimulationEvents.START_SIMULATION, _requestID,scene);
+					_logger.info("First step of simulation sent to Simulation Callback Listener");
+					this._simulationStarted = true;
+				}else{
+					_simulationCallback.updateReady(SimulationEvents.SCENE_UPDATE, null, scene);
+					_logger.info("Update sent to Simulation Callback Listener");
+				}
+			}
 		}
 	}
 }

@@ -143,11 +143,15 @@ public class SessionContext
 	private void resetRuntimeTree(List<ANode> nodes){
 		for(ANode node : nodes){
 			if(node instanceof EntityNode){
-				resetRuntimeTree(((ACompositeNode)node).getChildren());
-			}
-			if(node instanceof AspectNode){
-				((AspectNode) node).flushSubTree(AspectTreeType.VISUALIZATION_TREE);
-				((AspectNode) node).flushSubTree(AspectTreeType.WATCH_TREE);
+				if(((EntityNode) node).getChildren().size()>0){
+					resetRuntimeTree(((ACompositeNode)node).getChildren());
+				}
+				else{
+					for(AspectNode a : ((EntityNode)node).getAspects()){
+						a.flushSubTree(AspectTreeType.VISUALIZATION_TREE);
+						a.flushSubTree(AspectTreeType.WATCH_TREE);
+					}
+				}
 			}
 		}
 	}

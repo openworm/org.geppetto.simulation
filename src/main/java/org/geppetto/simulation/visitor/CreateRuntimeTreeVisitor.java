@@ -41,9 +41,11 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Aspect;
+import org.geppetto.core.model.simulation.Connection;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
@@ -147,6 +149,15 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 			position.setY(new Double(entity.getPosition().getY()));
 			position.setZ(new Double(entity.getPosition().getZ()));
 			clientEntity.setPosition(position);
+		}
+		if(entity.getConnections()!=null){
+			for(Connection c : entity.getConnections()){
+				ConnectionNode clientConnection = new ConnectionNode(c.getId());
+				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
+				clientConnection.setType(c.getType());
+				clientConnection.setParent(clientEntity);
+				clientEntity.getConnections().add(clientConnection);
+			}
 		}
 		if(entity.getParentEntity() != null)
 		{

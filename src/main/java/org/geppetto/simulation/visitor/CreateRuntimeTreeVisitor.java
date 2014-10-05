@@ -41,9 +41,11 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Aspect;
+import org.geppetto.core.model.simulation.Connection;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
@@ -87,8 +89,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		 */
 		Model model = aspect.getModel();
 		Simulator simulator = aspect.getSimulator();
-		AspectNode clientAspect = new AspectNode();
-		clientAspect.setId(aspect.getId());
+		AspectNode clientAspect = new AspectNode(aspect.getId());
 		clientAspect.setName(aspect.getId());
 
 		// attach to parent entity before populating skeleton of aspect node
@@ -140,9 +141,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 	@Override
 	public void visit(Entity entity)
 	{
-		EntityNode clientEntity = new EntityNode();
-		clientEntity.setName(entity.getId());
-		clientEntity.setId(entity.getId());
+		EntityNode clientEntity = new EntityNode(entity.getId());
 		if(entity.getPosition() != null)
 		{
 			Point position = new Point();
@@ -150,6 +149,15 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 			position.setY(new Double(entity.getPosition().getY()));
 			position.setZ(new Double(entity.getPosition().getZ()));
 			clientEntity.setPosition(position);
+		}
+		if(entity.getConnections()!=null){
+			for(Connection c : entity.getConnections()){
+				ConnectionNode clientConnection = new ConnectionNode(c.getId());
+				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
+				clientConnection.setType(c.getType());
+				clientConnection.setParent(clientEntity);
+				clientEntity.getConnections().add(clientConnection);
+			}
 		}
 		if(entity.getParentEntity() != null)
 		{

@@ -117,7 +117,7 @@ class SimulationThread extends Thread
 					_logger.info("First step of simulation sent to Simulation Callback Listener");
 					this._simulationStarted = true;
 				}else{
-					_simulationCallback.updateReady(SimulationEvents.SCENE_UPDATE, null, scene);
+					_simulationCallback.updateReady(SimulationEvents.SCENE_UPDATE, _requestID, scene);
 					_logger.info("Update sent to Simulation Callback Listener");
 				}
 			}

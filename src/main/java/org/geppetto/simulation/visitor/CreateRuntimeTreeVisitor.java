@@ -173,6 +173,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 					TextMetadataNode text = new TextMetadataNode(custom.getId());
 					text.setText(custom.getText());
 					text.setName(custom.getName());
+					text.setParent(clientConnection);
 					
 					clientConnection.getCustomNodes().add(text);
 				}

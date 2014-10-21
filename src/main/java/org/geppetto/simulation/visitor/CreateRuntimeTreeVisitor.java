@@ -159,6 +159,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 				ConnectionNode clientConnection = new ConnectionNode(c.getId());
 				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
 				clientConnection.setType(c.getType());
+				clientConnection.setName(c.getId());
 				clientConnection.setParent(clientEntity);
 				
 				for(VisualObjectReference ref : c.getVisualObjectReferences()){

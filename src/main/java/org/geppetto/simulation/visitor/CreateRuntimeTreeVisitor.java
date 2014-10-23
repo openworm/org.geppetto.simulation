@@ -53,6 +53,7 @@ import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.VisualObjectReference;
+import org.geppetto.core.model.values.StringValue;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Point;
@@ -172,7 +173,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 				
 				for(CustomProperty custom : c.getCustomProperties()){
 					TextMetadataNode text = new TextMetadataNode(custom.getId());
-					text.setText(custom.getText());
+					text.setValue(new StringValue(custom.getText()));
 					text.setName(custom.getName());
 					text.setParent(clientConnection);
 					

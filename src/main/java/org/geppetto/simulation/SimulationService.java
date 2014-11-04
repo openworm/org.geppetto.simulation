@@ -37,6 +37,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +48,8 @@ import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.runtime.ANode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
@@ -560,11 +563,15 @@ public class SimulationService implements ISimulation
 	{
 		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener, instancePath);
 		this._sessionContext.getRuntimeTreeRoot().apply(populateModelVisitor);
-
-		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-		populateModelVisitor.getPopulatedModelTree().apply(updateClientVisitor);
-
-		String modelTree = updateClientVisitor.getSerializedTree();
+		
+		String modelTree = "[";
+		for (Map.Entry<String, AspectSubTreeNode> entry : populateModelVisitor.getPopulatedModelTree().entrySet()){
+			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+			entry.getValue().apply(updateClientVisitor);
+			modelTree +=  "{\"aspectInstancePath\":" + '"' +  entry.getKey() + '"' + ",\"modelTree\":{" + updateClientVisitor.getSerializedTree() + "} },";
+		}
+		modelTree = modelTree.substring(0, modelTree.length() - 1);
+		modelTree += "]";
 
 		return modelTree;
 	}

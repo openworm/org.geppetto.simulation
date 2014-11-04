@@ -164,22 +164,22 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 				clientConnection.setParent(clientEntity);
 				clientEntity.getConnections().add(clientConnection);
 				
-//				for(VisualObjectReference ref : c.getVisualObjectReferences()){
-//					VisualObjectReferenceNode refNode = new VisualObjectReferenceNode(ref.getId());
-//					refNode.setAspectInstancePath(ref.getAspectInstancePath());
-//					refNode.setVisualObjectId(ref.getVisualObjectID());
-//					refNode.setParent(clientConnection);
-//					clientConnection.getVisualReferences().add(refNode);
-//				}	
-//				
-//				for(CustomProperty custom : c.getCustomProperties()){
-//					TextMetadataNode text = new TextMetadataNode(custom.getId());
-//					text.setValue(new FloatValue(custom.getValue()));
-//					text.setName(custom.getName());
-//					text.setParent(clientConnection);
-//					
-//					clientConnection.getCustomNodes().add(text);
-//				}
+				for(VisualObjectReference ref : c.getVisualObjectReferences()){
+					VisualObjectReferenceNode refNode = new VisualObjectReferenceNode(ref.getId());
+					refNode.setAspectInstancePath(ref.getAspectInstancePath());
+					refNode.setVisualObjectId(ref.getVisualObjectID());
+					refNode.setParent(clientConnection);
+					clientConnection.getVisualReferences().add(refNode);
+				}	
+				
+				for(CustomProperty custom : c.getCustomProperties()){
+					TextMetadataNode text = new TextMetadataNode(custom.getId());
+					text.setValue(new FloatValue(custom.getValue()));
+					text.setName(custom.getName());
+					text.setParent(clientConnection);
+					
+					clientConnection.getCustomNodes().add(text);
+				}
 			}
 		}
 		if(entity.getParentEntity() != null)

@@ -33,13 +33,21 @@
 package org.geppetto.simulation.visitor;
 
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.ModelWrapper;
+import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
@@ -60,7 +68,7 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor{
 	private ISimulationCallbackListener _simulationCallBack;
 	//The id of aspect we will be populating
 	private String _instancePath;
-	private AspectSubTreeNode _populateModelTree;
+	private HashMap<String, AspectSubTreeNode> _populateModelTree;
 
 	public PopulateModelTreeVisitor(ISimulationCallbackListener simulationListener,String instancePath)
 	{
@@ -85,13 +93,28 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor{
 				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
 			}		
 			
-			this._populateModelTree = (AspectSubTreeNode) node.getSubTree(AspectTreeType.MODEL_TREE);
+			this._populateModelTree = new HashMap<String, AspectSubTreeNode>();
+			this._populateModelTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.MODEL_TREE)));
+			
+			Map<String, EntityNode> mapping = (Map<String, EntityNode>) ((ModelWrapper) node.getModel()).getModel("entitiesMapping");
+			EntityNode entityNode = mapping.get(node.getParent().getId());
+			if (entityNode == null){
+				for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
+		 		    String key = entry.getKey();
+		 		    
+		 		   for (AspectNode aspectNode : entry.getValue().getAspects()){
+						if (aspectNode.getId() == node.getId()){
+							this._populateModelTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.MODEL_TREE));
+						}
+		 		   }	
+				}
+			}
 		}
 
 		return super.inAspectNode(node);
 	}
 	
-	public AspectSubTreeNode getPopulatedModelTree(){
+	public HashMap<String, AspectSubTreeNode> getPopulatedModelTree(){
 		return this._populateModelTree;
 	}
 }

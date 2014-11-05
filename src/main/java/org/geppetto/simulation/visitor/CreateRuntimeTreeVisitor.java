@@ -44,11 +44,16 @@ import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.TextMetadataNode;
+import org.geppetto.core.model.runtime.VisualObjectReferenceNode;
 import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Connection;
+import org.geppetto.core.model.simulation.CustomProperty;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.simulation.VisualObjectReference;
+import org.geppetto.core.model.values.FloatValue;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Point;
@@ -155,8 +160,26 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 				ConnectionNode clientConnection = new ConnectionNode(c.getId());
 				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
 				clientConnection.setType(c.getType());
+				clientConnection.setName(c.getId());
 				clientConnection.setParent(clientEntity);
 				clientEntity.getConnections().add(clientConnection);
+				
+				for(VisualObjectReference ref : c.getVisualObjectReferences()){
+					VisualObjectReferenceNode refNode = new VisualObjectReferenceNode(ref.getId());
+					refNode.setAspectInstancePath(ref.getAspectInstancePath());
+					refNode.setVisualObjectId(ref.getVisualObjectID());
+					refNode.setParent(clientConnection);
+					clientConnection.getVisualReferences().add(refNode);
+				}	
+				
+				for(CustomProperty custom : c.getCustomProperties()){
+					TextMetadataNode text = new TextMetadataNode(custom.getId());
+					text.setValue(new FloatValue(custom.getValue()));
+					text.setName(custom.getName());
+					text.setParent(clientConnection);
+					
+					clientConnection.getCustomNodes().add(text);
+				}
 			}
 		}
 		if(entity.getParentEntity() != null)

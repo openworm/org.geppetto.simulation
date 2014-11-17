@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -92,5 +93,16 @@ public class ExitVisitor extends DefaultStateVisitor {
 	public boolean outAspectNode(AspectNode node) {
 		node.setModified(false);
 		return super.inAspectNode(node);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#
+	 */
+	@Override
+	public boolean outConnectionNode(ConnectionNode node) {
+		node.setModified(false);
+		return super.inConnectionNode(node);
 	}
 }

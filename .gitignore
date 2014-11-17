@@ -1,7 +1,7 @@
 target
+/bin
 *.DS_Store
 src/main/java/META-INF/MANIFEST.MF
 /.externalToolBuilders/
 /.settings/
-/.project
-/.classpath
+.classpath

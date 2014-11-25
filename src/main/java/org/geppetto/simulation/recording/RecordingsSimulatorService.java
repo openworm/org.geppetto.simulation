@@ -34,6 +34,7 @@ package org.geppetto.simulation.recording;
 
 import java.util.List;
 
+import org.geppetto.core.beans.SimulatorConfig;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
@@ -43,6 +44,7 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.simulation.IRunConfiguration;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -50,9 +52,12 @@ import org.springframework.stereotype.Service;
  * 
  */
 @Service
-public class RecordingsSimulator extends ASimulator
+public class RecordingsSimulatorService extends ASimulator
 {
 
+	@Autowired
+	private SimulatorConfig _recordingsSimulatorConfig;
+	
 	@Override
 	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
 	{
@@ -71,20 +76,18 @@ public class RecordingsSimulator extends ASimulator
 	@Override
 	public String getName()
 	{
-		return "Recordings reader";
+		return _recordingsSimulatorConfig.getSimulatorName();
 	}
 
 	@Override
 	public boolean populateVisualTree(AspectNode aspectNode) throws ModelInterpreterException
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public String getId()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return _recordingsSimulatorConfig.getSimulatorID();
 	}
 }

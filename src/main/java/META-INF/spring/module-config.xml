@@ -18,7 +18,12 @@
 				<entry key="session">
 					<bean class="org.springframework.context.support.SimpleThreadScope" />
 				</entry>
+				<entry key="thread">
+					<ref bean="threadScope" />
+				</entry>
 			</map>
 		</property>
 	</bean>
+	
+	<bean id="threadScope" class="org.geppetto.core.scope.ThreadScope"/>
 </beans>

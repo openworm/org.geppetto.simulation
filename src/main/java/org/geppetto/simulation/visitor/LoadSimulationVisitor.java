@@ -97,13 +97,19 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					//add all the recordings found
 					for(String recording : pModel.getRecordingURL())
 					{
-						recordings.add(new URL(recording));
+						URL url = null;
+						url = this.getClass().getResource(recording);
+						recordings.add(url);
 					}
 				}
 				
 				long start = System.currentTimeMillis();
 
-				model = modelInterpreter.readModel(new URL(pModel.getModelURL()), recordings, pModel.getParentAspect().getInstancePath());
+				URL modelUrl = null;
+				if(pModel.getModelURL()!=null){
+					modelUrl = new URL(pModel.getModelURL());
+				}
+				model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
 				model.setInstancePath(pModel.getInstancePath());
 				_sessionContext.getModels().put(pModel.getInstancePath(), model);
 

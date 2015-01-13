@@ -10,7 +10,7 @@
 							http://www.springframework.org/schema/aop 
        						http://www.springframework.org/schema/aop/spring-aop-3.1.xsd">
 
-	<osgi:service id="SimulatorRecordingsExporter" ref="recordingsSimulatorService" interface="org.geppetto.core.simulator.ISimulator">
+ 	<osgi:service id="SimulatorRecordingsExporter" ref="recordingsSimulatorService" interface="org.geppetto.core.simulator.ISimulator">
 		<osgi:service-properties>
 			<entry key="discoverableID" value="recordingsSimulator" />
 		</osgi:service-properties>

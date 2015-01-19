@@ -78,15 +78,15 @@ class SimulationThread extends Thread
 
 	public void run()
 	{
-		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext,_simulationCallback);
+		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext,_simulationCallback,_requestID);
 		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING) )
 		{
-				_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
 				long calculateTime =System.currentTimeMillis() - _timeElapsed;
 				
 				//update only if time elapsed since last client update doesn't exceed
 				//the update cycle of application.
 				if( calculateTime >= _updateCycles){
+					_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
 					updateRuntimeTreeClient();
 
 					_timeElapsed = System.currentTimeMillis();
@@ -121,6 +121,11 @@ class SimulationThread extends Thread
 					_logger.info("Update sent to Simulation Callback Listener");
 				}
 			}
+		}
+		else if(getSessionContext().getStatus().equals(SimulationRuntimeStatus.STOPPED)){
+			_simulationCallback.updateReady(SimulationEvents.STOP_SIMULATION, _requestID,null);
+			_logger.info("Stop simulation ");
+			this._simulationStarted = true;
 		}
 	}
 }

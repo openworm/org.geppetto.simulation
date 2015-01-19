@@ -108,6 +108,12 @@ public class RecordingsSimulatorTest
 				Assert.assertEquals(expectedTime[current], value,0);
 				Assert.assertEquals(expected[current], value2,0);
 			}
+
+			@Override
+			public void endOfSteps() {
+				// TODO Auto-generated method stub
+				
+			}
 		};
 		List<IModel> models=new ArrayList<IModel>();
 		models.add(recording);

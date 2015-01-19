@@ -58,14 +58,21 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	@Override
 	public void stateTreeUpdated() throws GeppettoExecutionException
 	{
-		_simulatorRuntime.incrementProcessedSteps();
-		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
-				
-		//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
-		//to revert tree to initial conditions is simulation has been stopped
-		if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
-			_sessionContext.revertToInitialConditions();
+		if(!_simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
+			_simulatorRuntime.incrementProcessedSteps();
+			_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
+
+			//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
+			//to revert tree to initial conditions is simulation has been stopped
+			if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
+				_sessionContext.revertToInitialConditions();
+			}
 		}
+	}
+
+	@Override
+	public void endOfSteps() {		
+		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.OVER);
 	}
 
 }

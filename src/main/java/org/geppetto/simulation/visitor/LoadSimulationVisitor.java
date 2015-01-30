@@ -73,7 +73,6 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
 		_simulationCallback = simulationListener;
-
 	}
 
 	/*
@@ -175,7 +174,9 @@ public class LoadSimulationVisitor extends TraversingVisitor
 
 				long start = System.currentTimeMillis();
 
-				simulator.initialize(iModels, new SimulatorCallbackListener(simulatorModel, _sessionContext));
+				SimulatorCallbackListener callbackListener = 
+						new SimulatorCallbackListener(simulatorModel, _sessionContext,_simulationCallback);
+				simulator.initialize(iModels, callbackListener);
 				long end = System.currentTimeMillis();
 				_logger.info("Finished initializing simulator, took " + (end-start) + " ms ");
 				

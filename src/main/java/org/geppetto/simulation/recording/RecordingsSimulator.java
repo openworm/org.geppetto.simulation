@@ -60,6 +60,7 @@ public class RecordingsSimulator extends ASimulator
 	@Override
 	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
 	{
+		super.initialize(models, listener);
 		setWatchableVariablesFromRecordings();
 	}
 

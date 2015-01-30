@@ -34,17 +34,24 @@
 package org.geppetto.simulation;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.simulation.Simulation;
+import org.xml.sax.SAXException;
+
 
 public class SimulationConfigReader
 {
@@ -82,6 +89,7 @@ public class SimulationConfigReader
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			//unmarshaller.setSchema(parseSchema(new URL("https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd")));
 			sim = (Simulation) unmarshaller.unmarshal(reader);
 		}
 		catch(JAXBException e)
@@ -90,6 +98,21 @@ public class SimulationConfigReader
 		}
 
 		return sim;
+	}
+	
+	
+	public static Schema parseSchema(URL schema) {
+		Schema parsedSchema = null;
+		SchemaFactory sf = SchemaFactory
+				.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		try {
+			parsedSchema = sf.newSchema(schema);
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			//System.out.println("Problems parsing schema " + schema.getName());
+			e.printStackTrace();
+		}
+		return parsedSchema;
 	}
 
 	/**

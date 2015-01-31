@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
 public class SimulatorCallbackListener implements ISimulatorCallbackListener
@@ -45,14 +46,17 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	private Simulator _simulatorModel;
 	private SimulatorRuntime _simulatorRuntime;
 	private SessionContext _sessionContext;
+	private ISimulationCallbackListener _simulationCallback;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
-	public SimulatorCallbackListener(Simulator simulatorModel, SessionContext context)
+	public SimulatorCallbackListener(Simulator simulatorModel, 
+			SessionContext context, ISimulationCallbackListener simulationCallback)
 	{
 		_simulatorModel = simulatorModel;
 		_sessionContext = context;
 		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
+		_simulationCallback = simulationCallback;
 	}
 
 	@Override
@@ -71,8 +75,8 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	}
 
 	@Override
-	public void endOfSteps() {		
+	public void endOfSteps(String message) {		
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.OVER);
+		this._simulationCallback.message(message);
 	}
-
 }

@@ -288,6 +288,10 @@ public class SimulationService implements ISimulation
 		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
 		return simulationConfig;
 	}
+	
+	public ISimulationCallbackListener getSimulationCallbackListener(){
+		return this._simulationListener;
+	}
 
 	/**
 	 * Gets the list of all watchable variables in a give simulation

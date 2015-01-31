@@ -55,9 +55,7 @@ public class RecordingsSimulator extends ASimulator
 {
 	private static Log _logger = LogFactory.getLog(RecordingsSimulator.class);
 
-	public RecordingsSimulator() {
-		_logger.info("New recordings Simulator service created");
-	}
+	public RecordingsSimulator() {}
 	
 	@Override
 	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
@@ -83,14 +81,12 @@ public class RecordingsSimulator extends ASimulator
 	@Override
 	public boolean populateVisualTree(AspectNode aspectNode) throws ModelInterpreterException
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public String getId()
 	{
-		// TODO Auto-generated method stub
 		return "recordingsSimulator";
 	}
 }

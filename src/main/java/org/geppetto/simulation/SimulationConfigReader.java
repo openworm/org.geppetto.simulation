@@ -56,6 +56,8 @@ import org.xml.sax.SAXException;
 public class SimulationConfigReader
 {
 
+	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
+	
 	public static Simulation readConfig(URL url) throws GeppettoInitializationException
 	{
 
@@ -63,9 +65,10 @@ public class SimulationConfigReader
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
 			sim = (Simulation) unmarshaller.unmarshal(url);
 		}
-		catch(JAXBException e1)
+		catch(JAXBException | MalformedURLException e1)
 		{
 			throw new GeppettoInitializationException("Unable to unmarshall simulation with url : " + url.toString(), e1);
 		}
@@ -89,28 +92,26 @@ public class SimulationConfigReader
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
-			//unmarshaller.setSchema(parseSchema(new URL("https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd")));
+			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
 			sim = (Simulation) unmarshaller.unmarshal(reader);
 		}
-		catch(JAXBException e)
+		catch(JAXBException | MalformedURLException e)
 		{
-			throw new GeppettoInitializationException(e);
+			throw new GeppettoInitializationException("Unable to unmarshall simulation");
 		}
 
 		return sim;
 	}
 	
 	
-	public static Schema parseSchema(URL schema) {
+	public static Schema parseSchema(URL schema) throws GeppettoInitializationException {
 		Schema parsedSchema = null;
 		SchemaFactory sf = SchemaFactory
 				.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 		try {
 			parsedSchema = sf.newSchema(schema);
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			//System.out.println("Problems parsing schema " + schema.getName());
-			e.printStackTrace();
+			throw new GeppettoInitializationException("Unable to generate schema");
 		}
 		return parsedSchema;
 	}
@@ -124,7 +125,6 @@ public class SimulationConfigReader
 	 */
 	public static String writeSimulationConfig(URL url) throws GeppettoInitializationException
 	{
-
 		String line = null;
 		StringBuilder sb = new StringBuilder();
 

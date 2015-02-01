@@ -56,7 +56,7 @@ public class SimulationConfigReader
 {
 
 	//static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
-	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/conversionServices/src/main/resources/schema/simulation/simulationSchema.xsd";
+	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/development/src/main/resources/schema/simulation/simulationSchema.xsd";
 	
 	public static Simulation readConfig(URL url) throws GeppettoInitializationException
 	{

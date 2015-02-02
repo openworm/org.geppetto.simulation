@@ -47,13 +47,12 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.simulation.visitor.BaseVisitor;
+import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
-
-import com.massfords.humantask.BaseVisitor;
-import com.massfords.humantask.TraversingVisitor;
 
 /**
  * This visitor loads a simulation

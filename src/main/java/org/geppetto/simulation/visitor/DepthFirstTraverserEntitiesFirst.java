@@ -37,9 +37,8 @@ import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
-
-import com.massfords.humantask.DepthFirstTraverserImpl;
-import com.massfords.humantask.Visitor;
+import org.geppetto.core.model.simulation.visitor.DepthFirstTraverserImpl;
+import org.geppetto.core.model.simulation.visitor.Visitor;
 
 /**
  * @author matteocantarelli

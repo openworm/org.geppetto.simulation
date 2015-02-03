@@ -20,14 +20,14 @@
 			<tns:aspect>
 				<tns:id>electrical</tns:id>
 				<tns:model>
-	    			<tns:modelInterpreter>lemsModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelInterpreterId>lemsModelInterpreter</tns:modelInterpreterId>
 	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
 				</tns:model>
 			</tns:aspect>
 			<tns:aspect>
 				<tns:id>mechanical</tns:id>
 				<tns:model>
-	    			<tns:modelInterpreter>sphModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelInterpreterId>sphModelInterpreter</tns:modelInterpreterId>
 	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
 				</tns:model>
 			</tns:aspect>
@@ -37,14 +37,14 @@
 			<tns:aspect>
 				<tns:id>mechanical</tns:id>
 				<tns:model>
-	    			<tns:modelInterpreter>sphModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelInterpreterId>sphModelInterpreter</tns:modelInterpreterId>
 	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
 				</tns:model>
 			</tns:aspect>
 			<tns:aspect>
 				<tns:id>electrical</tns:id>
 				<tns:model>
-	    			<tns:modelInterpreter>lemsModelInterpreter</tns:modelInterpreter>
+	    			<tns:modelInterpreterId>lemsModelInterpreter</tns:modelInterpreterId>
 	    			<tns:modelURL>https://raw.github.com/openworm/org.geppetto.samples/master/LEMS/SingleComponentHH/LEMS_NML2_Ex5_DetCell.xml</tns:modelURL>
 				</tns:model>
 			</tns:aspect>

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -37,9 +37,8 @@ import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
-
-import com.massfords.humantask.DepthFirstTraverserImpl;
-import com.massfords.humantask.Visitor;
+import org.geppetto.core.model.simulation.visitor.DepthFirstTraverserImpl;
+import org.geppetto.core.model.simulation.visitor.Visitor;
 
 /**
  * @author matteocantarelli

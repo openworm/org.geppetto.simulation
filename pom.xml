@@ -4,7 +4,7 @@
 	<groupId>org.geppetto</groupId>
 	<artifactId>simulation</artifactId>
 	<name>Geppetto Simulation Bundle</name>
-	<version>0.2.0</version>
+	<version>0.2.1</version>
 	<packaging>bundle</packaging>
 	<properties>
 		<spring.version>3.1.0.RELEASE</spring.version>
@@ -173,7 +173,7 @@
 						<Bundle-Version>${project.version}</Bundle-Version>
 						<Bundle-ClassPath>.,{maven-dependencies}</Bundle-ClassPath>
 						<Include-Resource>
-							{maven-resources},META-INF/spring=src/main/java/META-INF/spring
+							{maven-resources},META-INF/spring=src/main/java/META-INF/spring,src/main/resources
 						</Include-Resource>
 						<Import-Package>
 							org.springframework.beans.factory.config,org.aopalliance.aop,org.springframework.aop,,org.springframework.aop.scope,org.springframework.aop.framework,*

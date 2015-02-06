@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  *
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  *
  * All rights reserved. This program and the accompanying materials
@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 
 public class SimulatorCallbackListener implements ISimulatorCallbackListener
@@ -45,27 +46,37 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	private Simulator _simulatorModel;
 	private SimulatorRuntime _simulatorRuntime;
 	private SessionContext _sessionContext;
+	private ISimulationCallbackListener _simulationCallback;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
-	public SimulatorCallbackListener(Simulator simulatorModel, SessionContext context)
+	public SimulatorCallbackListener(Simulator simulatorModel, 
+			SessionContext context, ISimulationCallbackListener simulationCallback)
 	{
 		_simulatorModel = simulatorModel;
 		_sessionContext = context;
 		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
+		_simulationCallback = simulationCallback;
 	}
 
 	@Override
 	public void stateTreeUpdated() throws GeppettoExecutionException
 	{
-		_simulatorRuntime.incrementProcessedSteps();
-		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
-				
-		//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
-		//to revert tree to initial conditions is simulation has been stopped
-		if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
-			_sessionContext.revertToInitialConditions();
+		if(!_simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
+			_simulatorRuntime.incrementProcessedSteps();
+			_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
+
+			//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
+			//to revert tree to initial conditions is simulation has been stopped
+			if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
+				_sessionContext.revertToInitialConditions();
+			}
 		}
 	}
 
+	@Override
+	public void endOfSteps(String message) {		
+		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.OVER);
+		this._simulationCallback.message(message);
+	}
 }

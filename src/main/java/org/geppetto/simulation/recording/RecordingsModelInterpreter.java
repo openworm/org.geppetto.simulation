@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -35,6 +35,8 @@ package org.geppetto.simulation.recording;
 import java.net.URL;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.model.IModel;
@@ -43,7 +45,6 @@ import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.springframework.stereotype.Service;
 
 import ucar.nc2.NetcdfFile;
@@ -55,8 +56,15 @@ import ucar.nc2.NetcdfFile;
 @Service
 public class RecordingsModelInterpreter implements IModelInterpreter
 {
+	
+	private static Log _logger = LogFactory.getLog(RecordingsModelInterpreter.class);
+
 
 	private static final String ID="RECORDING_";
+	
+	public RecordingsModelInterpreter() {
+		_logger.info("New recordings model service created");
+	}
 	
 	/* (non-Javadoc)
 	 * @see org.geppetto.core.model.IModelInterpreter#readModel(java.net.URL, java.util.List)

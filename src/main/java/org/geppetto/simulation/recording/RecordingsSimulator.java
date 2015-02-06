@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -34,12 +34,13 @@ package org.geppetto.simulation.recording;
 
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.simulation.IRunConfiguration;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
@@ -52,7 +53,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class RecordingsSimulator extends ASimulator
 {
+	private static Log _logger = LogFactory.getLog(RecordingsSimulator.class);
 
+	public RecordingsSimulator() {}
+	
 	@Override
 	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
 	{
@@ -77,14 +81,12 @@ public class RecordingsSimulator extends ASimulator
 	@Override
 	public boolean populateVisualTree(AspectNode aspectNode) throws ModelInterpreterException
 	{
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public String getId()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return "recordingsSimulator";
 	}
 }

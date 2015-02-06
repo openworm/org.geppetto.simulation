@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -36,13 +36,12 @@ import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.simulation.visitor.BaseVisitor;
+import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.ServiceCreator;
 import org.geppetto.simulation.SessionContext;
-
-import com.massfords.humantask.BaseVisitor;
-import com.massfords.humantask.TraversingVisitor;
 
 /**
  * This visitor discovers and instantiates the services for each model interpreter and simulator.

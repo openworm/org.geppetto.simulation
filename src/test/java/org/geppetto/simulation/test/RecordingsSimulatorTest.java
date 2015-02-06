@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -32,8 +32,8 @@
  *******************************************************************************/
 package org.geppetto.simulation.test;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +75,8 @@ public class RecordingsSimulatorTest
 		aspectNode = new AspectNode("Aspect");
 		System.out.println("new aspect");
 		
-		NetcdfFile file=HDF5Reader.readHDF5File(new File("./src/test/resources/example2.h5").toURI().toURL());
+		URL url = this.getClass().getResource("/recording_small.h5");
+		NetcdfFile file=HDF5Reader.readHDF5File(url);
 		RecordingModel recording=new RecordingModel(file);
 		recording.setInstancePath("entity.model");
 		RecordingsSimulator simulator=new RecordingsSimulator();
@@ -83,8 +84,8 @@ public class RecordingsSimulatorTest
 		ISimulatorCallbackListener listener=new ISimulatorCallbackListener()
 		{
 			int current=0;
-			final double[] expected={1, 2, 3, 4, 5, 6};
-			final double[] expectedTime={0.1, 0.2, 0.5, 0.51, 0.52, 0.6, 0.7};
+			final double[] expected={4.596967281768264E-8, 2.2727011770243068E-7, 3, 4, 5, 6};
+			final double[] expectedTime={0, 0.4, 0.5, 0.51, 0.52, 0.6, 0.7};
 			
 			@Override
 			public void stateTreeUpdated() throws GeppettoExecutionException
@@ -93,16 +94,23 @@ public class RecordingsSimulatorTest
 				VariableNode time = (VariableNode) wtree.getChildren().get(0);
 				CompositeNode a =  (CompositeNode) wtree.getChildren().get(1);
 				CompositeNode b = (CompositeNode) a.getChildren().get(0);
-				CompositeNode c = (CompositeNode) b.getChildren().get(0);
-				VariableNode d = (VariableNode) c.getChildren().get(0);
+				VariableNode c = (VariableNode) b.getChildren().get(0);
+				VariableNode d = (VariableNode) b.getChildren().get(1);
 
 				
 				double value = Double.valueOf(time.getTimeSeries().get(0).getValue().getStringValue());
-				double value2 = Double.valueOf(d.getTimeSeries().get(0).getValue().getStringValue());
+				double value2 = Double.valueOf(c.getTimeSeries().get(0).getValue().getStringValue());
+				double value3 = Double.valueOf(d.getTimeSeries().get(0).getValue().getStringValue());
 
-				System.out.println(value + " : " + value2);
+				System.out.println(value + " : " + value2 + " : " + value3);
 				Assert.assertEquals(expectedTime[current], value,0);
 				Assert.assertEquals(expected[current], value2,0);
+			}
+
+			@Override
+			public void endOfSteps(String message) {
+				// TODO Auto-generated method stub
+				
 			}
 		};
 		List<IModel> models=new ArrayList<IModel>();
@@ -112,8 +120,9 @@ public class RecordingsSimulatorTest
 		Assert.assertNotNull(vlist);
 		Assert.assertFalse(vlist.getVariables().isEmpty());
 		List<String> variablesToWatch=new ArrayList<String>();
-		variablesToWatch.add("Entity.Aspect.SimulationTree.a.b.c.d");
 		variablesToWatch.add("Entity.Aspect.SimulationTree.time");
+		variablesToWatch.add("Entity.Aspect.SimulationTree.P.neuron0.ge");
+		variablesToWatch.add("Entity.Aspect.SimulationTree.P.neuron0.gi");
 		simulator.addWatchVariables(variablesToWatch);
 		simulator.startWatch();
 		runtime.addChild(entity);

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -38,9 +38,8 @@ import java.util.List;
 import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
-
-import com.massfords.humantask.BaseVisitor;
-import com.massfords.humantask.TraversingVisitor;
+import org.geppetto.core.model.simulation.visitor.BaseVisitor;
+import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 
 /**
  * This visitor discovers any model which belongs to the scope

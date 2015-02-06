@@ -5,13 +5,13 @@
 		<tns:id>Entity1</tns:id>
 		<tns:aspect>
 			<tns:id>sph</tns:id>
+			<tns:simulator>
+				<tns:simulatorId>sphSimulator</tns:simulatorId>
+			</tns:simulator>
 			<tns:model>
 				<tns:modelInterpreterId>sphModelInterpreter</tns:modelInterpreterId>
 				<tns:modelURL>someurl</tns:modelURL>
 			</tns:model>
-			<tns:simulator>
-				<tns:simulatorId>sphSimulator</tns:simulatorId>
-			</tns:simulator>
 		</tns:aspect>
 	</tns:entity>
 	

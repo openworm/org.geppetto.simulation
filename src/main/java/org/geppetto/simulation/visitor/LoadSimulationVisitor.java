@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -47,13 +47,12 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.simulation.visitor.BaseVisitor;
+import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
-
-import com.massfords.humantask.BaseVisitor;
-import com.massfords.humantask.TraversingVisitor;
 
 /**
  * This visitor loads a simulation
@@ -73,7 +72,6 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
 		_simulationCallback = simulationListener;
-
 	}
 
 	/*
@@ -97,13 +95,19 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					//add all the recordings found
 					for(String recording : pModel.getRecordingURL())
 					{
-						recordings.add(new URL(recording));
+						URL url = null;
+						url = this.getClass().getResource(recording);
+						recordings.add(url);
 					}
 				}
 				
 				long start = System.currentTimeMillis();
 
-				model = modelInterpreter.readModel(new URL(pModel.getModelURL()), recordings, pModel.getParentAspect().getInstancePath());
+				URL modelUrl = null;
+				if(pModel.getModelURL()!=null){
+					modelUrl = new URL(pModel.getModelURL());
+				}
+				model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
 				model.setInstancePath(pModel.getInstancePath());
 				_sessionContext.getModels().put(pModel.getInstancePath(), model);
 
@@ -169,7 +173,9 @@ public class LoadSimulationVisitor extends TraversingVisitor
 
 				long start = System.currentTimeMillis();
 
-				simulator.initialize(iModels, new SimulatorCallbackListener(simulatorModel, _sessionContext));
+				SimulatorCallbackListener callbackListener = 
+						new SimulatorCallbackListener(simulatorModel, _sessionContext,_simulationCallback);
+				simulator.initialize(iModels, callbackListener);
 				long end = System.currentTimeMillis();
 				_logger.info("Finished initializing simulator, took " + (end-start) + " ms ");
 				

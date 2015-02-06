@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -33,11 +33,10 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.simulation.visitor.BaseVisitor;
+import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorRuntime;
-
-import com.massfords.humantask.BaseVisitor;
-import com.massfords.humantask.TraversingVisitor;
 
 /**
  * This visitor checks if all the simulators have stepped Note: This visitor at the moment doesn't take into account that different simulators could have different time steps and in this case the

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  *
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  *
  * All rights reserved. This program and the accompanying materials
@@ -37,18 +37,27 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.simulation.Simulation;
+import org.xml.sax.SAXException;
+
 
 public class SimulationConfigReader
 {
 
+	//static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
+	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/development/src/main/resources/schema/simulation/simulationSchema.xsd";
+	
 	public static Simulation readConfig(URL url) throws GeppettoInitializationException
 	{
 
@@ -56,9 +65,10 @@ public class SimulationConfigReader
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
 			sim = (Simulation) unmarshaller.unmarshal(url);
 		}
-		catch(JAXBException e1)
+		catch(JAXBException | MalformedURLException e1)
 		{
 			throw new GeppettoInitializationException("Unable to unmarshall simulation with url : " + url.toString(), e1);
 		}
@@ -82,14 +92,28 @@ public class SimulationConfigReader
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
 			sim = (Simulation) unmarshaller.unmarshal(reader);
 		}
-		catch(JAXBException e)
+		catch(JAXBException | MalformedURLException e)
 		{
-			throw new GeppettoInitializationException(e);
+			throw new GeppettoInitializationException("Unable to unmarshall simulation");
 		}
 
 		return sim;
+	}
+	
+	
+	public static Schema parseSchema(URL schema) throws GeppettoInitializationException {
+		Schema parsedSchema = null;
+		SchemaFactory sf = SchemaFactory
+				.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		try {
+			parsedSchema = sf.newSchema(schema);
+		} catch (SAXException e) {
+			throw new GeppettoInitializationException("Unable to generate schema");
+		}
+		return parsedSchema;
 	}
 
 	/**
@@ -101,7 +125,6 @@ public class SimulationConfigReader
 	 */
 	public static String writeSimulationConfig(URL url) throws GeppettoInitializationException
 	{
-
 		String line = null;
 		StringBuilder sb = new StringBuilder();
 

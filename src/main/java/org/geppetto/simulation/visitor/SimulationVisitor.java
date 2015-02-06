@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2011, 2013 OpenWorm.
+ * Copyright (c) 2011 - 2015 OpenWorm.
  * http://openworm.org
  * 
  * All rights reserved. This program and the accompanying materials
@@ -46,6 +46,7 @@ import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
 import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.SimulatorRuntimeStatus;
+import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 
 /**
  * This is the simulation visitor which traverse the simulation tree and orchestrates the simulation of the different models.
@@ -58,13 +59,15 @@ public class SimulationVisitor extends DefaultStateVisitor
 {
 	private ISimulationCallbackListener _simulationCallBack;
 	private SessionContext _sessionContext;
+	private String _requestID;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
-	public SimulationVisitor(SessionContext _sessionContext, ISimulationCallbackListener simulationListener)
+	public SimulationVisitor(SessionContext _sessionContext, ISimulationCallbackListener simulationListener, String _requestID)
 	{
 		this._simulationCallBack = simulationListener;
 		this._sessionContext = _sessionContext;
+		this._requestID = _requestID;
 	}
 
 	/*
@@ -75,19 +78,35 @@ public class SimulationVisitor extends DefaultStateVisitor
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
+		return super.inAspectNode(node);
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
+	 */
+	@Override
+	public boolean outAspectNode(AspectNode node)
+	{
 		ISimulator simulator = node.getSimulator();
 		if(simulator != null)
 		{
 			SimulatorRuntime simulatorRuntime = this._sessionContext.getSimulatorRuntime(simulator.getId());
 
+			if(simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
+				_simulationCallBack.updateReady(SimulationEvents.SIMULATION_OVER, _requestID, null);
+				simulatorRuntime.setStatus(SimulatorRuntimeStatus.IDLE);
+			}
+			
 			// we proceed only if the simulator is not already stepping
-			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
+			else if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 			{
 				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
 				if(!simulator.isInitialized())
 				{
-					LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
+					LoadSimulationVisitor loadSimulationVisitor = 
+							new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
 					_sessionContext.getSimulation().accept(loadSimulationVisitor);
 
 					// populate visual tree
@@ -113,17 +132,7 @@ public class SimulationVisitor extends DefaultStateVisitor
 				}
 			}
 		}
-		return super.inAspectNode(node);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
-	 */
-	@Override
-	public boolean outAspectNode(AspectNode node)
-	{
+		
 		return super.outAspectNode(node);
 	}
 

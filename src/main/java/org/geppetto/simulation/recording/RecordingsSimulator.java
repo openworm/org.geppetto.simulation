@@ -89,4 +89,11 @@ public class RecordingsSimulator extends ASimulator
 	{
 		return "recordingsSimulator";
 	}
+
+	@Override
+	public void registerGeppettoService()
+	{
+		// TODO Auto-generated method stub
+		
+	}
 }

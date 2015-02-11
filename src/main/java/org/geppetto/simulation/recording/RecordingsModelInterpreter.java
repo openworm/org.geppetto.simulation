@@ -113,4 +113,10 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 		return "Recording Model Interpreter";
 	}
 
+	@Override
+	public void registerGeppettoService() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

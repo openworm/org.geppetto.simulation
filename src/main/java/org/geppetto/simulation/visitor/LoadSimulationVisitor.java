@@ -42,6 +42,8 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.conversion.ConversionException;
+import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -49,6 +51,7 @@ import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
@@ -92,7 +95,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				List<URL> recordings = new ArrayList<URL>();
 				if(pModel.getRecordingURL() != null)
 				{
-					//add all the recordings found
+					// add all the recordings found
 					for(String recording : pModel.getRecordingURL())
 					{
 						URL url = null;
@@ -100,11 +103,12 @@ public class LoadSimulationVisitor extends TraversingVisitor
 						recordings.add(url);
 					}
 				}
-				
+
 				long start = System.currentTimeMillis();
 
 				URL modelUrl = null;
-				if(pModel.getModelURL()!=null){
+				if(pModel.getModelURL() != null)
+				{
 					modelUrl = new URL(pModel.getModelURL());
 				}
 				model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
@@ -112,8 +116,8 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				_sessionContext.getModels().put(pModel.getInstancePath(), model);
 
 				long end = System.currentTimeMillis();
-				_logger.info("Finished reading model, took " + (end-start) + " ms ");
-				
+				_logger.info("Finished reading model, took " + (end - start) + " ms ");
+
 			}
 			else
 			{
@@ -128,13 +132,13 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		}
 		catch(MalformedURLException e)
 		{
-			_logger.error("Malformed URL for model",e);
+			_logger.error("Malformed URL for model", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 
 		}
 		catch(ModelInterpreterException e)
 		{
-			_logger.error("Error Reading Model",e);
+			_logger.error("Error Reading Model", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 		}
 
@@ -151,9 +155,9 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		super.visit(simulatorModel);
 		try
 		{
+			IConversion conversion = _sessionContext.getConversion(simulatorModel);
 			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
-
-			if(simulator != null)
+			if(conversion != null || simulator != null)
 			{
 				// initialize simulator
 				GetModelsForSimulatorVisitor getModelsForSimulatorVisitor = new GetModelsForSimulatorVisitor(simulatorModel);
@@ -170,20 +174,37 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					// store in the session context what simulator is in charge of a given model
 					_sessionContext.mapModelToSimulator(m, simulatorModel);
 				}
-
-				long start = System.currentTimeMillis();
-
-				SimulatorCallbackListener callbackListener = 
-						new SimulatorCallbackListener(simulatorModel, _sessionContext,_simulationCallback);
-				simulator.initialize(iModels, callbackListener);
-				long end = System.currentTimeMillis();
-				_logger.info("Finished initializing simulator, took " + (end-start) + " ms ");
 				
-			}
-			else
-			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + simulatorModel.getInstancePath()
-						+ " already exists, something did not get cleared", null);
+				if(conversion != null)
+				{
+					// TODO Refactor simulators to deal with more than one model!
+					IModel iModelConverted = conversion.convert(iModels.get(0), new ModelFormat("NeuroML"), new ModelFormat("Neuron"));
+					
+					//Replace model
+					_sessionContext.getModels().put(iModelConverted.getInstancePath(), iModelConverted);
+					iModels = new ArrayList<IModel>();
+					for(Model m : models)
+					{
+						iModels.add(_sessionContext.getIModel(m.getInstancePath()));
+					}
+				}
+
+				if(simulator != null)
+				{
+
+					long start = System.currentTimeMillis();
+
+					SimulatorCallbackListener callbackListener = new SimulatorCallbackListener(simulatorModel, _sessionContext, _simulationCallback);
+					simulator.initialize(iModels, callbackListener);
+					long end = System.currentTimeMillis();
+					_logger.info("Finished initializing simulator, took " + (end - start) + " ms ");
+
+				}
+				else
+				{
+					_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + simulatorModel.getInstancePath()
+							+ " already exists, something did not get cleared", null);
+				}
 			}
 		}
 		catch(GeppettoInitializationException e)
@@ -192,6 +213,11 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 		catch(GeppettoExecutionException e)
+		{
+			_logger.error("Error: ", e);
+			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+		}
+		catch(ConversionException e)
 		{
 			_logger.error("Error: ", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);

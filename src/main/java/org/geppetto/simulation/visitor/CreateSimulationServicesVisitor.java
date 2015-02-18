@@ -33,6 +33,7 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
@@ -97,13 +98,33 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	public void visit(Simulator simulatorModel)
 	{
 		super.visit(simulatorModel);
-		ServiceCreator<Simulator, ISimulator> sc = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
+		
+		if (simulatorModel.getConversionServiceId() != null){
+			ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
+					_sessionContext.getConversions(),_simulationCallBack);
+			Thread tscc = new Thread(scc);
+			tscc.start();
+			try
+			{
+				tscc.join();
+			}
+			catch(InterruptedException e)
+			{
+				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+			}
+		}
+		//Do we need this for conversion?
+//		if(simulatorModel.getSimulatorId()!=null){
+//			_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
+//		}
+		
+		ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
 				_sessionContext.getSimulators(),_simulationCallBack);
-		Thread t = new Thread(sc);
-		t.start();
+		Thread tscs = new Thread(scs);
+		tscs.start();
 		try
 		{
-			t.join();
+			tscs.join();
 		}
 		catch(InterruptedException e)
 		{

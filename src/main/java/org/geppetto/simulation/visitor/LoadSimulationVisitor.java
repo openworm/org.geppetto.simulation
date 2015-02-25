@@ -36,6 +36,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,6 +53,8 @@ import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.services.ModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
+import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
@@ -174,18 +177,75 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					// store in the session context what simulator is in charge of a given model
 					_sessionContext.mapModelToSimulator(m, simulatorModel);
 				}
-				
+
+				// TODO Refactor simulators to deal with more than one model!
+				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(models.get(0));
+
+				// TODO Refactor simulators to deal with more than one model!
+				List<ModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
+				List<ModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
+				List<IModel> iModelsConverted = new ArrayList<IModel>();
 				if(conversion != null)
 				{
-					// TODO Refactor simulators to deal with more than one model!
-					IModel iModelConverted = conversion.convert(iModels.get(0), new ModelFormat("NeuroML"), new ModelFormat("Neuron"));
-					
-					//Replace model
-					_sessionContext.getModels().put(iModelConverted.getInstancePath(), iModelConverted);
-					iModels = new ArrayList<IModel>();
-					for(Model m : models)
+					// Read conversion supported model formats
+					List<ModelFormat> supportedInputFormats = conversion.getSupportedInputs();
+					List<ModelFormat> supportedOutputFormats = conversion.getSupportedOutputs();
+
+					// Check if real model formats and conversion supported model formats match
+					List<ModelFormat> matchInputFormats = retainCommon(inputFormats, supportedInputFormats);
+					List<ModelFormat> matchOutputFormats = retainCommon(outputFormats, supportedOutputFormats);
+
+					// Try to convert until a input-output format combination works
+					for(ModelFormat inputFormat : matchInputFormats)
 					{
-						iModels.add(_sessionContext.getIModel(m.getInstancePath()));
+						if(iModelsConverted.size() == 0)
+						{
+							for(ModelFormat outputFormat : matchOutputFormats)
+							{
+								try
+								{
+									iModelsConverted.add(conversion.convert(iModels.get(0), inputFormat, outputFormat));
+									break;
+								}
+								catch(ConversionException e)
+								{
+									_logger.error("Error: ", e);
+									_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+								}
+							}
+						}	
+					}
+				}
+				else
+				{
+					// Check format returned by the model interpreter matches with the one accepted by the simulator
+					List<ModelFormat> matchFormats = retainCommon(inputFormats, outputFormats);
+					if(matchFormats.size() == 0)
+					{
+						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionServices(inputFormats, outputFormats);
+
+						for(Map.Entry<ConversionServiceKey, List<IConversion>> entry : conversionServices.entrySet())
+						{
+							if(iModelsConverted.size() == 0)
+							{
+								for(IConversion conversionService : entry.getValue())
+								{
+									ConversionServiceKey conversionServiceKey = entry.getKey();
+									try
+									{
+										//Verify supported outputs for this model
+										if (conversionService.getSupportedOutputs(iModels.get(0), conversionServiceKey.getInputModelFormat()).contains(conversionServiceKey.getOutputModelFormat())){
+											iModelsConverted.add(conversionService.convert(iModels.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat()));
+											break;
+										}
+									}
+									catch(ConversionException e)
+									{
+										
+									}
+								}
+							}
+						}
 					}
 				}
 
@@ -195,7 +255,14 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					long start = System.currentTimeMillis();
 
 					SimulatorCallbackListener callbackListener = new SimulatorCallbackListener(simulatorModel, _sessionContext, _simulationCallback);
-					simulator.initialize(iModels, callbackListener);
+					if(iModelsConverted.size() == 0)
+					{
+						simulator.initialize(iModels, callbackListener);
+					}
+					else
+					{
+						simulator.initialize(iModelsConverted, callbackListener);
+					}
 					long end = System.currentTimeMillis();
 					_logger.info("Finished initializing simulator, took " + (end - start) + " ms ");
 
@@ -222,6 +289,13 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			_logger.error("Error: ", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
+	}
+
+	List<ModelFormat> retainCommon(List<ModelFormat> formats, List<ModelFormat> formats2)
+	{
+		List<ModelFormat> result = new ArrayList<ModelFormat>(formats);
+		result.retainAll(formats2);
+		return result;
 	}
 
 }

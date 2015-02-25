@@ -48,7 +48,6 @@ public class TimeVisitor extends DefaultStateVisitor{
 	
 	private double _time = 0;
 	private String _unit;
-	private int _aspects = 0;
 
 
 	/* (non-Javadoc)
@@ -60,15 +59,16 @@ public class TimeVisitor extends DefaultStateVisitor{
 		
 		ISimulator simulator = node.getSimulator();
 		if(simulator!=null){
-			_time = _time + simulator.getTime();
+			if(simulator.getTime()>_time){
+				_time = simulator.getTime();
+			}
 			_unit = simulator.getTimeStepUnit();
-			_aspects++;
 		}
 		return super.outAspectNode(node);
 	}
 
 	public double getTime(){
-		return _time/_aspects;
+		return _time;
 	}
 	
 	public String getTimeStepUnit(){

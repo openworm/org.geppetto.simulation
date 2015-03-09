@@ -35,12 +35,17 @@ package org.geppetto.simulation;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.model.quantities.PhysicalQuantity;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
+import org.geppetto.core.model.values.ValuesFactory;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.SimulationVisitor;
+import org.geppetto.simulation.visitor.TimeVisitor;
 
 class SimulationThread extends Thread
 {
@@ -52,6 +57,8 @@ class SimulationThread extends Thread
 	private long _timeElapsed;
 	private boolean _simulationStarted = false;
 	private String _requestID;
+	private double _runtime;
+	private String _timeStepUnit;
 
 	/**
 	 * @param context
@@ -104,9 +111,17 @@ class SimulationThread extends Thread
 
 		if(checkSteppedSimulatorsVisitor.allStepped() && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 		{
+			
+			//Visit simulators to extract time from them
+			TimeVisitor timeVisitor = new TimeVisitor();
+			_sessionContext.getRuntimeTreeRoot().apply(timeVisitor);
+			_timeStepUnit = timeVisitor.getTimeStepUnit();
+			//set global time
+			this.setGlobalTime(timeVisitor.getTime(), _sessionContext.getRuntimeTreeRoot());
+			
 			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
-
+			
 			ExitVisitor exitVisitor = new ExitVisitor(_simulationCallback);
 			_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
 			
@@ -127,5 +142,22 @@ class SimulationThread extends Thread
 			_logger.info("Stop simulation ");
 			this._simulationStarted = true;
 		}
+	}
+
+	/**
+	 * Updates the time node in the run time tree root node
+	 * 
+	 * @param newTimeValue - New time
+	 * @param tree -Tree root node
+	 */
+	private void setGlobalTime(double newTimeValue, RuntimeTreeRoot tree){
+		_runtime += newTimeValue;
+		VariableNode time = new VariableNode("time");
+		PhysicalQuantity t = new PhysicalQuantity();
+		t.setValue(ValuesFactory.getDoubleValue(_runtime));
+		t.setUnit(_timeStepUnit);
+		time.addPhysicalQuantity(t);
+		time.setParent(tree);
+		tree.setTime(time);
 	}
 }

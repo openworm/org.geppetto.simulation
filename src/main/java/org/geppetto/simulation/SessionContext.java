@@ -55,7 +55,8 @@ import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.simulator.ISimulator;
 
 /**
- * This class stores the context of a given session. Each user has its own session. Each session has its own simulation.
+ * This class stores the context of a given session.
+ * Each user has its own session. Each session has its own simulation.
  * 
  * @author matteocantarelli
  * 
@@ -131,12 +132,21 @@ public class SessionContext
 		}
 
 		this.resetRuntimeTree(this.getRuntimeTreeRoot().getChildren());
-
+		
+		// iterate through aspects and instruct them to start watching
+		for(ISimulator simulator : getSimulators().values())
+		{
+			if(simulator != null)
+			{
+				simulator.resetWatch();
+			}
+		}
 		_logger.info("Simulation reverted to initial conditions");
 	}
 
 	/**
-	 * Resets the visualization and simulation tree for each aspect. Used when resetting simulation after stopping it.
+	 * Resets the visualization and simulation tree for each aspect. 
+	 * Used when resetting simulation after stopping it. 
 	 * 
 	 * @param nodes
 	 */
@@ -163,7 +173,8 @@ public class SessionContext
 	}
 
 	/**
-	 * Resets the simulation context NOTE: WIPES EVERYTHING
+	 * Resets the simulation context
+	 * NOTE: WIPES EVERYTHING
 	 */
 	public void reset()
 	{

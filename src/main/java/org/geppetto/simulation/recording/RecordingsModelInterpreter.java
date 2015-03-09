@@ -33,6 +33,7 @@
 package org.geppetto.simulation.recording;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -45,6 +46,8 @@ import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 import org.springframework.stereotype.Service;
 
 import ucar.nc2.NetcdfFile;
@@ -115,7 +118,9 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 
 	@Override
 	public void registerGeppettoService() {
-		// TODO Auto-generated method stub
+		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
+		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
+		ServicesRegistry.registerModelInterpreterService(this, modelFormatList);
 		
 	}
 

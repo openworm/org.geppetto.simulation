@@ -52,6 +52,7 @@ import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
@@ -182,25 +183,25 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(models.get(0));
 
 				// TODO Refactor simulators to deal with more than one model!
-				List<ModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
-				List<ModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
+				List<IModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
+				List<IModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
 				List<IModel> iModelsConverted = new ArrayList<IModel>();
 				if(conversion != null)
 				{
 					// Read conversion supported model formats
-					List<ModelFormat> supportedInputFormats = conversion.getSupportedInputs();
-					List<ModelFormat> supportedOutputFormats = conversion.getSupportedOutputs();
+					List<IModelFormat> supportedInputFormats = conversion.getSupportedInputs();
+					List<IModelFormat> supportedOutputFormats = conversion.getSupportedOutputs();
 
 					// Check if real model formats and conversion supported model formats match
-					List<ModelFormat> matchInputFormats = retainCommon(inputFormats, supportedInputFormats);
-					List<ModelFormat> matchOutputFormats = retainCommon(outputFormats, supportedOutputFormats);
+					List<IModelFormat> matchInputFormats = retainCommonModelFormats(supportedInputFormats, inputFormats);
+					List<IModelFormat> matchOutputFormats = retainCommonModelFormats(supportedOutputFormats, outputFormats);
 
 					// Try to convert until a input-output format combination works
-					for(ModelFormat inputFormat : matchInputFormats)
+					for(IModelFormat inputFormat : matchInputFormats)
 					{
 						if(iModelsConverted.size() == 0)
 						{
-							for(ModelFormat outputFormat : matchOutputFormats)
+							for(IModelFormat outputFormat : matchOutputFormats)
 							{
 								try
 								{
@@ -219,7 +220,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				else
 				{
 					// Check format returned by the model interpreter matches with the one accepted by the simulator
-					List<ModelFormat> matchFormats = retainCommon(inputFormats, outputFormats);
+					List<IModelFormat> matchFormats = retainCommonModelFormats(inputFormats, outputFormats);
 					if(matchFormats.size() == 0)
 					{
 						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionServices(inputFormats, outputFormats);
@@ -290,11 +291,17 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 	}
-
-	List<ModelFormat> retainCommon(List<ModelFormat> formats, List<ModelFormat> formats2)
+	
+	public static List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
 	{
-		List<ModelFormat> result = new ArrayList<ModelFormat>(formats);
-		result.retainAll(formats2);
+		List<IModelFormat> result = new ArrayList<IModelFormat>();
+		for (IModelFormat format : formats){
+			for (IModelFormat format2 : formats2){
+				if (format.toString().equals(format2.toString())){
+					result.add(format);
+				}
+			}
+		}
 		return result;
 	}
 

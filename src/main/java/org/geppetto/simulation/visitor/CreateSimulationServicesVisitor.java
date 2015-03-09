@@ -102,16 +102,7 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 		if (simulatorModel.getConversionServiceId() != null){
 			ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
 					_sessionContext.getConversions(),_simulationCallBack);
-			Thread tscc = new Thread(scc);
-			tscc.start();
-			try
-			{
-				tscc.join();
-			}
-			catch(InterruptedException e)
-			{
-				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-			}
+			scc.run();
 		}
 		//Do we need this for conversion?
 //		if(simulatorModel.getSimulatorId()!=null){

@@ -32,6 +32,7 @@
  *******************************************************************************/
 package org.geppetto.simulation.recording;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -41,6 +42,8 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulation.IRunConfiguration;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
@@ -93,7 +96,9 @@ public class RecordingsSimulator extends ASimulator
 	@Override
 	public void registerGeppettoService()
 	{
-		// TODO Auto-generated method stub
+		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
+		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
+		ServicesRegistry.registerSimulatorService(this, modelFormatList);
 		
 	}
 }

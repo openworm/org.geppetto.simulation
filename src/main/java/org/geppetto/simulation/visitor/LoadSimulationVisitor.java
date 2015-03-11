@@ -223,7 +223,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					List<IModelFormat> matchFormats = retainCommonModelFormats(inputFormats, outputFormats);
 					if(matchFormats.size() == 0)
 					{
-						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionServices(inputFormats, outputFormats);
+						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionService(inputFormats, outputFormats);
 
 						for(Map.Entry<ConversionServiceKey, List<IConversion>> entry : conversionServices.entrySet())
 						{

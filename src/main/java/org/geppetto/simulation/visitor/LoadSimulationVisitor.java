@@ -190,6 +190,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				{
 					// Read conversion supported model formats
 					List<IModelFormat> supportedInputFormats = conversion.getSupportedInputs();
+					//FIXME: We can pass the model and the input format so it brings back a filtered list of outputs format
 					List<IModelFormat> supportedOutputFormats = conversion.getSupportedOutputs();
 
 					// Check if real model formats and conversion supported model formats match

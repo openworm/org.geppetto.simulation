@@ -53,7 +53,6 @@ import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.services.IModelFormat;
-import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -190,7 +189,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				{
 					// Read conversion supported model formats
 					List<IModelFormat> supportedInputFormats = conversion.getSupportedInputs();
-					//FIXME: We can pass the model and the input format so it brings back a filtered list of outputs format
+					// FIXME: We can pass the model and the input format so it brings back a filtered list of outputs format
 					List<IModelFormat> supportedOutputFormats = conversion.getSupportedOutputs();
 
 					// Check if real model formats and conversion supported model formats match
@@ -215,7 +214,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 									_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 								}
 							}
-						}	
+						}
 					}
 				}
 				else
@@ -230,20 +229,15 @@ public class LoadSimulationVisitor extends TraversingVisitor
 						{
 							if(iModelsConverted.size() == 0)
 							{
-								for(IConversion conversionService : entry.getValue())
+								// FIXME: Assuming we will only have one conversion service
+								ConversionServiceKey conversionServiceKey = entry.getKey();
+								for(IModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(iModels.get(0), conversionServiceKey.getInputModelFormat()))
 								{
-									ConversionServiceKey conversionServiceKey = entry.getKey();
-									try
+									// Verify supported outputs for this model
+									if(supportedModelFormat.toString() == conversionServiceKey.getOutputModelFormat().toString())
 									{
-										//Verify supported outputs for this model
-										if (conversionService.getSupportedOutputs(iModels.get(0), conversionServiceKey.getInputModelFormat()).contains(conversionServiceKey.getOutputModelFormat())){
-											iModelsConverted.add(conversionService.convert(iModels.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat()));
-											break;
-										}
-									}
-									catch(ConversionException e)
-									{
-										
+										iModelsConverted.add(entry.getValue().get(0).convert(iModels.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat()));
+										break;
 									}
 								}
 							}
@@ -292,13 +286,16 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 		}
 	}
-	
+
 	public static List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
 	{
 		List<IModelFormat> result = new ArrayList<IModelFormat>();
-		for (IModelFormat format : formats){
-			for (IModelFormat format2 : formats2){
-				if (format.toString().equals(format2.toString())){
+		for(IModelFormat format : formats)
+		{
+			for(IModelFormat format2 : formats2)
+			{
+				if(format.toString().equals(format2.toString()))
+				{
 					result.add(format);
 				}
 			}

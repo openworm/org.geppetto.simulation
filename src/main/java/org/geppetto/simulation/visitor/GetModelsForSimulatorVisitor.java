@@ -117,7 +117,7 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 	@Override
 	public void visit(Aspect aspect)
 	{
-		if(!_stopVisiting)
+		if(!_stopVisiting && aspect.getSimulator()!=null)
 		{
 			if(!aspect.getSimulator().equals(_simulator))
 			{

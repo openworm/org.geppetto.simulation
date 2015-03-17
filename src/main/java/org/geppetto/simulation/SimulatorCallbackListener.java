@@ -66,11 +66,11 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 			_simulatorRuntime.incrementProcessedSteps();
 			_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
 
-			//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
-			//to revert tree to initial conditions is simulation has been stopped
-			if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
-				_sessionContext.revertToInitialConditions();
-			}
+//			//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
+//			//to revert tree to initial conditions is simulation has been stopped
+//			if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
+//				_sessionContext.revertToInitialConditions();
+//			}
 		}
 	}
 

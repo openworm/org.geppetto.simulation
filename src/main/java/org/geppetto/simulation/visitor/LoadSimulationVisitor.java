@@ -221,7 +221,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				{
 					// Check format returned by the model interpreter matches with the one accepted by the simulator
 					List<IModelFormat> matchFormats = retainCommonModelFormats(inputFormats, outputFormats);
-					if(matchFormats.size() == 0)
+					if(matchFormats.size() == 0 && inputFormats!=null && outputFormats!=null)
 					{
 						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionService(inputFormats, outputFormats);
 
@@ -290,13 +290,15 @@ public class LoadSimulationVisitor extends TraversingVisitor
 	public static List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
 	{
 		List<IModelFormat> result = new ArrayList<IModelFormat>();
-		for(IModelFormat format : formats)
-		{
-			for(IModelFormat format2 : formats2)
+		if(formats!=null){
+			for(IModelFormat format : formats)
 			{
-				if(format.toString().equals(format2.toString()))
+				for(IModelFormat format2 : formats2)
 				{
-					result.add(format);
+					if(format.toString().equals(format2.toString()))
+					{
+						result.add(format);
+					}
 				}
 			}
 		}

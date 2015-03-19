@@ -33,6 +33,7 @@
 package org.geppetto.simulation.recording;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import ncsa.hdf.object.h5.H5File;
@@ -47,6 +48,8 @@ import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 import org.springframework.stereotype.Service;
 /**
  * @author matteocantarelli
@@ -110,6 +113,14 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	public String getName()
 	{
 		return "Recording Model Interpreter";
+	}
+
+	@Override
+	public void registerGeppettoService() {
+		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
+		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
+		ServicesRegistry.registerModelInterpreterService(this, modelFormatList);
+		
 	}
 
 }

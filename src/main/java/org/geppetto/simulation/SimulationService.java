@@ -66,6 +66,7 @@ import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
+import org.geppetto.simulation.visitor.WriteModelVisitor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -578,4 +579,23 @@ public class SimulationService implements ISimulation
 
 		return modelTree;
 	}
+	
+		
+	/**
+	 * Takes the id of aspect and the file format and write the model to this format
+	 * 
+	 * @param aspectID
+	 * @param format
+	 * @return
+	 */
+	@Override
+	public String writeModel(String instancePath, String format)
+	{
+		WriteModelVisitor writeModelVisitor = new WriteModelVisitor(_simulationListener, instancePath, format);
+		this._sessionContext.getRuntimeTreeRoot().apply(writeModelVisitor);
+		
+		//Read returned value
+		
+		return "";
+	}	
 }

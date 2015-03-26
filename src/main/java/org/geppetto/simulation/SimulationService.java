@@ -208,9 +208,9 @@ public class SimulationService implements ISimulation
 	{
 		_logger.info("Starting simulation");
 
-		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
 		_simulationThread = new SimulationThread(_sessionContext, _simulationListener, requestId, appConfig.getUpdateCycle());
 		_simulationThread.start();
+		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
 	}
 
 	/*

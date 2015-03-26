@@ -124,6 +124,18 @@ public class RecordingsSimulatorTest
 				// TODO Auto-generated method stub
 				
 			}
+
+			@Override
+			public void idle() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void stepping() {
+				// TODO Auto-generated method stub
+				
+			}
 		};
 		List<IModel> models=new ArrayList<IModel>();
 		models.add(recording);

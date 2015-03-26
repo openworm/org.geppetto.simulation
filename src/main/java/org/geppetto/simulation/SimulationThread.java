@@ -111,7 +111,6 @@ class SimulationThread extends Thread
 
 		if(checkSteppedSimulatorsVisitor.allStepped() && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 		{
-			
 			//Visit simulators to extract time from them
 			TimeVisitor timeVisitor = new TimeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(timeVisitor);

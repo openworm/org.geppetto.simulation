@@ -75,14 +75,4 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.OVER);
 		this._simulationCallback.message(message);
 	}
-
-	@Override
-	public void idle() {
-		this._sessionContext.setSimulationStatus(SimulationRuntimeStatus.IDLE);
-	}
-	
-	@Override
-	public void stepping() {
-		this._sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
-	}
 }

@@ -37,8 +37,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
+import org.geppetto.simulation.visitor.ExitVisitor;
 
 public class SimulatorCallbackListener implements ISimulatorCallbackListener
 {
@@ -65,12 +67,6 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 		if(!_simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
 			_simulatorRuntime.incrementProcessedSteps();
 			_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
-
-//			//A scheduled event could have taken place ms prior to simulation being stopped, make sure 
-//			//to revert tree to initial conditions is simulation has been stopped
-//			if(_sessionContext.getStatus().equals(SimulationRuntimeStatus.STOPPED)){
-//				_sessionContext.revertToInitialConditions();
-//			}
 		}
 	}
 

@@ -36,29 +36,20 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.conversion.ConversionException;
-import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.services.IModelFormat;
-import org.geppetto.core.services.registry.ServicesRegistry;
-import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
-import org.geppetto.simulation.SimulatorCallbackListener;
 
 /**
  * This visitor loads a simulation
@@ -152,140 +143,141 @@ public class LoadSimulationVisitor extends TraversingVisitor
 	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
-	@Override
-	public void visit(Simulator simulatorModel)
-	{
-		super.visit(simulatorModel);
-		try
-		{
-			IConversion conversion = _sessionContext.getConversion(simulatorModel);
-			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
-			if(conversion != null || simulator != null)
-			{
-				// initialize simulator
-				GetModelsForSimulatorVisitor getModelsForSimulatorVisitor = new GetModelsForSimulatorVisitor(simulatorModel);
-				simulatorModel.getParentAspect().getParentEntity().accept(getModelsForSimulatorVisitor);
-				List<Model> models = getModelsForSimulatorVisitor.getModels();
-
-				_sessionContext.mapSimulatorToModels(simulatorModel, models);
-
-				// Builds a list with the IModel corresponding to the discovered models.
-				List<IModel> iModels = new ArrayList<IModel>();
-				for(Model m : models)
-				{
-					iModels.add(_sessionContext.getIModel(m.getInstancePath()));
-					// store in the session context what simulator is in charge of a given model
-					_sessionContext.mapModelToSimulator(m, simulatorModel);
-				}
-
-				// TODO Refactor simulators to deal with more than one model!
-				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(models.get(0));
-
-				// TODO Refactor simulators to deal with more than one model!
-				List<IModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
-				List<IModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
-				List<IModel> iModelsConverted = new ArrayList<IModel>();
-				if(conversion != null)
-				{
-					// Read conversion supported model formats
-					List<IModelFormat> supportedInputFormats = conversion.getSupportedInputs();
-					// FIXME: We can pass the model and the input format so it brings back a filtered list of outputs format
-					List<IModelFormat> supportedOutputFormats = conversion.getSupportedOutputs();
-
-					// Check if real model formats and conversion supported model formats match
-					List<IModelFormat> matchInputFormats = retainCommonModelFormats(supportedInputFormats, inputFormats);
-					List<IModelFormat> matchOutputFormats = retainCommonModelFormats(supportedOutputFormats, outputFormats);
-
-					// Try to convert until a input-output format combination works
-					for(IModelFormat inputFormat : matchInputFormats)
-					{
-						if(iModelsConverted.size() == 0)
-						{
-							for(IModelFormat outputFormat : matchOutputFormats)
-							{
-								try
-								{
-									iModelsConverted.add(conversion.convert(iModels.get(0), inputFormat, outputFormat));
-									break;
-								}
-								catch(ConversionException e)
-								{
-									_logger.error("Error: ", e);
-									_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-								}
-							}
-						}
-					}
-				}
-				else
-				{
-					// Check format returned by the model interpreter matches with the one accepted by the simulator
-					List<IModelFormat> matchFormats = retainCommonModelFormats(inputFormats, outputFormats);
-					if(matchFormats.size() == 0 && inputFormats!=null && outputFormats!=null)
-					{
-						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionService(inputFormats, outputFormats);
-
-						for(Map.Entry<ConversionServiceKey, List<IConversion>> entry : conversionServices.entrySet())
-						{
-							if(iModelsConverted.size() == 0)
-							{
-								// FIXME: Assuming we will only have one conversion service
-								ConversionServiceKey conversionServiceKey = entry.getKey();
-								for(IModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(iModels.get(0), conversionServiceKey.getInputModelFormat()))
-								{
-									// Verify supported outputs for this model
-									if(supportedModelFormat.toString() == conversionServiceKey.getOutputModelFormat().toString())
-									{
-										iModelsConverted.add(entry.getValue().get(0).convert(iModels.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat()));
-										break;
-									}
-								}
-							}
-						}
-					}
-				}
-
-				if(simulator != null)
-				{
-
-					long start = System.currentTimeMillis();
-
-					SimulatorCallbackListener callbackListener = new SimulatorCallbackListener(simulatorModel, _sessionContext, _simulationCallback);
-					if(iModelsConverted.size() == 0)
-					{
-						simulator.initialize(iModels, callbackListener);
-					}
-					else
-					{
-						simulator.initialize(iModelsConverted, callbackListener);
-					}
-					long end = System.currentTimeMillis();
-					_logger.info("Finished initializing simulator, took " + (end - start) + " ms ");
-
-				}
-				else
-				{
-					_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + simulatorModel.getInstancePath()
-							+ " already exists, something did not get cleared", null);
-				}
-			}
-		}
-		catch(GeppettoInitializationException e)
-		{
-			_logger.error("Error: ", e);
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-		}
-		catch(GeppettoExecutionException e)
-		{
-			_logger.error("Error: ", e);
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-		}
-		catch(ConversionException e)
-		{
-			_logger.error("Error: ", e);
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-		}
-	}
+	// SIM TODO
+//	@Override
+//	public void visit(Simulator simulatorModel)
+//	{
+//		super.visit(simulatorModel);
+//		try
+//		{
+//			IConversion conversion = _sessionContext.getConversion(simulatorModel);
+//			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
+//			if(conversion != null || simulator != null)
+//			{
+//				// initialize simulator
+//				GetModelsForSimulatorVisitor getModelsForSimulatorVisitor = new GetModelsForSimulatorVisitor(simulatorModel);
+//				simulatorModel.getParentAspect().getParentEntity().accept(getModelsForSimulatorVisitor);
+//				List<Model> models = getModelsForSimulatorVisitor.getModels();
+//
+//				_sessionContext.mapSimulatorToModels(simulatorModel, models);
+//
+//				// Builds a list with the IModel corresponding to the discovered models.
+//				List<IModel> iModels = new ArrayList<IModel>();
+//				for(Model m : models)
+//				{
+//					iModels.add(_sessionContext.getIModel(m.getInstancePath()));
+//					// store in the session context what simulator is in charge of a given model
+//					_sessionContext.mapModelToSimulator(m, simulatorModel);
+//				}
+//
+//				// TODO Refactor simulators to deal with more than one model!
+//				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(models.get(0));
+//
+//				// TODO Refactor simulators to deal with more than one model!
+//				List<IModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
+//				List<IModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
+//				List<IModel> iModelsConverted = new ArrayList<IModel>();
+//				if(conversion != null)
+//				{
+//					// Read conversion supported model formats
+//					List<IModelFormat> supportedInputFormats = conversion.getSupportedInputs();
+//					// FIXME: We can pass the model and the input format so it brings back a filtered list of outputs format
+//					List<IModelFormat> supportedOutputFormats = conversion.getSupportedOutputs();
+//
+//					// Check if real model formats and conversion supported model formats match
+//					List<IModelFormat> matchInputFormats = retainCommonModelFormats(supportedInputFormats, inputFormats);
+//					List<IModelFormat> matchOutputFormats = retainCommonModelFormats(supportedOutputFormats, outputFormats);
+//
+//					// Try to convert until a input-output format combination works
+//					for(IModelFormat inputFormat : matchInputFormats)
+//					{
+//						if(iModelsConverted.size() == 0)
+//						{
+//							for(IModelFormat outputFormat : matchOutputFormats)
+//							{
+//								try
+//								{
+//									iModelsConverted.add(conversion.convert(iModels.get(0), inputFormat, outputFormat));
+//									break;
+//								}
+//								catch(ConversionException e)
+//								{
+//									_logger.error("Error: ", e);
+//									_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+//								}
+//							}
+//						}
+//					}
+//				}
+//				else
+//				{
+//					// Check format returned by the model interpreter matches with the one accepted by the simulator
+//					List<IModelFormat> matchFormats = retainCommonModelFormats(inputFormats, outputFormats);
+//					if(matchFormats.size() == 0 && inputFormats!=null && outputFormats!=null)
+//					{
+//						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionService(inputFormats, outputFormats);
+//
+//						for(Map.Entry<ConversionServiceKey, List<IConversion>> entry : conversionServices.entrySet())
+//						{
+//							if(iModelsConverted.size() == 0)
+//							{
+//								// FIXME: Assuming we will only have one conversion service
+//								ConversionServiceKey conversionServiceKey = entry.getKey();
+//								for(IModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(iModels.get(0), conversionServiceKey.getInputModelFormat()))
+//								{
+//									// Verify supported outputs for this model
+//									if(supportedModelFormat.toString() == conversionServiceKey.getOutputModelFormat().toString())
+//									{
+//										iModelsConverted.add(entry.getValue().get(0).convert(iModels.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat()));
+//										break;
+//									}
+//								}
+//							}
+//						}
+//					}
+//				}
+//
+//				if(simulator != null)
+//				{
+//
+//					long start = System.currentTimeMillis();
+//
+//					SimulatorCallbackListener callbackListener = new SimulatorCallbackListener(simulatorModel, _sessionContext, _simulationCallback);
+//					if(iModelsConverted.size() == 0)
+//					{
+//						simulator.initialize(iModels, callbackListener);
+//					}
+//					else
+//					{
+//						simulator.initialize(iModelsConverted, callbackListener);
+//					}
+//					long end = System.currentTimeMillis();
+//					_logger.info("Finished initializing simulator, took " + (end - start) + " ms ");
+//
+//				}
+//				else
+//				{
+//					_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + simulatorModel.getInstancePath()
+//							+ " already exists, something did not get cleared", null);
+//				}
+//			}
+//		}
+//		catch(GeppettoInitializationException e)
+//		{
+//			_logger.error("Error: ", e);
+//			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+//		}
+//		catch(GeppettoExecutionException e)
+//		{
+//			_logger.error("Error: ", e);
+//			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+//		}
+//		catch(ConversionException e)
+//		{
+//			_logger.error("Error: ", e);
+//			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+//		}
+//	}
 
 	public static List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
 	{

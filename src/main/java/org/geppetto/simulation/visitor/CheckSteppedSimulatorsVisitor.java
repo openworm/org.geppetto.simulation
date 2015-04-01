@@ -32,7 +32,6 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.simulation.SessionContext;
@@ -63,28 +62,29 @@ public class CheckSteppedSimulatorsVisitor extends TraversingVisitor
 	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
-	@Override
-	public void visit(Simulator simulator)
-	{
-		
-		if(_allStepped || _noneEverStepped)
-		{
-			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator.getSimulatorId());
-			
-			if(simulatorRuntime.getNonConsumedSteps() < 0)
-			{
-				// this simulator has no steps to consume
-				_allStepped = false;
-			}
-			
-			if(simulatorRuntime.getProcessedSteps() != 0)
-			{
-				// this simulator has steps to consume
-				_noneEverStepped = false;
-			}
-		}
-
-	}
+//	@Override
+	// SIM TODO
+//	public void visit(Simulator simulator)
+//	{
+//		
+//		if(_allStepped || _noneEverStepped)
+//		{
+//			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator.getSimulatorId());
+//			
+//			if(simulatorRuntime.getNonConsumedSteps() < 0)
+//			{
+//				// this simulator has no steps to consume
+//				_allStepped = false;
+//			}
+//			
+//			if(simulatorRuntime.getProcessedSteps() != 0)
+//			{
+//				// this simulator has steps to consume
+//				_noneEverStepped = false;
+//			}
+//		}
+//
+//	}
 
 	/**
 	 * @return

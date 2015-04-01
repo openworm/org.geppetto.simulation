@@ -33,14 +33,11 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.ServiceCreator;
 import org.geppetto.simulation.SessionContext;
 
@@ -94,36 +91,37 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
-	@Override
-	public void visit(Simulator simulatorModel)
-	{
-		super.visit(simulatorModel);
-		
-		if (simulatorModel.getConversionServiceId() != null){
-			ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
-					_sessionContext.getConversions(),_simulationCallBack);
-			scc.run();
-		}
-		//Do we need this for conversion?
+//	@Override
+	// SIM TODO
+//	public void visit(Simulator simulatorModel)
+//	{
+//		super.visit(simulatorModel);
+//		
+//		if (simulatorModel.getConversionServiceId() != null){
+//			ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
+//					_sessionContext.getConversions(),_simulationCallBack);
+//			scc.run();
+//		}
+//		//Do we need this for conversion?
+////		if(simulatorModel.getSimulatorId()!=null){
+////			_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
+////		}
+//		
+//		ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
+//				_sessionContext.getSimulators(),_simulationCallBack);
+//		Thread tscs = new Thread(scs);
+//		tscs.start();
+//		try
+//		{
+//			tscs.join();
+//		}
+//		catch(InterruptedException e)
+//		{
+//			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+//		}
 //		if(simulatorModel.getSimulatorId()!=null){
 //			_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
 //		}
-		
-		ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
-				_sessionContext.getSimulators(),_simulationCallBack);
-		Thread tscs = new Thread(scs);
-		tscs.start();
-		try
-		{
-			tscs.join();
-		}
-		catch(InterruptedException e)
-		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-		}
-		if(simulatorModel.getSimulatorId()!=null){
-			_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
-		}
-	}
+//	}
 
 }

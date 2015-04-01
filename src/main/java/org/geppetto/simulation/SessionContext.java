@@ -40,19 +40,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.ACompositeNode;
 import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
-import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
+import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulation;
-import org.geppetto.core.model.simulation.Simulator;
-import org.geppetto.core.simulator.ISimulator;
 
 /**
  * This class stores the context of a given session.
@@ -70,8 +67,9 @@ public class SessionContext
 
 	// This are the services that have been created for this simulation
 	private ConcurrentHashMap<Model, IModelInterpreter> _modelInterpreters = new ConcurrentHashMap<Model, IModelInterpreter>();
-	private ConcurrentHashMap<Simulator, ISimulator> _simulators = new ConcurrentHashMap<Simulator, ISimulator>();
-	private ConcurrentHashMap<Simulator, IConversion> _conversions = new ConcurrentHashMap<Simulator, IConversion>();
+	// SIM TODO
+//	private ConcurrentHashMap<Simulator, ISimulator> _simulators = new ConcurrentHashMap<Simulator, ISimulator>();
+//	private ConcurrentHashMap<Simulator, IConversion> _conversions = new ConcurrentHashMap<Simulator, IConversion>();
 
 	// This map contains the simulator runtime for each one of the simulators
 	private ConcurrentHashMap<String, SimulatorRuntime> _simulatorRuntimes = new ConcurrentHashMap<String, SimulatorRuntime>();
@@ -80,13 +78,14 @@ public class SessionContext
 	private ConcurrentHashMap<String, IModel> _models = new ConcurrentHashMap<String, IModel>();
 
 	// This map caches which models are been executed for a given simulatore
-	private ConcurrentHashMap<Simulator, List<Model>> _simulatorToModels = new ConcurrentHashMap<Simulator, List<Model>>();
-
-	// This map caches for each model what simulator is responsible for its simulation
-	private ConcurrentHashMap<Model, Simulator> _modelToSimulator = new ConcurrentHashMap<Model, Simulator>();
+	// SIM TODO
+//	private ConcurrentHashMap<Simulator, List<Model>> _simulatorToModels = new ConcurrentHashMap<Simulator, List<Model>>();
+//
+//	// This map caches for each model what simulator is responsible for its simulation
+//	private ConcurrentHashMap<Model, Simulator> _modelToSimulator = new ConcurrentHashMap<Model, Simulator>();
 
 	// This is the Simulation tree that was loaded from the simulation file
-	private Simulation _simulation;
+	private GeppettoModel _simulation;
 
 	// The logger
 	private static Log _logger = LogFactory.getLog(SessionContext.class);
@@ -134,13 +133,14 @@ public class SessionContext
 		this.resetRuntimeTree(this.getRuntimeTreeRoot().getChildren());
 		
 		// iterate through aspects and instruct them to start watching
-		for(ISimulator simulator : getSimulators().values())
-		{
-			if(simulator != null)
-			{
-				simulator.resetWatch();
-			}
-		}
+		// SIM TODO
+//		for(ISimulator simulator : getSimulators().values())
+//		{
+//			if(simulator != null)
+//			{
+//				simulator.resetWatch();
+//			}
+//		}
 		_logger.info("Simulation reverted to initial conditions");
 	}
 
@@ -180,10 +180,11 @@ public class SessionContext
 	{
 		_simulatorRuntimes.clear();
 		_modelInterpreters.clear();
-		_simulatorToModels.clear();
-		_modelToSimulator.clear();
-		_simulators.clear();
-		_conversions.clear();
+		// SIM TODO
+//		_simulatorToModels.clear();
+//		_modelToSimulator.clear();
+//		_simulators.clear();
+//		_conversions.clear();
 		_models.clear();
 		_simulation = null;
 		_runtimeTreeRoot = new RuntimeTreeRoot("scene");
@@ -227,7 +228,7 @@ public class SessionContext
 	/**
 	 * @return
 	 */
-	public Simulation getSimulation()
+	public GeppettoModel getSimulation()
 	{
 		return _simulation;
 	}
@@ -235,7 +236,7 @@ public class SessionContext
 	/**
 	 * @param sim
 	 */
-	public void setSimulation(Simulation simulation)
+	public void setSimulation(GeppettoModel simulation)
 	{
 		_simulation = simulation;
 	}
@@ -259,24 +260,26 @@ public class SessionContext
 	 * @return
 	 * @throws GeppettoInitializationException
 	 */
-	public ISimulator getSimulator(Simulator simulatorModel) throws GeppettoInitializationException
-	{
-		if(!_simulators.containsKey(simulatorModel))
-		{
-			throw new GeppettoInitializationException("The simulator for " + simulatorModel.getInstancePath() + " was not found");
-		}
-		return _simulators.get(simulatorModel);
-	}
+	// SIM TODO
+//	public ISimulator getSimulator(Simulator simulatorModel) throws GeppettoInitializationException
+//	{
+//		if(!_simulators.containsKey(simulatorModel))
+//		{
+//			throw new GeppettoInitializationException("The simulator for " + simulatorModel.getInstancePath() + " was not found");
+//		}
+//		return _simulators.get(simulatorModel);
+//	}
 
 	/**
 	 * @param simulator
 	 * @return
 	 * @throws GeppettoInitializationException
 	 */
-	public IConversion getConversion(Simulator simulatorModel) throws GeppettoInitializationException
-	{
-		return _conversions.get(simulatorModel);
-	}
+	// SIM TODO
+//	public IConversion getConversion(Simulator simulatorModel) throws GeppettoInitializationException
+//	{
+//		return _conversions.get(simulatorModel);
+//	}
 
 	/**
 	 * @param model
@@ -302,18 +305,19 @@ public class SessionContext
 	/**
 	 * @return
 	 */
-	public Map<Simulator, ISimulator> getSimulators()
-	{
-		return _simulators;
-	}
-
-	/**
-	 * @return
-	 */
-	public Map<Simulator, IConversion> getConversions()
-	{
-		return _conversions;
-	}
+	// SIM TODO
+//	public Map<Simulator, ISimulator> getSimulators()
+//	{
+//		return _simulators;
+//	}
+//
+//	/**
+//	 * @return
+//	 */
+//	public Map<Simulator, IConversion> getConversions()
+//	{
+//		return _conversions;
+//	}
 
 	/**
 	 * @return
@@ -338,37 +342,41 @@ public class SessionContext
 	 * @param instancePath
 	 * @param simulator
 	 */
-	public void mapSimulatorToModels(Simulator simulator, List<Model> models)
-	{
-		_simulatorToModels.put(simulator, models);
-	}
+	// SIM TODO
+//	public void mapSimulatorToModels(Simulator simulator, List<Model> models)
+//	{
+//		_simulatorToModels.put(simulator, models);
+//	}
 
 	/**
 	 * @param modelInstancePath
 	 * @return
 	 */
-	public List<Model> getModelsFromSimulator(Simulator simulator)
-	{
-		return _simulatorToModels.get(simulator);
-	}
+	// SIM TODO
+//	public List<Model> getModelsFromSimulator(Simulator simulator)
+//	{
+//		return _simulatorToModels.get(simulator);
+//	}
 
 	/**
 	 * @param model
 	 * @param simulator
 	 */
-	public void mapModelToSimulator(Model model, Simulator simulator)
-	{
-		_modelToSimulator.put(model, simulator);
-
-	}
+	// SIM TODO
+//	public void mapModelToSimulator(Model model, Simulator simulator)
+//	{
+//		_modelToSimulator.put(model, simulator);
+//
+//	}
 
 	/**
 	 * @param model
 	 * @return
 	 */
-	public Simulator getSimulatorFromModel(Model model)
-	{
-		return _modelToSimulator.get(model);
-	}
+	// SIM TODO
+//	public Simulator getSimulatorFromModel(Model model)
+//	{
+//		return _modelToSimulator.get(model);
+//	}
 
 }

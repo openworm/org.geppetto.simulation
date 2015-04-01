@@ -51,13 +51,11 @@ import org.geppetto.core.model.simulation.Connection;
 import org.geppetto.core.model.simulation.CustomProperty;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.VisualObjectReference;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.model.values.FloatValue;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Point;
 import org.geppetto.simulation.SessionContext;
 
@@ -92,7 +90,8 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		 * Extract information from aspect and create local aspect node
 		 */
 		Model model = aspect.getModel();
-		Simulator simulator = aspect.getSimulator();
+		// SIM TODO
+//		Simulator simulator = aspect.getSimulator();
 		AspectNode clientAspect = new AspectNode(aspect.getId());
 		clientAspect.setName(aspect.getId());
 
@@ -123,18 +122,19 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		/*
 		 * Extract simulator from aspect and set it to client aspect node
 		 */
-		if(simulator != null)
-		{
-			try
-			{
-				ISimulator simulatorService = _sessionContext.getSimulator(simulator);
-				clientAspect.setSimulator(simulatorService);
-			}
-			catch(GeppettoInitializationException e)
-			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-			}
-		}
+		// SIM TODO
+//		if(simulator != null)
+//		{
+//			try
+//			{
+//				ISimulator simulatorService = _sessionContext.getSimulator(simulator);
+//				clientAspect.setSimulator(simulatorService);
+//			}
+//			catch(GeppettoInitializationException e)
+//			{
+//				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+//			}
+//		}
 	}
 
 	/*

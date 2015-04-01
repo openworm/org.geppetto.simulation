@@ -33,7 +33,6 @@
 
 package org.geppetto.simulation;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,20 +43,16 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
-import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
-import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulation;
-import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
-import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
@@ -103,7 +98,7 @@ public class SimulationService implements ISimulation
 	{
 		long start = System.currentTimeMillis();
 		_logger.info("Initializing simulation");
-		Simulation sim = SimulationConfigReader.readConfig(simConfigURL);
+		GeppettoModel sim = SimulationConfigReader.readConfig(simConfigURL);
 		_simulationListener = simulationListener;
 		long end = System.currentTimeMillis();
 		_logger.info("Reading configuration file, took " + (end - start) + " ms ");
@@ -131,7 +126,7 @@ public class SimulationService implements ISimulation
 	{
 		long start = System.currentTimeMillis();
 		_logger.info("Initializing simulation");
-		Simulation simulation = SimulationConfigReader.readSimulationConfig(simulationConfig);
+		GeppettoModel simulation = SimulationConfigReader.readSimulationConfig(simulationConfig);
 		_simulationListener = simulationListener;
 		long end = System.currentTimeMillis();
 		_logger.info("Reading configuration file, took " + (end - start) + " ms ");
@@ -154,7 +149,7 @@ public class SimulationService implements ISimulation
 	 * @throws GeppettoExecutionException
 	 * @throws ModelInterpreterException
 	 */
-	public void load(Simulation simulation, String requestID) throws GeppettoInitializationException
+	public void load(GeppettoModel simulation, String requestID) throws GeppettoInitializationException
 	{
 
 		// refresh simulation context
@@ -257,13 +252,14 @@ public class SimulationService implements ISimulation
 		_sessionContext.revertToInitialConditions();
 
 		// iterate through aspects and instruct them to stop
-		for(ISimulator simulator : _sessionContext.getSimulators().values())
-		{
-			if(simulator != null)
-			{
-				simulator.setInitialized(false);
-			}
-		}
+		// SIM TODO
+//		for(ISimulator simulator : _sessionContext.getSimulators().values())
+//		{
+//			if(simulator != null)
+//			{
+//				simulator.setInitialized(false);
+//			}
+//		}
 	}
 
 	/*
@@ -323,19 +319,20 @@ public class SimulationService implements ISimulation
 		VariableList varsList = new VariableList();
 		List<AVariable> vars = new ArrayList<AVariable>();
 
-		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
-		{
-			ISimulator simulator = _sessionContext.getSimulators().get(simulatorModel);
-			if(simulator != null)
-			{
-				SimpleVariable v = new SimpleVariable();
-				v.setAspect("aspect");
-				v.setName(simulatorModel.getParentAspect().getId());
-
-				vars.add(v);
-				vars.addAll(isWatch ? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
-			}
-		}
+		// SIM TODO
+//		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
+//		{
+//			ISimulator simulator = _sessionContext.getSimulators().get(simulatorModel);
+//			if(simulator != null)
+//			{
+//				SimpleVariable v = new SimpleVariable();
+//				v.setAspect("aspect");
+//				v.setName(simulatorModel.getParentAspect().getId());
+//
+//				vars.add(v);
+//				vars.addAll(isWatch ? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
+//			}
+//		}
 
 		varsList.setVariables(vars);
 
@@ -354,39 +351,40 @@ public class SimulationService implements ISimulation
 		_watchLists.addAll(lists);
 
 		// iterate through aspects and set variables to be watched for each
-		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
-		{
-
-			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
-
-			if(simulator != null)
-			{
-				List<String> variableNames = new ArrayList<String>();
-
-				for(WatchList list : lists)
-				{
-					for(String varPath : list.getVariablePaths())
-					{
-
-						for(Model model : _sessionContext.getModelsFromSimulator(simulatorModel))
-						{
-							// A variable watch belongs to a specific simulator if the simulator
-							// is responsible for the specific model where this variable comes from
-							// The instance path here is used to perform this check
-							// FIXME: The check was commented as it doesn't work in case subentities are extracted
-							// e.g. "c302.ADAL_0.electrical.a".startsWith("c302.electrical")==FALSE
-							// The check has to be more sophisticated and we should have a mapping of what
-							// simulator is responsible for what subentities
-							// if(varPath.startsWith(model.getInstancePath()))
-							// {
-							variableNames.add(varPath);
-							// }
-						}
-					}
-				}
-				simulator.addWatchVariables(variableNames);
-			}
-		}
+		// SIM TODO
+//		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
+//		{
+//
+//			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
+//
+//			if(simulator != null)
+//			{
+//				List<String> variableNames = new ArrayList<String>();
+//
+//				for(WatchList list : lists)
+//				{
+//					for(String varPath : list.getVariablePaths())
+//					{
+//
+//						for(Model model : _sessionContext.getModelsFromSimulator(simulatorModel))
+//						{
+//							// A variable watch belongs to a specific simulator if the simulator
+//							// is responsible for the specific model where this variable comes from
+//							// The instance path here is used to perform this check
+//							// FIXME: The check was commented as it doesn't work in case subentities are extracted
+//							// e.g. "c302.ADAL_0.electrical.a".startsWith("c302.electrical")==FALSE
+//							// The check has to be more sophisticated and we should have a mapping of what
+//							// simulator is responsible for what subentities
+//							// if(varPath.startsWith(model.getInstancePath()))
+//							// {
+//							variableNames.add(varPath);
+//							// }
+//						}
+//					}
+//				}
+//				simulator.addWatchVariables(variableNames);
+//			}
+//		}
 	}
 
 	/*
@@ -401,13 +399,14 @@ public class SimulationService implements ISimulation
 		_watching = true;
 
 		// iterate through aspects and instruct them to start watching
-		for(ISimulator simulator : _sessionContext.getSimulators().values())
-		{
-			if(simulator != null)
-			{
-				simulator.startWatch();
-			}
-		}
+		// SIM TODO
+//		for(ISimulator simulator : _sessionContext.getSimulators().values())
+//		{
+//			if(simulator != null)
+//			{
+//				simulator.startWatch();
+//			}
+//		}
 	}
 
 	/*
@@ -422,15 +421,16 @@ public class SimulationService implements ISimulation
 		_watching = false;
 
 		// iterate through aspects and instruct them to stop watching
-		for(ISimulator simulator : _sessionContext.getSimulators().values())
-		{
-
-			if(simulator != null)
-			{
-				// stop watch and reset state tree for variable watch for each simulator
-				simulator.stopWatch();
-			}
-		}
+		// SIM TODO
+//		for(ISimulator simulator : _sessionContext.getSimulators().values())
+//		{
+//
+//			if(simulator != null)
+//			{
+//				// stop watch and reset state tree for variable watch for each simulator
+//				simulator.stopWatch();
+//			}
+//		}
 	}
 
 	/*
@@ -445,13 +445,14 @@ public class SimulationService implements ISimulation
 		this.stopWatch();
 
 		// instruct aspects to clear watch variables
-		for(ISimulator simulator : _sessionContext.getSimulators().values())
-		{
-			if(simulator != null)
-			{
-				simulator.clearWatchVariables();
-			}
-		}
+		// SIM TODO
+//		for(ISimulator simulator : _sessionContext.getSimulators().values())
+//		{
+//			if(simulator != null)
+//			{
+//				simulator.clearWatchVariables();
+//			}
+//		}
 
 		// clear locally stored watch lists
 		_watchLists.clear();
@@ -509,24 +510,25 @@ public class SimulationService implements ISimulation
 	 * @param simConfig
 	 * @throws InvalidSyntaxException
 	 */
-	private void populateScripts(Simulation simConfig) throws GeppettoInitializationException
+	private void populateScripts(GeppettoModel simConfig) throws GeppettoInitializationException
 	{
 		// clear local scripts variable
 		_scripts.clear();
 
-		for(String script : simConfig.getScript())
-		{
-			URL scriptURL = null;
-			try
-			{
-				scriptURL = new URL(script);
-			}
-			catch(MalformedURLException e)
-			{
-				throw new GeppettoInitializationException("Malformed script url " + script, e);
-			}
-			_scripts.add(scriptURL);
-		}
+		// SIM TODO
+//		for(String script : simConfig.getScript())
+//		{
+//			URL scriptURL = null;
+//			try
+//			{
+//				scriptURL = new URL(script);
+//			}
+//			catch(MalformedURLException e)
+//			{
+//				throw new GeppettoInitializationException("Malformed script url " + script, e);
+//			}
+//			_scripts.add(scriptURL);
+//		}
 	}
 
 	/*

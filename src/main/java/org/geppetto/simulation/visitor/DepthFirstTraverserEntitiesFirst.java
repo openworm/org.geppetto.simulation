@@ -34,9 +34,8 @@ package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Entity;
+import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulation;
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.DepthFirstTraverserImpl;
 import org.geppetto.core.model.simulation.visitor.Visitor;
 
@@ -83,13 +82,14 @@ public class DepthFirstTraverserEntitiesFirst extends DepthFirstTraverserImpl
             	return;
             }
         }
-        if (aBean.getSimulator()!= null) {
-            aBean.getSimulator().accept(aVisitor);
-            if(_stopVisiting)
-            {
-            	return;
-            }
-        }
+    	// SIM TODO
+//        if (aBean.getSimulator()!= null) {
+//            aBean.getSimulator().accept(aVisitor);
+//            if(_stopVisiting)
+//            {
+//            	return;
+//            }
+//        }
     }
 
 
@@ -98,7 +98,7 @@ public class DepthFirstTraverserEntitiesFirst extends DepthFirstTraverserImpl
     }
 
 
-    public void traverse(Simulation aBean, Visitor aVisitor) {
+    public void traverse(GeppettoModel aBean, Visitor aVisitor) {
         for (Entity bean: aBean.getEntities()) {
             bean.accept(aVisitor);
             if(_stopVisiting)
@@ -108,10 +108,11 @@ public class DepthFirstTraverserEntitiesFirst extends DepthFirstTraverserImpl
         }
     }
 
-    public void traverse(Simulator aBean, Visitor aVisitor) {
-        if (aBean.getTimeStep()!= null) {
-            aBean.getTimeStep().accept(aVisitor);
-        }
-    }
+	// SIM TODO
+//    public void traverse(Simulator aBean, Visitor aVisitor) {
+//        if (aBean.getTimeStep()!= null) {
+//            aBean.getTimeStep().accept(aVisitor);
+//        }
+//    }
 
 }

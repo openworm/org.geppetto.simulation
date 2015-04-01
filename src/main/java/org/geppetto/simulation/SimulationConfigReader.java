@@ -48,7 +48,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.model.simulation.Simulation;
+import org.geppetto.core.model.simulation.GeppettoModel;
 import org.xml.sax.SAXException;
 
 
@@ -58,15 +58,15 @@ public class SimulationConfigReader
 	//static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
 	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/development/src/main/resources/schema/simulation/simulationSchema.xsd";
 	
-	public static Simulation readConfig(URL url) throws GeppettoInitializationException
+	public static GeppettoModel readConfig(URL url) throws GeppettoInitializationException
 	{
 
-		Simulation sim = null;
+		GeppettoModel sim = null;
 		try
 		{
-			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			Unmarshaller unmarshaller = JAXBContext.newInstance(GeppettoModel.class).createUnmarshaller();
 			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
-			sim = (Simulation) unmarshaller.unmarshal(url);
+			sim = (GeppettoModel) unmarshaller.unmarshal(url);
 		}
 		catch(JAXBException | MalformedURLException e1)
 		{
@@ -83,17 +83,17 @@ public class SimulationConfigReader
 	 * @return
 	 * @throws GeppettoInitializationException
 	 */
-	public static Simulation readSimulationConfig(String simulationConfig) throws GeppettoInitializationException
+	public static GeppettoModel readSimulationConfig(String simulationConfig) throws GeppettoInitializationException
 	{
 
-		Simulation sim = null;
+		GeppettoModel sim = null;
 
 		StringReader reader = new StringReader(simulationConfig);
 		try
 		{
-			Unmarshaller unmarshaller = JAXBContext.newInstance(Simulation.class).createUnmarshaller();
+			Unmarshaller unmarshaller = JAXBContext.newInstance(GeppettoModel.class).createUnmarshaller();
 			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
-			sim = (Simulation) unmarshaller.unmarshal(reader);
+			sim = (GeppettoModel) unmarshaller.unmarshal(reader);
 		}
 		catch(JAXBException | MalformedURLException e)
 		{

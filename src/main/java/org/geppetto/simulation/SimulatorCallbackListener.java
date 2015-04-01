@@ -36,28 +36,29 @@ package org.geppetto.simulation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.model.simulation.Simulator;
-import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
-import org.geppetto.simulation.visitor.ExitVisitor;
 
 public class SimulatorCallbackListener implements ISimulatorCallbackListener
 {
 
-	private Simulator _simulatorModel;
+	// SIM TODO
+//	private Simulator _simulatorModel;
 	private SimulatorRuntime _simulatorRuntime;
 	private SessionContext _sessionContext;
 	private ISimulationCallbackListener _simulationCallback;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
-	public SimulatorCallbackListener(Simulator simulatorModel, 
+	// SIM TODO
+	public SimulatorCallbackListener(//Simulator simulatorModel, 
 			SessionContext context, ISimulationCallbackListener simulationCallback)
 	{
-		_simulatorModel = simulatorModel;
+		// SIM TODO
+//		_simulatorModel = simulatorModel;
 		_sessionContext = context;
-		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
+		// SIM TODO
+//		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
 		_simulationCallback = simulationCallback;
 	}
 

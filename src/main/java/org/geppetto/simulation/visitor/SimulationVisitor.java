@@ -34,19 +34,26 @@ package org.geppetto.simulation.visitor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.channel.ChannelMessage;
+import org.geppetto.core.channel.ports.ChannelInPort;
+import org.geppetto.core.channel.ports.ChannelOutPort;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.values.AValue;
+import org.geppetto.core.model.values.DoubleValue;
+import org.geppetto.core.simulation.AspectIO;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
+import org.geppetto.core.simulation.SimulationVariablesMessage;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
 import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.SimulatorRuntimeStatus;
-import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 
 /**
  * This is the simulation visitor which traverse the simulation tree and orchestrates the simulation of the different models.
@@ -92,6 +99,8 @@ public class SimulationVisitor extends DefaultStateVisitor
 		ISimulator simulator = node.getSimulator();
 		if(simulator != null)
 		{
+			_logger.info("~~~> aspect " + node.getName());
+			AspectIO aspectIO = _sessionContext.getAspectIOByName(node.getName());
 			SimulatorRuntime simulatorRuntime = this._sessionContext.getSimulatorRuntime(simulator.getId());
 
 			if(simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
@@ -120,8 +129,23 @@ public class SimulationVisitor extends DefaultStateVisitor
 					// too many steps in the buffer
 					try
 					{
-						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
-						simulator.simulate(new TimeConfiguration(null, 1, 1), node);
+						// TODO: for now all simulators are run from the same simlation
+						// thread and thus, if a simulator needs to wait for some IO, it
+						// can not block because it'll block the thread in this case.
+						// Instead we check if it has any data to wait and if so, we merely
+						// skip it switching to next simulator that might have some data
+						// to send.
+						if (simulatorNeedsToBlock(simulator, aspectIO)) {
+							simulatorRuntime.setStatus(SimulatorRuntimeStatus.IO);
+							_logger.debug("Aspec " + node.getName() + ": is waiting for IO");
+						} else {
+							simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
+							receiveIncomingMessages(simulator, aspectIO);
+							simulator.clearOutputVariables();
+							simulator.simulate(new TimeConfiguration(null, 1, 1), node);
+							sendAwaitingData(simulator, aspectIO);
+						}
+
 						simulatorRuntime.incrementStepsConsumed();
 					}
 					catch(GeppettoExecutionException e)
@@ -145,5 +169,63 @@ public class SimulationVisitor extends DefaultStateVisitor
 	public boolean visitVariableNode(VariableNode node)
 	{
 		return super.visitVariableNode(node);
+	}
+
+	private boolean simulatorNeedsToBlock(ISimulator simulator, AspectIO aspectIO) {
+		if (aspectIO == null) {
+			return false;
+		}
+
+		int numInPorts = aspectIO.getInPorts().size();
+		int numReadyPorts = 0;
+		for (ChannelInPort inPort : aspectIO.getInPorts()) {
+			if (inPort.numAwaitingMessages() > 0) {
+				numReadyPorts++;
+			}
+		}
+
+		return numReadyPorts < numInPorts;
+	}
+
+	private void receiveIncomingMessages(ISimulator simulator, AspectIO aspectIO) {
+		if (aspectIO == null) {
+			return;
+		}
+
+		// XXX: receiving part has to do something more smart with the variables
+		// received. For now I just print all the variabels and its values.
+		for (ChannelInPort inPort : aspectIO.getInPorts()) {
+			ChannelMessage chanMsg = inPort.receive(false);
+			if (!(chanMsg instanceof SimulationVariablesMessage)) {
+				_logger.error("Unexpected channel message type: " + chanMsg.getClass().getSimpleName());
+				continue;
+			}
+
+			SimulationVariablesMessage msg = (SimulationVariablesMessage) chanMsg;
+			_logger.info("Simulator " + simulator.getName() + " received"
+					+ " the following variables from " + inPort.getPeer());
+			for (String varName : msg.getVariableNames()) {
+				AValue val = msg.getVariableValue(varName);
+				if (!(val instanceof DoubleValue)) {
+					_logger.warn("Variable " + varName + " is not of type double, " +
+							"I don't remember sending any of other types");
+				}
+
+				_logger.info("--> " + varName + " = " + val);
+			}
+		}
+	}
+
+	private void sendAwaitingData(ISimulator simulator, AspectIO aspectIO) {
+		if (aspectIO == null) {
+			return;
+		}
+
+		for (ChannelOutPort outPort : aspectIO.getOutPorts()) {
+			SimulationVariablesMessage msg = simulator.getSimvarMessageByAspectId(outPort.getPeer());
+			if (msg.getNumberOfVarsInMessage() > 0) {
+				outPort.send(msg);
+			}
+		}
 	}
 }

@@ -33,12 +33,10 @@
 
 package org.geppetto.simulation;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.channel.AChannel;
+import org.geppetto.core.channel.channels.SimpleNonBlockingChannel;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.model.IModel;
@@ -46,13 +44,20 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.ACompositeNode;
 import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
-import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.simulation.AspectIO;
 import org.geppetto.core.simulator.ISimulator;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class stores the context of a given session.
@@ -79,11 +84,16 @@ public class SessionContext
 	// The string in the map below is the instancepath for a specific model specified in a simulation file
 	private ConcurrentHashMap<String, IModel> _models = new ConcurrentHashMap<String, IModel>();
 
-	// This map caches which models are been executed for a given simulatore
+	// This map caches which models are been executed for a given simulator
 	private ConcurrentHashMap<Simulator, List<Model>> _simulatorToModels = new ConcurrentHashMap<Simulator, List<Model>>();
 
 	// This map caches for each model what simulator is responsible for its simulation
 	private ConcurrentHashMap<Model, Simulator> _modelToSimulator = new ConcurrentHashMap<Model, Simulator>();
+
+	private List<AChannel> _channels = new LinkedList<>();
+
+    // A mapping between string id of the aspect and its IO attributes and features.
+	private ConcurrentHashMap<String, AspectIO> _aspectNameToIO = new ConcurrentHashMap<>();
 
 	// This is the Simulation tree that was loaded from the simulation file
 	private Simulation _simulation;
@@ -182,9 +192,11 @@ public class SessionContext
 		_modelInterpreters.clear();
 		_simulatorToModels.clear();
 		_modelToSimulator.clear();
+		_aspectNameToIO.clear();
 		_simulators.clear();
 		_conversions.clear();
 		_models.clear();
+		_channels.clear();
 		_simulation = null;
 		_runtimeTreeRoot = new RuntimeTreeRoot("scene");
 		setSimulationStatus(SimulationRuntimeStatus.IDLE);
@@ -371,4 +383,53 @@ public class SessionContext
 		return _modelToSimulator.get(model);
 	}
 
+	/**
+	 * Creates a channel between connecting two aspects together
+	 *
+	 * @param sndAspectId the id of sending aspect
+	 * @param recvAspectId the id of receiving aspect
+	 * @return A unique id of the created channel
+	 */
+	public String createChannel(String sndAspectId, String recvAspectId) {
+		// TODO: ensure that both aspects exist (is it possible to do from SessionContext at all?)
+
+		UUID uuid = UUID.randomUUID();
+		AChannel channel = new SimpleNonBlockingChannel("channel-" + uuid.toString());
+
+		_channels.add(channel);
+		channel.getInPort().setOwner(recvAspectId);
+		channel.getOutPort().setOwner(sndAspectId);
+
+		AspectIO aio = getOrCreateAspectIO(recvAspectId);
+		aio.addInPort(channel.getInPort());
+
+		aio = getOrCreateAspectIO(sndAspectId);
+		aio.addOutPort(channel.getOutPort());
+
+		return channel.getId();
+	}
+
+	public AChannel findChannel(String channelId) {
+		for (AChannel c : _channels) {
+			if (c.getId().equals(channelId)) {
+				return c;
+			}
+		}
+
+		return null;
+	}
+
+	public AspectIO getAspectIOByName(String aspectId) {
+		return _aspectNameToIO.get(aspectId);
+	}
+
+	private AspectIO getOrCreateAspectIO(String aspectId) {
+		AspectIO aio = getAspectIOByName(aspectId);
+		if (aio == null) {
+			aio = new AspectIO(aspectId);
+			_aspectNameToIO.put(aspectId, aio);
+		}
+
+		return aio;
+	}
 }

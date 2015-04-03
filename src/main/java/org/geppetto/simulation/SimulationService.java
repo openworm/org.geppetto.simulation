@@ -41,6 +41,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.channel.AChannel;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
@@ -207,6 +208,32 @@ public class SimulationService implements ISimulation
 	public void start(String requestId)
 	{
 		_logger.info("Starting simulation");
+
+		// XXX: a chunk of code below is required for demonstrating aspect
+		// to aspect communication.
+
+		// connect aspects alpha and beta, where alpha is a sending aspect
+		// and beta a receiving one.
+		String channelId = _sessionContext.createChannel("alpha", "beta");
+		_logger.info("Created a new channel: " + channelId);
+
+		for (Simulator sim : _sessionContext.getSimulators().keySet()) {
+			// find a simulator that belongs to aspect alpha
+			// and instruct it on which variables shall be sent
+			// after each successful simulator step
+			if (sim.getParentAspect().getId().equals("alpha")) {
+				try {
+					ISimulator isim = _sessionContext.getSimulator(sim);
+
+					// set up variables to send to aspect "beta"
+					isim.addOutputVariable("hhpop[0].v", "beta");
+					isim.addOutputVariable("hhpop[0].spiking", "beta");
+				} catch (GeppettoInitializationException e) {
+					_logger.error("Error: ", e);
+				}
+			}
+		}
+		// XXX <end>
 
 		_simulationThread = new SimulationThread(_sessionContext, _simulationListener, requestId, appConfig.getUpdateCycle());
 		_simulationThread.start();

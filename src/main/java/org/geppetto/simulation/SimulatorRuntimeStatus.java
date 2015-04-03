@@ -42,5 +42,6 @@ public enum SimulatorRuntimeStatus
 	STEPPING,
 	STEPPED,
 	OVER,
+	IO,
 	CONVERSION,
 }

@@ -39,9 +39,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulation.IRunConfiguration;
@@ -64,7 +66,6 @@ public class RecordingsSimulator extends ASimulator
 	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
 	{
 		super.initialize(models, listener);
-		setWatchableVariablesFromRecordings();
 	}
 
 	@Override
@@ -82,12 +83,6 @@ public class RecordingsSimulator extends ASimulator
 	}
 
 	@Override
-	public boolean populateVisualTree(AspectNode aspectNode) throws ModelInterpreterException
-	{
-		return false;
-	}
-
-	@Override
 	public String getId()
 	{
 		return "recordingsSimulator";
@@ -100,5 +95,17 @@ public class RecordingsSimulator extends ASimulator
 		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
 		ServicesRegistry.registerSimulatorService(this, modelFormatList);
 		
+	}
+
+	@Override
+	public boolean isSupported(GeppettoFeature feature) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public IFeature getFeature(GeppettoFeature feature) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

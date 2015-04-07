@@ -133,14 +133,6 @@ public class SessionContext
 
 		this.resetRuntimeTree(this.getRuntimeTreeRoot().getChildren());
 		
-		// iterate through aspects and instruct them to start watching
-		for(ISimulator simulator : getSimulators().values())
-		{
-			if(simulator != null)
-			{
-				simulator.resetWatch();
-			}
-		}
 		_logger.info("Simulation reverted to initial conditions");
 	}
 

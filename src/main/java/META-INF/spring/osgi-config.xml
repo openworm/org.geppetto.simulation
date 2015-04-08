@@ -32,4 +32,6 @@
 	<bean id="simulationService" scope="session" class="org.geppetto.simulation.SimulationService">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
+
+	<bean id="eventListenerBean" class="org.geppetto.simulation.ApplicationListenerBean" />
 </beans>

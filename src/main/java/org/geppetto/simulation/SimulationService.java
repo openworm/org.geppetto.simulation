@@ -386,7 +386,11 @@ public class SimulationService implements ISimulation
 						}
 					}
 				}
-				((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE)).addWatchVariables(variableNames);
+				IVariableWatchFeature watchFeature =
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature!=null){
+					watchFeature.addWatchVariables(variableNames);
+				}
 			}
 		}
 	}
@@ -407,7 +411,11 @@ public class SimulationService implements ISimulation
 		{
 			if(simulator != null)
 			{
-				((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE)).startWatch();
+				IVariableWatchFeature watchFeature = 
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature !=null){
+					watchFeature.startWatch();
+				}
 			}
 		}
 	}
@@ -430,7 +438,11 @@ public class SimulationService implements ISimulation
 			if(simulator != null)
 			{
 				// stop watch and reset state tree for variable watch for each simulator
-				((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE)).stopWatch();
+				IVariableWatchFeature watchFeature = 
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature !=null){
+					watchFeature.stopWatch();
+				}
 			}
 		}
 	}
@@ -451,7 +463,11 @@ public class SimulationService implements ISimulation
 		{
 			if(simulator != null)
 			{
-				((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE)).clearWatchVariables();
+				IVariableWatchFeature watchFeature =
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature!=null){
+					watchFeature.clearWatchVariables();
+				}
 			}
 		}
 

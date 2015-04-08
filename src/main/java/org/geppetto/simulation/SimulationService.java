@@ -47,6 +47,7 @@ import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.SimpleVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
+import org.geppetto.core.features.IVariableWatchFeature;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
@@ -54,6 +55,7 @@ import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
@@ -333,7 +335,7 @@ public class SimulationService implements ISimulation
 				v.setName(simulatorModel.getParentAspect().getId());
 
 				vars.add(v);
-				vars.addAll(isWatch ? simulator.getWatchableVariables().getVariables() : simulator.getForceableVariables().getVariables());
+				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
 			}
 		}
 
@@ -384,7 +386,11 @@ public class SimulationService implements ISimulation
 						}
 					}
 				}
-				simulator.addWatchVariables(variableNames);
+				IVariableWatchFeature watchFeature =
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature!=null){
+					watchFeature.addWatchVariables(variableNames);
+				}
 			}
 		}
 	}
@@ -405,7 +411,11 @@ public class SimulationService implements ISimulation
 		{
 			if(simulator != null)
 			{
-				simulator.startWatch();
+				IVariableWatchFeature watchFeature = 
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature !=null){
+					watchFeature.startWatch();
+				}
 			}
 		}
 	}
@@ -428,7 +438,11 @@ public class SimulationService implements ISimulation
 			if(simulator != null)
 			{
 				// stop watch and reset state tree for variable watch for each simulator
-				simulator.stopWatch();
+				IVariableWatchFeature watchFeature = 
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature !=null){
+					watchFeature.stopWatch();
+				}
 			}
 		}
 	}
@@ -449,7 +463,11 @@ public class SimulationService implements ISimulation
 		{
 			if(simulator != null)
 			{
-				simulator.clearWatchVariables();
+				IVariableWatchFeature watchFeature =
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+				if(watchFeature!=null){
+					watchFeature.clearWatchVariables();
+				}
 			}
 		}
 

@@ -42,6 +42,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
+import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -56,7 +57,7 @@ import org.springframework.stereotype.Service;
  * 
  */
 @Service
-public class RecordingsModelInterpreter implements IModelInterpreter
+public class RecordingsModelInterpreter extends AModelInterpreter
 {
 	
 	private static Log _logger = LogFactory.getLog(RecordingsModelInterpreter.class);

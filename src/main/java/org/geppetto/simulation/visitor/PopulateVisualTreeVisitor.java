@@ -34,10 +34,13 @@ package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.features.IVisualTreeFeature;
+import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 
@@ -63,22 +66,18 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		ISimulator simulator = node.getSimulator();
+		IModelInterpreter model = node.getModelInterpreter();
 		try
 		{
-			if(simulator!=null){
-				simulator.populateVisualTree(node);
+			if(model!=null){
+				((IVisualTreeFeature) model.getFeature(GeppettoFeature.VISUAL_TREE_FEATURE)).populateVisualTree(node);
 			}
 		}
 		catch(ModelInterpreterException e)
 		{
 			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
 		}
-		catch(GeppettoExecutionException e)
-		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-		}
-
+		
 		return super.inAspectNode(node);
 	}
 

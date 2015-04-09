@@ -33,6 +33,7 @@
 package org.geppetto.simulation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,8 @@ public class ExperimentRunManager implements IExperimentRunManager
 {
 	private Map<IUser, List<IExperiment>> queue = new LinkedHashMap<>();
 
+	private List<ExperimentRun> experimentRuns = new ArrayList<>();
+
 	public ExperimentRunManager()
 	{
 		try
@@ -65,33 +68,91 @@ public class ExperimentRunManager implements IExperimentRunManager
 		}
 	}
 
-	public void queueExperiment(IExperiment experiment)
+	public void queueExperiment(IUser user, IExperiment experiment)
 	{
+		experiment.setStatus(ExperimentStatus.QUEUED);
+		addExperimentsToQueue(user, Arrays.asList(new IExperiment[] { experiment }), ExperimentStatus.QUEUED);
+	}
 
+	public boolean checkExperiment(IExperiment experiment)
+	{
+		return true;
+	}
+
+	public void runExperiment(IExperiment experiment)
+	{
+		try
+		{
+			ExperimentRun experimentRun = new ExperimentRun(getService(IGeppettoDataManager.class.getName()), experiment);
+			experiment.setStatus(ExperimentStatus.RUNNING);
+			IUser user = getUserForExperiment(experiment);
+			synchronized(this) {
+				queue.get(user).remove(experiment);
+			}
+			synchronized(experimentRuns)
+			{
+				experimentRuns.add(experimentRun);
+			}
+		}
+		catch(GeppettoInitializationException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	private void loadExperiments() throws GeppettoInitializationException
 	{
 		IGeppettoDataManager dataManager = getService(IGeppettoDataManager.class.getName());
 		List<? extends IUser> users = dataManager.getAllUsers();
-		for (IUser user : users) {
+		for(IUser user : users)
+		{
 			List<? extends IGeppettoProject> projects = dataManager.getGeppettoProjectsForUser(user.getLogin());
-			for (IGeppettoProject project : projects) {
+			for(IGeppettoProject project : projects)
+			{
 				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
 				addExperimentsToQueue(user, experiments, ExperimentStatus.RUNNING);
 				addExperimentsToQueue(user, experiments, ExperimentStatus.QUEUED);
 			}
 		}
 	}
-	
-	private void addExperimentsToQueue(IUser user, List<? extends IExperiment> experiments, ExperimentStatus status) {
+
+	private synchronized IUser getUserForExperiment(IExperiment experiment) throws GeppettoInitializationException
+	{
+//		IGeppettoDataManager dataManager = getService(IGeppettoDataManager.class.getName());
+//		List<? extends IUser> users = dataManager.getAllUsers();
+//		for(IUser user : users)
+//		{
+//			List<? extends IGeppettoProject> projects = dataManager.getGeppettoProjectsForUser(user.getLogin());
+//			for(IGeppettoProject project : projects)
+//			{
+//				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
+//				if(experiments.contains(experiment))
+//				{
+//					return user;
+//				}
+//			}
+//		}
+		for (Map.Entry<IUser, List<IExperiment>> experimentEntry : queue.entrySet()) {
+			if (experimentEntry.getValue().contains(experiment)) {
+				return experimentEntry.getKey();
+			}
+		}
+		return null;
+	}
+
+	private synchronized void addExperimentsToQueue(IUser user, List<? extends IExperiment> experiments, ExperimentStatus status)
+	{
 		List<IExperiment> userExperiments = queue.get(user);
-		if (userExperiments == null) {
+		if(userExperiments == null)
+		{
 			userExperiments = new ArrayList<>();
 			queue.put(user, userExperiments);
 		}
-		for (IExperiment experiment : experiments) {
-			if (experiment.getStatus() == status) {
+		for(IExperiment experiment : experiments)
+		{
+			if(experiment.getStatus() == status)
+			{
+				experiment.setStatus(ExperimentStatus.QUEUED);
 				userExperiments.add(experiment);
 			}
 		}

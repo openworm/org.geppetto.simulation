@@ -86,7 +86,8 @@ public class ExperimentRunManager implements IExperimentRunManager
 			ExperimentRun experimentRun = new ExperimentRun(getService(IGeppettoDataManager.class.getName()), experiment);
 			experiment.setStatus(ExperimentStatus.RUNNING);
 			IUser user = getUserForExperiment(experiment);
-			synchronized(this) {
+			synchronized(this)
+			{
 				queue.get(user).remove(experiment);
 			}
 			synchronized(experimentRuns)
@@ -118,22 +119,24 @@ public class ExperimentRunManager implements IExperimentRunManager
 
 	private synchronized IUser getUserForExperiment(IExperiment experiment) throws GeppettoInitializationException
 	{
-//		IGeppettoDataManager dataManager = getService(IGeppettoDataManager.class.getName());
-//		List<? extends IUser> users = dataManager.getAllUsers();
-//		for(IUser user : users)
-//		{
-//			List<? extends IGeppettoProject> projects = dataManager.getGeppettoProjectsForUser(user.getLogin());
-//			for(IGeppettoProject project : projects)
-//			{
-//				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
-//				if(experiments.contains(experiment))
-//				{
-//					return user;
-//				}
-//			}
-//		}
-		for (Map.Entry<IUser, List<IExperiment>> experimentEntry : queue.entrySet()) {
-			if (experimentEntry.getValue().contains(experiment)) {
+		// IGeppettoDataManager dataManager = getService(IGeppettoDataManager.class.getName());
+		// List<? extends IUser> users = dataManager.getAllUsers();
+		// for(IUser user : users)
+		// {
+		// List<? extends IGeppettoProject> projects = dataManager.getGeppettoProjectsForUser(user.getLogin());
+		// for(IGeppettoProject project : projects)
+		// {
+		// List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
+		// if(experiments.contains(experiment))
+		// {
+		// return user;
+		// }
+		// }
+		// }
+		for(Map.Entry<IUser, List<IExperiment>> experimentEntry : queue.entrySet())
+		{
+			if(experimentEntry.getValue().contains(experiment))
+			{
 				return experimentEntry.getKey();
 			}
 		}

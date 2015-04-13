@@ -67,6 +67,7 @@ import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
+import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.geppetto.simulation.visitor.WriteModelVisitor;
 import org.osgi.framework.InvalidSyntaxException;
@@ -335,7 +336,7 @@ public class SimulationService implements ISimulation
 				v.setName(simulatorModel.getParentAspect().getId());
 
 				vars.add(v);
-				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
+				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
 			}
 		}
 
@@ -387,7 +388,7 @@ public class SimulationService implements ISimulation
 					}
 				}
 				IVariableWatchFeature watchFeature =
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature!=null){
 					watchFeature.addWatchVariables(variableNames);
 				}
@@ -412,7 +413,7 @@ public class SimulationService implements ISimulation
 			if(simulator != null)
 			{
 				IVariableWatchFeature watchFeature = 
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature !=null){
 					watchFeature.startWatch();
 				}
@@ -439,7 +440,7 @@ public class SimulationService implements ISimulation
 			{
 				// stop watch and reset state tree for variable watch for each simulator
 				IVariableWatchFeature watchFeature = 
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature !=null){
 					watchFeature.stopWatch();
 				}
@@ -464,7 +465,7 @@ public class SimulationService implements ISimulation
 			if(simulator != null)
 			{
 				IVariableWatchFeature watchFeature =
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature!=null){
 					watchFeature.clearWatchVariables();
 				}
@@ -615,5 +616,23 @@ public class SimulationService implements ISimulation
 		//Read returned value
 		
 		return "";
+	}
+
+	@Override
+	public String getSimulationTree(String instancePath)
+	{
+		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationListener, instancePath);
+		this._sessionContext.getRuntimeTreeRoot().apply(populateSimulationVisitor);
+		
+		String simulationTree = "[";
+		for (Map.Entry<String, AspectSubTreeNode> entry : populateSimulationVisitor.getPopulatedSimulationTree().entrySet()){
+			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+			entry.getValue().apply(updateClientVisitor);
+			simulationTree +=  "{\"aspectInstancePath\":" + '"' +  entry.getKey() + '"' + ",\"simulationTree\":{" + updateClientVisitor.getSerializedTree() + "} },";
+		}
+		simulationTree = simulationTree.substring(0, simulationTree.length() - 1);
+		simulationTree += "]";
+
+		return simulationTree;
 	}	
 }

@@ -32,6 +32,7 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -71,6 +72,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 
 	private SessionContext _sessionContext;
 	private ISimulationCallbackListener _simulationCallback;
+	private final String SERVER_ROOT_TOKEN = "%SERVER_ROOT%";
 	private static Log _logger = LogFactory.getLog(LoadSimulationVisitor.class);
 
 	public LoadSimulationVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationListener)
@@ -102,7 +104,17 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					for(String recording : pModel.getRecordingURL())
 					{
 						URL url = null;
-						url = this.getClass().getResource(recording);
+						
+						if(recording.contains(SERVER_ROOT_TOKEN))
+						{
+							recording = recording.replace(SERVER_ROOT_TOKEN, "");
+							url = this.getLocalURL(recording);
+						}
+						else
+						{
+							url = this.getClass().getResource(recording);
+						}
+						
 						recordings.add(url);
 					}
 				}
@@ -110,10 +122,20 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				long start = System.currentTimeMillis();
 
 				URL modelUrl = null;
-				if(pModel.getModelURL() != null)
+				String modelUrlStr = pModel.getModelURL();
+				if(modelUrlStr != null)
 				{
-					modelUrl = new URL(pModel.getModelURL());
+					if(modelUrlStr.contains(SERVER_ROOT_TOKEN))
+					{
+						modelUrlStr = modelUrlStr.replace(SERVER_ROOT_TOKEN, "");
+						modelUrl = this.getLocalURL(modelUrlStr);
+					}
+					else
+					{
+						modelUrl = new URL(modelUrlStr);
+					}
 				}
+				
 				model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
 				model.setInstancePath(pModel.getInstancePath());
 				_sessionContext.getModels().put(pModel.getInstancePath(), model);
@@ -303,6 +325,12 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			}
 		}
 		return result;
+	}
+	
+	private URL getLocalURL(String localPath) throws MalformedURLException
+	{
+		File catalinaBase = new File( System.getProperty( "catalina.home" ) ).getAbsoluteFile();
+		return new File( catalinaBase, localPath ).toURI().toURL();
 	}
 
 }

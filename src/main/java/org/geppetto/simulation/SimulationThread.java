@@ -136,11 +136,6 @@ class SimulationThread extends Thread
 				}
 			}
 		}
-		else if(getSessionContext().getStatus().equals(SimulationRuntimeStatus.STOPPED)){
-			_simulationCallback.updateReady(SimulationEvents.STOP_SIMULATION, _requestID,null);
-			_logger.info("Stop simulation ");
-			this._simulationStarted = true;
-		}
 	}
 
 	/**

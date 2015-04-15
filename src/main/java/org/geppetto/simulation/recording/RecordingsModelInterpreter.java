@@ -42,12 +42,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
+import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.springframework.stereotype.Service;
@@ -120,6 +122,27 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
 		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
 		ServicesRegistry.registerModelInterpreterService(this, modelFormatList);
+		
+	}
+
+	@Override
+	public boolean isSupported(GeppettoFeature feature)
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public IFeature getFeature(GeppettoFeature feature)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void addFeature(IFeature feature)
+	{
+		// TODO Auto-generated method stub
 		
 	}
 

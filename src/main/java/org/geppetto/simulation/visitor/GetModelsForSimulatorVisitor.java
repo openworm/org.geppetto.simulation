@@ -77,7 +77,6 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 //	private Simulator _simulator = null;
 	private String _simulatorAspectId = null;
 	private List<Model> _models = new ArrayList<Model>();
-	private boolean _stopVisiting = false;
 
 	/**
 	 * @param simulatorModel
@@ -99,8 +98,6 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 	@Override
 	public void visit(Model model)
 	{
-		if(!_stopVisiting)
-		{
 			//we are interested in this model if it has no simulator associated with it or if the simulator associated with it
 			//is the one we are targeting with this visit
 			// SIM TODO
@@ -113,7 +110,6 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 //					_models.add(model);
 //				}
 //			}
-		}
 	}
 
 	@Override

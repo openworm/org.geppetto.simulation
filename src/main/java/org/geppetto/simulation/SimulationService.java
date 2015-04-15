@@ -45,11 +45,13 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
+import org.geppetto.core.features.IVariableWatchFeature;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
@@ -98,14 +100,16 @@ public class SimulationService implements ISimulation
 	public void init(URL simConfigURL, String requestID, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		long start = System.currentTimeMillis();
-		_logger.info("Initializing simulation");
-		GeppettoModel sim = SimulationConfigReader.readConfig(simConfigURL);
-		_simulationListener = simulationListener;
 		long end = System.currentTimeMillis();
-		_logger.info("Reading configuration file, took " + (end - start) + " ms ");
 
 		try
 		{
+			_logger.info("Initializing simulation");
+			GeppettoModel sim = SimulationConfigReader.readConfig(simConfigURL);
+			_simulationListener = simulationListener;
+			end = System.currentTimeMillis();
+			_logger.info("Reading configuration file, took " + (end - start) + " ms ");
+
 			load(sim, requestID);
 		}
 		catch(GeppettoInitializationException e)
@@ -113,6 +117,7 @@ public class SimulationService implements ISimulation
 			_logger.error("Error: ", e);
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
+		
 		end = System.currentTimeMillis();
 		_logger.info("Total initialization time took " + (end - start) + " ms ");
 	}
@@ -126,13 +131,15 @@ public class SimulationService implements ISimulation
 	public void init(String simulationConfig, String requestID, ISimulationCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		long start = System.currentTimeMillis();
-		_logger.info("Initializing simulation");
-		GeppettoModel simulation = SimulationConfigReader.readSimulationConfig(simulationConfig);
-		_simulationListener = simulationListener;
 		long end = System.currentTimeMillis();
 		_logger.info("Reading configuration file, took " + (end - start) + " ms ");
 		try
 		{
+			_logger.info("Initializing simulation");
+			GeppettoModel simulation = SimulationConfigReader.readSimulationConfig(simulationConfig);
+			_simulationListener = simulationListener;
+			end = System.currentTimeMillis();
+			_logger.info("Reading configuration file, took " + (end - start) + " ms ");
 			load(simulation, requestID);
 		}
 		catch(GeppettoInitializationException e)
@@ -140,6 +147,7 @@ public class SimulationService implements ISimulation
 			_logger.error("Error: ", e);
 			throw new GeppettoInitializationException("Error Loading Simulation Model");
 		}
+		
 		end = System.currentTimeMillis();
 		_logger.info("Total initialization time took " + (end - start) + " ms ");
 	}

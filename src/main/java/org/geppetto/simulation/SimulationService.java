@@ -341,7 +341,7 @@ public class SimulationService implements ISimulation
 				v.setName(simulatorModel.getParentAspect().getId());
 
 				vars.add(v);
-				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
+				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
 			}
 		}
 
@@ -393,7 +393,7 @@ public class SimulationService implements ISimulation
 					}
 				}
 				IVariableWatchFeature watchFeature =
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature!=null){
 					watchFeature.addWatchVariables(variableNames);
 				}
@@ -418,7 +418,7 @@ public class SimulationService implements ISimulation
 			if(simulator != null)
 			{
 				IVariableWatchFeature watchFeature = 
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature !=null){
 					watchFeature.startWatch();
 				}
@@ -445,7 +445,7 @@ public class SimulationService implements ISimulation
 			{
 				// stop watch and reset state tree for variable watch for each simulator
 				IVariableWatchFeature watchFeature = 
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature !=null){
 					watchFeature.stopWatch();
 				}
@@ -470,7 +470,7 @@ public class SimulationService implements ISimulation
 			if(simulator != null)
 			{
 				IVariableWatchFeature watchFeature =
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIALE_WATCH_FEATURE));
+						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature!=null){
 					watchFeature.clearWatchVariables();
 				}

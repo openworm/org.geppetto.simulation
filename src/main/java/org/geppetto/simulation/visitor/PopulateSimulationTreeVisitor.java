@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.features.ISimulationTreeFeature;
+import org.geppetto.core.features.IWatchableVariableListFeature;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
@@ -82,7 +82,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			try
 			{
 				if(model!=null){
-					((ISimulationTreeFeature) model.getFeature(GeppettoFeature.VARIABLE_LIST_FEATURE)).populateSimulationTree(node);
+					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariablea(node);
 				}
 			}
 			catch(ModelInterpreterException e)
@@ -92,7 +92,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			
 			//FIXME: It it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
 			this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
-			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.WATCH_TREE)));
+			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.SIMULATION_TREE)));
 			
 			Map<String, EntityNode> mapping = (Map<String, EntityNode>) ((ModelWrapper) node.getModel()).getModel("entitiesMapping");
 			EntityNode entityNode = mapping.get(node.getParent().getId());
@@ -102,7 +102,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 		 		    
 		 		   for (AspectNode aspectNode : entry.getValue().getAspects()){
 						if (aspectNode.getId() == node.getId()){
-							this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.WATCH_TREE));
+							this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
 						}
 		 		   }	
 				}

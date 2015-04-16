@@ -54,6 +54,7 @@ import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.state.visitors.IterateWatchableVariableListVisitor;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulation;
@@ -84,7 +85,7 @@ public class SimulationService implements ISimulation
 	private final SessionContext _sessionContext = new SessionContext();
 	private SimulationThread _simulationThread;
 	private ISimulationCallbackListener _simulationListener;
-	private List<WatchList> _watchLists = new ArrayList<WatchList>();
+//	private List<WatchList> _watchLists = new ArrayList<WatchList>();
 	private boolean _watching = false;
 	private List<URL> _scripts = new ArrayList<URL>();
 
@@ -171,11 +172,11 @@ public class SimulationService implements ISimulation
 
 		// clear watch lists
 		this.clearWatchLists();
-		if(_watching)
-		{
-			// stop the watching - will cause all previous stored watch values to be flushed
-			this.stopWatch();
-		}
+//		if(_watching)
+//		{
+//			// stop the watching - will cause all previous stored watch values to be flushed
+//			this.stopWatch();
+//		}
 
 		_sessionContext.setSimulation(simulation);
 
@@ -299,20 +300,11 @@ public class SimulationService implements ISimulation
 	/**
 	 * Gets the list of all watchable variables in a give simulation
 	 */
-	@Override
-	public VariableList listWatchableVariables()
-	{
-		return this.listVariablesHelper(true);
-	}
-
-	/**
-	 * Gets the list of all forceable variables in a give simulation
-	 */
-	@Override
-	public VariableList listForceableVariables()
-	{
-		return this.listVariablesHelper(false);
-	}
+//	@Override
+//	public VariableList listWatchableVariables()
+//	{
+//		return this.listVariablesHelper(true);
+//	}
 
 	/**
 	 * Fetches variables from simulators
@@ -321,44 +313,88 @@ public class SimulationService implements ISimulation
 	 *            specifies is the helper should fetch watch- or force-able variables
 	 * @return
 	 */
-	public VariableList listVariablesHelper(boolean isWatch)
-	{
-		VariableList varsList = new VariableList();
-		List<AVariable> vars = new ArrayList<AVariable>();
-
-		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
-		{
-			ISimulator simulator = _sessionContext.getSimulators().get(simulatorModel);
-			if(simulator != null)
-			{
-				SimpleVariable v = new SimpleVariable();
-				v.setAspect("aspect");
-				v.setName(simulatorModel.getParentAspect().getId());
-
-				vars.add(v);
-				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
-			}
-		}
-
-		varsList.setVariables(vars);
-
-		return varsList;
-	}
+//	public VariableList listVariablesHelper(boolean isWatch)
+//	{
+//		VariableList varsList = new VariableList();
+//		List<AVariable> vars = new ArrayList<AVariable>();
+//
+//		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
+//		{
+//			ISimulator simulator = _sessionContext.getSimulators().get(simulatorModel);
+//			if(simulator != null)
+//			{
+//				SimpleVariable v = new SimpleVariable();
+//				v.setAspect("aspect");
+//				v.setName(simulatorModel.getParentAspect().getId());
+//
+//				vars.add(v);
+//				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
+//			}
+//		}
+//
+//		varsList.setVariables(vars);
+//
+//		return varsList;
+//	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#addWatchLists(java.util.List)
 	 */
+//	@Override
+//	public void addWatchLists(List<WatchList> lists) throws GeppettoExecutionException, GeppettoInitializationException
+//	{
+//		// add to local container
+//		_watchLists.addAll(lists);
+//
+//		// iterate through aspects and set variables to be watched for each
+//		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
+//		{
+//
+//			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
+//
+//			if(simulator != null)
+//			{
+//				List<String> variableNames = new ArrayList<String>();
+//
+//				for(WatchList list : lists)
+//				{
+//					for(String varPath : list.getVariablePaths())
+//					{
+//
+//						for(Model model : _sessionContext.getModelsFromSimulator(simulatorModel))
+//						{
+//							// A variable watch belongs to a specific simulator if the simulator
+//							// is responsible for the specific model where this variable comes from
+//							// The instance path here is used to perform this check
+//							// FIXME: The check was commented as it doesn't work in case subentities are extracted
+//							// e.g. "c302.ADAL_0.electrical.a".startsWith("c302.electrical")==FALSE
+//							// The check has to be more sophisticated and we should have a mapping of what
+//							// simulator is responsible for what subentities
+//							// if(varPath.startsWith(model.getInstancePath()))
+//							// {
+//							variableNames.add(varPath);
+//							// }
+//						}
+//					}
+//				}
+//				IVariableWatchFeature watchFeature =
+//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+//				if(watchFeature!=null){
+//					watchFeature.addWatchVariables(variableNames);
+//				}
+//			}
+//		}
+//	}
+	
 	@Override
-	public void addWatchLists(List<WatchList> lists) throws GeppettoExecutionException, GeppettoInitializationException
-	{
-		// add to local container
-		_watchLists.addAll(lists);
-
+	public void addWatchLists(List<WatchList> lists) throws GeppettoExecutionException, GeppettoInitializationException{
+		IterateWatchableVariableListVisitor iterateWatchableVariableListVisitor = new IterateWatchableVariableListVisitor(lists);
+		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
+		
 		// iterate through aspects and set variables to be watched for each
-		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
-		{
+		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet()){
 
 			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
 
@@ -395,30 +431,32 @@ public class SimulationService implements ISimulation
 			}
 		}
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#startWatch()
 	 */
-	@Override
+//	@Override
 	public void startWatch()
 	{
-		// set local watch flag
-		_watching = true;
-
-		// iterate through aspects and instruct them to start watching
-		for(ISimulator simulator : _sessionContext.getSimulators().values())
-		{
-			if(simulator != null)
-			{
-				IVariableWatchFeature watchFeature = 
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-				if(watchFeature !=null){
-					watchFeature.startWatch();
-				}
-			}
-		}
+		String r = "r";
+		r.toString();
+	//	 set local watch flag
+		//_watching = true;
+//
+//		// iterate through aspects and instruct them to start watching
+//		for(ISimulator simulator : _sessionContext.getSimulators().values())
+//		{
+//			if(simulator != null)
+//			{
+//				IVariableWatchFeature watchFeature = 
+//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+//				if(watchFeature !=null){
+//					watchFeature.startWatch();
+//				}
+//			}
+//		}
 	}
 
 	/*
@@ -426,27 +464,27 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#stopWatch()
 	 */
-	@Override
-	public void stopWatch()
-	{
-		// set local watch flag
-		_watching = false;
-
-		// iterate through aspects and instruct them to stop watching
-		for(ISimulator simulator : _sessionContext.getSimulators().values())
-		{
-
-			if(simulator != null)
-			{
-				// stop watch and reset state tree for variable watch for each simulator
-				IVariableWatchFeature watchFeature = 
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-				if(watchFeature !=null){
-					watchFeature.stopWatch();
-				}
-			}
-		}
-	}
+//	@Override
+//	public void stopWatch()
+//	{
+//		// set local watch flag
+//		_watching = false;
+//
+//		// iterate through aspects and instruct them to stop watching
+//		for(ISimulator simulator : _sessionContext.getSimulators().values())
+//		{
+//
+//			if(simulator != null)
+//			{
+//				// stop watch and reset state tree for variable watch for each simulator
+//				IVariableWatchFeature watchFeature = 
+//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+//				if(watchFeature !=null){
+//					watchFeature.stopWatch();
+//				}
+//			}
+//		}
+//	}
 
 	/*
 	 * (non-Javadoc)
@@ -457,15 +495,14 @@ public class SimulationService implements ISimulation
 	public void clearWatchLists()
 	{
 		// stop watching - wills top all simulators and clear watch data for each
-		this.stopWatch();
+		//this.stopWatch();
 
 		// instruct aspects to clear watch variables
 		for(ISimulator simulator : _sessionContext.getSimulators().values())
 		{
 			if(simulator != null)
 			{
-				IVariableWatchFeature watchFeature =
-						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+				IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 				if(watchFeature!=null){
 					watchFeature.clearWatchVariables();
 				}
@@ -473,7 +510,7 @@ public class SimulationService implements ISimulation
 		}
 
 		// clear locally stored watch lists
-		_watchLists.clear();
+		//_watchLists.clear();
 	}
 
 	/*
@@ -481,11 +518,11 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getWatchLists()
 	 */
-	@Override
-	public List<WatchList> getWatchLists()
-	{
-		return _watchLists;
-	}
+//	@Override
+//	public List<WatchList> getWatchLists()
+//	{
+//		return _watchLists;
+//	}
 
 	/*
 	 * (non-Javadoc)

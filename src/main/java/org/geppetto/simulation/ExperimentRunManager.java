@@ -83,7 +83,7 @@ public class ExperimentRunManager implements IExperimentRunManager
 	{
 		try
 		{
-			ExperimentRun experimentRun = new ExperimentRun(getService(IGeppettoDataManager.class.getName()), experiment);
+			final ExperimentRun experimentRun = new ExperimentRun(getService(IGeppettoDataManager.class.getName()), experiment);
 			experiment.setStatus(ExperimentStatus.RUNNING);
 			IUser user = getUserForExperiment(experiment);
 			synchronized(this)
@@ -93,6 +93,17 @@ public class ExperimentRunManager implements IExperimentRunManager
 			synchronized(experimentRuns)
 			{
 				experimentRuns.add(experimentRun);
+				// TODO: we should define a thread pool logic here
+				new Thread(new Runnable()
+				{
+					
+					@Override
+					public void run()
+					{
+						experimentRun.run();
+						
+					}
+				}).start();;
 			}
 		}
 		catch(GeppettoInitializationException e)

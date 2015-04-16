@@ -32,8 +32,15 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.data.IGeppettoDataManager;
+import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.simulator.ISimulator;
 
 public class ExperimentRun
 {
@@ -41,11 +48,32 @@ public class ExperimentRun
 	private IGeppettoDataManager dataManager;
 
 	private IExperiment experiment;
+	
+	private List<ISimulator> simulatorServices = new ArrayList<>();
+	
+	private List<IConversion> conversionServices = new ArrayList<>();
 
 	public ExperimentRun(IGeppettoDataManager dataManager, IExperiment experiment)
 	{
 		this.dataManager = dataManager;
 		this.experiment = experiment;
+		init(experiment);
+	}
+	
+	private void init(IExperiment experiment) {
+		List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
+		for (IAspectConfiguration aspectConfig : aspectConfigs) {
+			ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
+			// TODO: copy from CreateSimulationServices.visit()
+			// TODO: copy from LoadSimulationVisitor.visit()
+			// TODO: IModel,... see the diagram
+
+		}
+	}
+	
+	protected void run() {
+		// TODO: see SimulationVisitor
+		//  
 	}
 
 }

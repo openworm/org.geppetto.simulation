@@ -435,60 +435,6 @@ public class SimulationService implements ISimulation
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#startWatch()
-	 */
-//	@Override
-	public void startWatch()
-	{
-		String r = "r";
-		r.toString();
-	//	 set local watch flag
-		//_watching = true;
-//
-//		// iterate through aspects and instruct them to start watching
-//		for(ISimulator simulator : _sessionContext.getSimulators().values())
-//		{
-//			if(simulator != null)
-//			{
-//				IVariableWatchFeature watchFeature = 
-//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-//				if(watchFeature !=null){
-//					watchFeature.startWatch();
-//				}
-//			}
-//		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#stopWatch()
-	 */
-//	@Override
-//	public void stopWatch()
-//	{
-//		// set local watch flag
-//		_watching = false;
-//
-//		// iterate through aspects and instruct them to stop watching
-//		for(ISimulator simulator : _sessionContext.getSimulators().values())
-//		{
-//
-//			if(simulator != null)
-//			{
-//				// stop watch and reset state tree for variable watch for each simulator
-//				IVariableWatchFeature watchFeature = 
-//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-//				if(watchFeature !=null){
-//					watchFeature.stopWatch();
-//				}
-//			}
-//		}
-//	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#clearWatchLists()
 	 */
 	@Override
@@ -512,17 +458,6 @@ public class SimulationService implements ISimulation
 		// clear locally stored watch lists
 		//_watchLists.clear();
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#getWatchLists()
-	 */
-//	@Override
-//	public List<WatchList> getWatchLists()
-//	{
-//		return _watchLists;
-//	}
 
 	/*
 	 * (non-Javadoc)

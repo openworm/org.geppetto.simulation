@@ -136,7 +136,6 @@ public class RecordingsSimulatorTest
 //		variablesToWatch.add("Entity.Aspect.SimulationTree.P.neuron0.ge");
 //		variablesToWatch.add("Entity.Aspect.SimulationTree.P.neuron0.gi");
 //		simulator.addWatchVariables(variablesToWatch);
-//		simulator.startWatch();
 //		runtime.addChild(entity);
 //		entity.addChild(aspectNode);
 //		simulator.simulate(null,aspectNode);

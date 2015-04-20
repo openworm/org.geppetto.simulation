@@ -312,7 +312,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 	public static List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
 	{
 		List<IModelFormat> result = new ArrayList<IModelFormat>();
-		if(formats!=null){
+		if(formats!=null & formats2!=null){
 			for(IModelFormat format : formats)
 			{
 				for(IModelFormat format2 : formats2)

@@ -44,7 +44,6 @@ import ncsa.hdf.utils.SetNatives;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
-import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;

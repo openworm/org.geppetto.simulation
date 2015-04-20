@@ -82,7 +82,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			try
 			{
 				if(model!=null){
-					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariablea(node);
+					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariables(node);
 				}
 			}
 			catch(ModelInterpreterException e)

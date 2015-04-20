@@ -61,6 +61,7 @@ import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
+import org.geppetto.simulation.visitor.SetParametersVisitor;
 import org.geppetto.simulation.visitor.WriteModelVisitor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -617,5 +618,15 @@ public class SimulationService implements ISimulation
 		//Read returned value
 		
 		return "";
+	}
+
+	@Override
+	public boolean setParameters(String model, Map<String, String> parameters) {
+		//TODO: Take code in visitor and put here instead once AspectConfiguration 
+		//in in place. We will be able to get modelinterpreter from there instead
+		//of having to use visitor to call setParameter of model services.
+		SetParametersVisitor parameterVisitor = new SetParametersVisitor(_simulationListener,parameters, model);
+
+		return _sessionContext.getRuntimeTreeRoot().apply(parameterVisitor);
 	}	
 }

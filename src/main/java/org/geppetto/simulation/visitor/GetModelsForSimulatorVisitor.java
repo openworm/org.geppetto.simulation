@@ -77,7 +77,6 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 	private Simulator _simulator = null;
 	private String _simulatorAspectId = null;
 	private List<Model> _models = new ArrayList<Model>();
-	private boolean _stopVisiting = false;
 
 	/**
 	 * @param simulatorModel
@@ -98,18 +97,15 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 	@Override
 	public void visit(Model model)
 	{
-		if(!_stopVisiting)
+		//we are interested in this model if it has no simulator associated with it or if the simulator associated with it
+		//is the one we are targeting with this visit
+		if(model.getParentAspect().getSimulator() == null || model.getParentAspect().getSimulator().equals(_simulator))
 		{
-			//we are interested in this model if it has no simulator associated with it or if the simulator associated with it
-			//is the one we are targeting with this visit
-			if(model.getParentAspect().getSimulator() == null || model.getParentAspect().getSimulator().equals(_simulator))
+			//we are interested in this model if it has no simulator associated with it but its aspect id
+			//is the same that as the aspect id which contains the simulator we are targeting with this visit
+			if(model.getParentAspect().getId().equalsIgnoreCase(_simulatorAspectId))
 			{
-				//we are interested in this model if it has no simulator associated with it but its aspect id
-				//is the same that as the aspect id which contains the simulator we are targeting with this visit
-				if(model.getParentAspect().getId().equalsIgnoreCase(_simulatorAspectId))
-				{
-					_models.add(model);
-				}
+				_models.add(model);
 			}
 		}
 	}
@@ -117,17 +113,20 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 	@Override
 	public void visit(Aspect aspect)
 	{
-		if(!_stopVisiting && aspect.getSimulator()!=null)
+		// NOTE: the if statements in this method are not combined to make it easier to understand the logic
+		
+		// Let's check the simulator is set (not null) otherwise we don't need to fetch models
+		// as the aspect that doens't need to be simulated.
+		if(aspect.getSimulator()!=null)
 		{
+			// Let's check it's not the same simulator as the parent entity the visitor was applied to.
 			if(!aspect.getSimulator().equals(_simulator))
 			{
+				// If we find another aspect in a child entity that has a simulator for the same aspect
+				// we return without fetching models that fall in the inner simulator scope.
 				if(aspect.getId().equals(_simulatorAspectId))
 				{
-					//if we find another aspect further down the hierarchy which has a simulator
-					//for the same aspect then we stop visiting as any other model that we 
-					//were to find from this moment on would fall in this simulator scope
-					//and out of the scope we are visiting
-					_stopVisiting = true;
+					return;
 				}
 			}
 			super.visit(aspect);

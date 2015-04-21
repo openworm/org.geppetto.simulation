@@ -39,22 +39,21 @@ import java.util.List;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.IGeppettoDataManager;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.simulation.IExperimentRunManager;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
-public class ExperimentRunManager implements IExperimentRunManager
+public class ExperimentRunManager implements IExperimentRunManager, IExperimentListener
 {
 	private Map<IUser, List<IExperiment>> queue = new LinkedHashMap<>();
 
 	private List<ExperimentRun> experimentRuns = new ArrayList<>();
+
+	private ProjectManager projectManager = new ProjectManager();
 
 	public ExperimentRunManager()
 	{
@@ -76,6 +75,7 @@ public class ExperimentRunManager implements IExperimentRunManager
 
 	public boolean checkExperiment(IExperiment experiment)
 	{
+		// TODO
 		return true;
 	}
 
@@ -83,7 +83,8 @@ public class ExperimentRunManager implements IExperimentRunManager
 	{
 		try
 		{
-			ExperimentRun experimentRun = new ExperimentRun(getService(IGeppettoDataManager.class.getName()), experiment);
+			ExperimentRun experimentRun = new ExperimentRun(DataManagerHelper.getDataManager(), experiment);
+			experimentRun.addExperimentListener(this);
 			experiment.setStatus(ExperimentStatus.RUNNING);
 			IUser user = getUserForExperiment(experiment);
 			synchronized(this)
@@ -103,13 +104,14 @@ public class ExperimentRunManager implements IExperimentRunManager
 
 	private void loadExperiments() throws GeppettoInitializationException
 	{
-		IGeppettoDataManager dataManager = getService(IGeppettoDataManager.class.getName());
+		IGeppettoDataManager dataManager = DataManagerHelper.getDataManager();
 		List<? extends IUser> users = dataManager.getAllUsers();
 		for(IUser user : users)
 		{
 			List<? extends IGeppettoProject> projects = dataManager.getGeppettoProjectsForUser(user.getLogin());
 			for(IGeppettoProject project : projects)
 			{
+				projectManager.loadProject(project);
 				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
 				addExperimentsToQueue(user, experiments, ExperimentStatus.RUNNING);
 				addExperimentsToQueue(user, experiments, ExperimentStatus.QUEUED);
@@ -119,20 +121,6 @@ public class ExperimentRunManager implements IExperimentRunManager
 
 	private synchronized IUser getUserForExperiment(IExperiment experiment) throws GeppettoInitializationException
 	{
-		// IGeppettoDataManager dataManager = getService(IGeppettoDataManager.class.getName());
-		// List<? extends IUser> users = dataManager.getAllUsers();
-		// for(IUser user : users)
-		// {
-		// List<? extends IGeppettoProject> projects = dataManager.getGeppettoProjectsForUser(user.getLogin());
-		// for(IGeppettoProject project : projects)
-		// {
-		// List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
-		// if(experiments.contains(experiment))
-		// {
-		// return user;
-		// }
-		// }
-		// }
 		for(Map.Entry<IUser, List<IExperiment>> experimentEntry : queue.entrySet())
 		{
 			if(experimentEntry.getValue().contains(experiment))
@@ -161,40 +149,40 @@ public class ExperimentRunManager implements IExperimentRunManager
 		}
 	}
 
-	/**
-	 * A method to get a service of a given type
-	 * 
-	 * @param type
-	 * @return
-	 * @throws InvalidSyntaxException
-	 */
-	private IGeppettoDataManager getService(String type) throws GeppettoInitializationException
+	private IGeppettoProject getProjectForExperiment(IUser user, IExperiment experiment)
 	{
-		BundleContext bc = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
+		List<? extends IGeppettoProject> projects = user.getGeppettoProjects();
+		for(IGeppettoProject project : projects)
+		{
+			if(project.getExperiments().contains(experiment))
+			{
+				return project;
+			}
+		}
+		return null;
+	}
 
-		IGeppettoDataManager service = null;
-		ServiceReference<?>[] sr;
+	@Override
+	public void experimentRunDone(ExperimentRun experimentRun, IExperiment experiment)
+	{
+		experimentRun.removeExperimentListener(this);
 		try
 		{
-			sr = bc.getServiceReferences(type, null);
-		}
-		catch(InvalidSyntaxException e)
-		{
-			throw new GeppettoInitializationException(e);
-		}
-		if(sr != null && sr.length > 0)
-		{
-			service = (IGeppettoDataManager) bc.getService(sr[0]);
-			for(ServiceReference<?> s : sr)
+			IUser user = getUserForExperiment(experiment);
+			if(user != null)
 			{
-				if(!((IGeppettoDataManager) bc.getService(s)).isDefault())
+				queue.get(user).remove(experiment);
+				IGeppettoProject project = getProjectForExperiment(user, experiment);
+				if(project != null)
 				{
-					service = (IGeppettoDataManager) bc.getService(s);
+					projectManager.closeProject(project);
 				}
 			}
 		}
-
-		return service;
+		catch(GeppettoInitializationException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 }

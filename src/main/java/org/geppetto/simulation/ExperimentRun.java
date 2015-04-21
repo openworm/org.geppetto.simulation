@@ -42,7 +42,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 
-public class ExperimentRun
+public class ExperimentRun implements ISimulatorCallback
 {
 
 	private IGeppettoDataManager dataManager;
@@ -53,11 +53,23 @@ public class ExperimentRun
 
 	private List<IConversion> conversionServices = new ArrayList<>();
 
+	private List<IExperimentListener> experimentListeners = new ArrayList<>();
+
 	public ExperimentRun(IGeppettoDataManager dataManager, IExperiment experiment)
 	{
 		this.dataManager = dataManager;
 		this.experiment = experiment;
 		init(experiment);
+	}
+
+	protected void addExperimentListener(IExperimentListener listener)
+	{
+		experimentListeners.add(listener);
+	}
+
+	protected void removeExperimentListener(IExperimentListener listener)
+	{
+		experimentListeners.remove(listener);
 	}
 
 	private void init(IExperiment experiment)
@@ -66,8 +78,37 @@ public class ExperimentRun
 		for(IAspectConfiguration aspectConfig : aspectConfigs)
 		{
 			ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
+			simConfig.getSimulatorId();
+
 			// TODO: copy from CreateSimulationServices.visit()
+			// Outstanding and now what?
+
+			// if(simulatorModel.getConversionServiceId() != null)
+			// {
+			// ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
+			// _sessionContext.getConversions(), _simulationCallBack);
+			// scc.run();
+			// }
+			//
+			// ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
+			// _sessionContext.getSimulators(), _simulationCallBack);
+			// Thread tscs = new Thread(scs);
+			// tscs.start();
+			// try
+			// {
+			// tscs.join();
+			// }
+			// catch(InterruptedException e)
+			// {
+			// _simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+			// }
+			// if(simulatorModel.getSimulatorId() != null)
+			// {
+			// _sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
+			// }
+
 			// TODO: copy from LoadSimulationVisitor.visit()
+
 			// TODO: IModel,... see the diagram
 
 		}
@@ -75,7 +116,23 @@ public class ExperimentRun
 
 	protected void run()
 	{
+		// TODO: run and run
 
+		// and when done, notify about it
+		for(IExperimentListener listener : experimentListeners)
+		{
+			listener.experimentRunDone(this, experiment);
+		}
+	}
+
+	private void storeResults()
+	{
+		// TODO
+	}
+
+	public void release()
+	{
+		// TODO
 	}
 
 }

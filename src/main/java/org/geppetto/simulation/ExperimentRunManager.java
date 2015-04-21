@@ -175,7 +175,21 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 				IGeppettoProject project = getProjectForExperiment(user, experiment);
 				if(project != null)
 				{
-					projectManager.closeProject(project);
+					List<? extends IExperiment> experiments = project.getExperiments();
+					boolean allCompleted = true;
+					for (int i = 0; i < experiments.size() && allCompleted; i++) {
+						allCompleted = experiments.get(i).getStatus() == ExperimentStatus.COMPLETED;
+					}
+					// close the project if all its experiments are completed
+					if (allCompleted) {
+						projectManager.closeProject(project);
+					}
+					RuntimeProject runtimeProject = projectManager.getRuntimeProject(project);
+					// When an experiment run is done we close its experiment unless it happens to be also the active one
+					if(runtimeProject != null && !experiment.equals(runtimeProject.getActiveExperiment()))
+					{
+						runtimeProject.closeExperiment(experiment);
+					}
 				}
 			}
 		}

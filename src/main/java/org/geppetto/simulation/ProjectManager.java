@@ -49,7 +49,16 @@ public class ProjectManager
 
 	public void closeProject(IGeppettoProject project)
 	{
-		projects.remove(project);
+		// Active experiment is cleared when the user closes the project or the session
+		if (projects.get(project) != null) {
+			projects.get(project).setActiveExperiment(null);
+		}
+		
+		projects.remove(project);		
+	}
+	
+	public RuntimeProject getRuntimeProject(IGeppettoProject project) {
+		return projects.get(project);
 	}
 
 }

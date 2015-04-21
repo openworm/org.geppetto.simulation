@@ -42,7 +42,7 @@ public class RuntimeProject
 
 	private IExperiment activeExperiment;
 
-	private Map<IExperiment, RuntimeProject> experimentRuntime = new HashMap<IExperiment, RuntimeProject>();
+	private Map<IExperiment, RuntimeExperiment> experimentRuntime = new HashMap<IExperiment, RuntimeExperiment>();
 
 	public RuntimeProject()
 	{
@@ -50,15 +50,23 @@ public class RuntimeProject
 
 	public void openExperiment(IExperiment experiment)
 	{
-		// TODO
+		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment();
+		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 
 	public void closeExperiment(IExperiment experiment)
 	{
-		// TODO
+		// When an experiment is closed we release it (all the services are cleared and destroyed) and we remove it from the map
+		RuntimeExperiment runtimeExperiment = experimentRuntime.get(experiment);
+		if(runtimeExperiment != null)
+		{
+			runtimeExperiment.release();
+			experimentRuntime.remove(experiment);
+		}
 	}
 
-	public RuntimeProject getRuntimeProject(IExperiment experiment)
+	public RuntimeExperiment getRuntimeExperiment(IExperiment experiment)
 	{
 		return experimentRuntime.get(experiment);
 	}

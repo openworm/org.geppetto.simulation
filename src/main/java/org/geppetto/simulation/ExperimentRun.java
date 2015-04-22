@@ -85,8 +85,8 @@ public class ExperimentRun implements ISimulatorCallback
 
 			// if(simulatorModel.getConversionServiceId() != null)
 			// {
-			// ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
-			// _sessionContext.getConversions(), _simulationCallBack);
+//			 ServiceCreator<ISimulator, IConversion> scc = new ServiceCreator<ISimulator, IConversion>(simConfig.getSimulatorId(), IConversion.class.getName(), simulatorModel,
+//			 _sessionContext.getConversions(), _simulationCallBack);
 			// scc.run();
 			// }
 			//
@@ -109,8 +109,6 @@ public class ExperimentRun implements ISimulatorCallback
 
 			// TODO: copy from LoadSimulationVisitor.visit()
 
-			// TODO: IModel,... see the diagram
-
 		}
 	}
 
@@ -127,12 +125,12 @@ public class ExperimentRun implements ISimulatorCallback
 
 	private void storeResults()
 	{
-		// TODO
+		// TODO: need to figure out the logic here
 	}
 
 	public void release()
 	{
-		// TODO
+		// TODO: need to figure out the logic here
 	}
 
 }

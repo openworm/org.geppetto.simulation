@@ -78,6 +78,10 @@ public class RuntimeProject
 
 	public void setActiveExperiment(IExperiment experiment)
 	{
+		if (activeExperiment != null) {
+			// switching the active experiment requires us to close the currently active one
+			closeExperiment(activeExperiment);
+		}
 		activeExperiment = experiment;
 	}
 

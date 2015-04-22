@@ -43,6 +43,7 @@ public class ProjectManager
 
 	public void loadProject(IGeppettoProject project)
 	{
+		// RuntimeProject is created and populated when loadProject is called
 		RuntimeProject runtimeProject = new RuntimeProject();
 		projects.put(project, runtimeProject);
 	}

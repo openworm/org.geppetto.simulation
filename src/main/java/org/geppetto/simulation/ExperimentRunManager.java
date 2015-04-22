@@ -75,7 +75,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 
 	public boolean checkExperiment(IExperiment experiment)
 	{
-		// TODO
+		// TODO: how should we check?
 		return true;
 	}
 
@@ -111,6 +111,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 			List<? extends IGeppettoProject> projects = dataManager.getGeppettoProjectsForUser(user.getLogin());
 			for(IGeppettoProject project : projects)
 			{
+				// This could be either when the user decides to open a project or when the ExperimentsRunManager queues an Experiment
 				projectManager.loadProject(project);
 				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
 				addExperimentsToQueue(user, experiments, ExperimentStatus.RUNNING);
@@ -180,8 +181,8 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 					for (int i = 0; i < experiments.size() && allCompleted; i++) {
 						allCompleted = experiments.get(i).getStatus() == ExperimentStatus.COMPLETED;
 					}
-					// close the project if all its experiments are completed
 					if (allCompleted) {
+						// close the project when all the user experiments are completed
 						projectManager.closeProject(project);
 					}
 					RuntimeProject runtimeProject = projectManager.getRuntimeProject(project);

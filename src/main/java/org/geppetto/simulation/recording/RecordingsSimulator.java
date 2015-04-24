@@ -49,6 +49,7 @@ import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulation.IRunConfiguration;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
+import org.geppetto.core.simulator.AVariableWatchFeature;
 import org.springframework.stereotype.Service;
 
 /**
@@ -66,6 +67,9 @@ public class RecordingsSimulator extends ASimulator
 	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
 	{
 		super.initialize(models, listener);
+		
+		// add variable watch feature
+		this.addFeature(new AVariableWatchFeature());
 	}
 
 	@Override
@@ -95,17 +99,5 @@ public class RecordingsSimulator extends ASimulator
 		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
 		ServicesRegistry.registerSimulatorService(this, modelFormatList);
 		
-	}
-
-	@Override
-	public boolean isSupported(GeppettoFeature feature) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public IFeature getFeature(GeppettoFeature feature) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

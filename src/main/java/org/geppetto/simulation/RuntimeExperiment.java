@@ -37,6 +37,7 @@ import java.util.Map;
 
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 
 public class RuntimeExperiment
 {
@@ -48,11 +49,16 @@ public class RuntimeExperiment
 	public RuntimeExperiment()
 	{
 		// TODO: figure out how to build the modelInterpreters map
+		// retrieve model interpreters and simulators
+		// TODO: use the GeppettoModel that is in RuntimeProject
+//		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, _simulationListener);
+//		simulation.accept(createServicesVisitor);
+
 	}
 
 	public void release()
 	{
-		// TODO
+		// TODO: release the instantiated services
 	}
 
 }

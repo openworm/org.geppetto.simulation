@@ -32,11 +32,12 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.IExperiment;
 
 public interface IExperimentListener
 {
 
-	void experimentRunDone(ExperimentRun experimentRun, IExperiment experiment);
+	void experimentRunDone(ExperimentRun experimentRun, IExperiment experiment) throws GeppettoExecutionException;
 
 }

@@ -35,6 +35,7 @@ package org.geppetto.simulation;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.IExperiment;
 
 public class RuntimeProject
@@ -44,6 +45,8 @@ public class RuntimeProject
 
 	private Map<IExperiment, RuntimeExperiment> experimentRuntime = new HashMap<IExperiment, RuntimeExperiment>();
 
+	// TODO: store object model for GeppettoModel
+	// TODO: hold GeppettoModel reference and then copy from SimulationService.load - InstancePathVisitor...
 	public RuntimeProject()
 	{
 	}
@@ -55,14 +58,17 @@ public class RuntimeProject
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 
-	public void closeExperiment(IExperiment experiment)
+	public void closeExperiment(IExperiment experiment) throws GeppettoExecutionException
 	{
 		// When an experiment is closed we release it (all the services are cleared and destroyed) and we remove it from the map
-		RuntimeExperiment runtimeExperiment = experimentRuntime.get(experiment);
-		if(runtimeExperiment != null)
+		if(!experimentRuntime.containsKey(experiment) && experimentRuntime.get(experiment) != null)
 		{
-			runtimeExperiment.release();
+			experimentRuntime.get(experiment).release();
 			experimentRuntime.remove(experiment);
+		}
+		else
+		{
+			throw new GeppettoExecutionException("An experiment not having a runtime experiment cannot be closed");
 		}
 	}
 
@@ -76,9 +82,10 @@ public class RuntimeProject
 		return activeExperiment;
 	}
 
-	public void setActiveExperiment(IExperiment experiment)
+	public void setActiveExperiment(IExperiment experiment) throws GeppettoExecutionException
 	{
-		if (activeExperiment != null) {
+		if(activeExperiment != null)
+		{
 			// switching the active experiment requires us to close the currently active one
 			closeExperiment(activeExperiment);
 		}

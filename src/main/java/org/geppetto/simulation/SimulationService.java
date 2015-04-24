@@ -54,7 +54,7 @@ import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
-import org.geppetto.simulation.visitor.CreateSimulationServicesVisitor;
+import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
@@ -180,7 +180,7 @@ public class SimulationService implements ISimulation
 		_sessionContext.setSimulation(simulation);
 
 		// retrieve model interpreters and simulators
-		CreateSimulationServicesVisitor createServicesVisitor = new CreateSimulationServicesVisitor(_sessionContext, _simulationListener);
+		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(_sessionContext, _simulationListener);
 		simulation.accept(createServicesVisitor);
 
 		populateScripts(simulation);

@@ -35,10 +35,16 @@ package org.geppetto.simulation;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.IGeppettoProject;
 
 public class ProjectManager
 {
+	
+	// TODO: implements IProjectManager which would be in core
+	// TODO: autowire IProjectManager into GeppettoMessageInbound
+	// TODO: move getGeppettoModelURL here
+	
 	private Map<IGeppettoProject, RuntimeProject> projects = new LinkedHashMap<>();
 
 	public void loadProject(IGeppettoProject project)
@@ -48,17 +54,22 @@ public class ProjectManager
 		projects.put(project, runtimeProject);
 	}
 
-	public void closeProject(IGeppettoProject project)
+	public void closeProject(IGeppettoProject project) throws GeppettoExecutionException
 	{
-		// Active experiment is cleared when the user closes the project or the session
-		if (projects.get(project) != null) {
-			projects.get(project).setActiveExperiment(null);
+		if(!projects.containsKey(project) && projects.get(project) == null)
+		{
+			throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
 		}
-		
-		projects.remove(project);		
+		if(projects.get(project).getActiveExperiment() != null)
+		{
+			throw new GeppettoExecutionException("A project with an active experiment cannot be closed");
+		}
+
+		projects.remove(project);
 	}
-	
-	public RuntimeProject getRuntimeProject(IGeppettoProject project) {
+
+	public RuntimeProject getRuntimeProject(IGeppettoProject project)
+	{
 		return projects.get(project);
 	}
 

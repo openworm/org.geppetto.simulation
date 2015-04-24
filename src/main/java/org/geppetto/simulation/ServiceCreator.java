@@ -51,7 +51,7 @@ import org.osgi.framework.ServiceReference;
  * Model->IModelInterpreter
  * Simulator->ISimulator
  * 
- * See {@link org.geppetto.simulation.CreateSimulationServicesVisitor} for more info.
+ * See {@link org.geppetto.simulation.CreateModelInterpreterServicesVisitor} for more info.
  * 
  * @author matteocantarelli
  *

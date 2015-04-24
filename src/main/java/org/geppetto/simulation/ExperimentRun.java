@@ -35,14 +35,16 @@ package org.geppetto.simulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.data.IGeppettoDataManager;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 
-public class ExperimentRun implements ISimulatorCallback
+public class ExperimentRun implements ISimulatorCallbackListener
 {
 
 	private IGeppettoDataManager dataManager;
@@ -85,7 +87,7 @@ public class ExperimentRun implements ISimulatorCallback
 
 			// if(simulatorModel.getConversionServiceId() != null)
 			// {
-//			 ServiceCreator<ISimulator, IConversion> scc = new ServiceCreator<ISimulator, IConversion>(simConfig.getSimulatorId(), IConversion.class.getName(), simulatorModel,
+//			 ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simConfig.getSimulatorId(), IConversion.class.getName(), simulatorModel,
 //			 _sessionContext.getConversions(), _simulationCallBack);
 			// scc.run();
 			// }
@@ -112,7 +114,7 @@ public class ExperimentRun implements ISimulatorCallback
 		}
 	}
 
-	protected void run()
+	protected void run() throws GeppettoExecutionException
 	{
 		// TODO: run and run
 
@@ -130,7 +132,21 @@ public class ExperimentRun implements ISimulatorCallback
 
 	public void release()
 	{
-		// TODO: need to figure out the logic here
+		// TODO: release the simulators once they are done
+	}
+
+	@Override
+	public void endOfSteps(String message)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void stateTreeUpdated() throws GeppettoExecutionException
+	{
+		// TODO Auto-generated method stub
+		
 	}
 
 }

@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.IGeppettoDataManager;
@@ -75,7 +76,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 
 	public boolean checkExperiment(IExperiment experiment)
 	{
-		// TODO: how should we check?
+		// TODO: needs to decide if an experiment should be running or not
 		return true;
 	}
 
@@ -164,7 +165,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	}
 
 	@Override
-	public void experimentRunDone(ExperimentRun experimentRun, IExperiment experiment)
+	public void experimentRunDone(ExperimentRun experimentRun, IExperiment experiment) throws GeppettoExecutionException
 	{
 		experimentRun.removeExperimentListener(this);
 		try
@@ -176,20 +177,20 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 				IGeppettoProject project = getProjectForExperiment(user, experiment);
 				if(project != null)
 				{
-					List<? extends IExperiment> experiments = project.getExperiments();
-					boolean allCompleted = true;
-					for (int i = 0; i < experiments.size() && allCompleted; i++) {
-						allCompleted = experiments.get(i).getStatus() == ExperimentStatus.COMPLETED;
-					}
-					if (allCompleted) {
-						// close the project when all the user experiments are completed
-						projectManager.closeProject(project);
-					}
 					RuntimeProject runtimeProject = projectManager.getRuntimeProject(project);
 					// When an experiment run is done we close its experiment unless it happens to be also the active one
 					if(runtimeProject != null && !experiment.equals(runtimeProject.getActiveExperiment()))
 					{
 						runtimeProject.closeExperiment(experiment);
+					}
+					List<? extends IExperiment> experiments = project.getExperiments();
+					boolean closeProject = runtimeProject.getActiveExperiment() == null;
+					for (int i = 0; i < experiments.size() && closeProject; i++) {
+						closeProject = experiments.get(i).getStatus() == ExperimentStatus.COMPLETED;
+					}
+					if (closeProject) {
+						// close the project when all the user experiments are completed and none of the experiments is active
+						projectManager.closeProject(project);
 					}
 				}
 			}

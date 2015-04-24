@@ -49,13 +49,14 @@ import org.geppetto.simulation.SessionContext;
  * @author matteocantarelli
  * 
  */
-public class CreateSimulationServicesVisitor extends TraversingVisitor
+public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 {
 
 	private SessionContext _sessionContext;
 	private ISimulationCallbackListener _simulationCallBack;
 
-	public CreateSimulationServicesVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallBack)
+	// TODO: get a Map<String, IModelInterpreter> as a parameter
+	public CreateModelInterpreterServicesVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallBack)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_sessionContext = sessionContext;
@@ -71,6 +72,9 @@ public class CreateSimulationServicesVisitor extends TraversingVisitor
 	public void visit(Model model)
 	{
 		super.visit(model);
+		// TODO:
+//		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(),
+//				_sessionContext.getModelInterpreters(),_simulationCallBack);
 		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
 				_sessionContext.getModelInterpreters(),_simulationCallBack);
 		Thread t = new Thread(sc);

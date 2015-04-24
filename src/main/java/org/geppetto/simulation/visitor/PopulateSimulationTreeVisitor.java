@@ -37,6 +37,7 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.features.IWatchableVariableListFeature;
+import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
@@ -94,17 +95,22 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
 			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.SIMULATION_TREE)));
 			
-			Map<String, EntityNode> mapping = (Map<String, EntityNode>) ((ModelWrapper) node.getModel()).getModel("entitiesMapping");
-			EntityNode entityNode = mapping.get(node.getParent().getId());
-			if (entityNode == null){
-				for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
-		 		    String key = entry.getKey();
-		 		    
-		 		   for (AspectNode aspectNode : entry.getValue().getAspects()){
-						if (aspectNode.getId() == node.getId()){
-							this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
-						}
-		 		   }	
+			IModel imodel =  node.getModel();
+			if(imodel instanceof ModelWrapper){
+				ModelWrapper wrapper = (ModelWrapper)imodel;
+				Map<String, EntityNode> mapping = (Map<String, EntityNode>) wrapper.getModel("entitiesMapping");
+				mapping.clear();
+				EntityNode entityNode = mapping.get(node.getParent().getId());
+				if (entityNode == null){
+					for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
+						String key = entry.getKey();
+
+						for (AspectNode aspectNode : entry.getValue().getAspects()){
+							if (aspectNode.getId() == node.getId()){
+								this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
+							}
+						}	
+					}
 				}
 			}
 		}

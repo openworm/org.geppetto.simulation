@@ -112,6 +112,9 @@ public class SimulationVisitor extends DefaultStateVisitor
 					// populate visual tree
 					PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationCallBack);
 					node.apply(populateVisualVisitor);
+					
+					PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationCallBack, node.getInstancePath());
+					node.apply(populateSimulationVisitor);
 				}
 
 				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())

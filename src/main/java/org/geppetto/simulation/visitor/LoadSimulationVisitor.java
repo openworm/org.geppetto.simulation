@@ -114,7 +114,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 						{
 							url = this.getClass().getResource(recording);
 						}
-						
+
 						recordings.add(url);
 					}
 				}

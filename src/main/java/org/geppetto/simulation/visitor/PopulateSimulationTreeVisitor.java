@@ -94,12 +94,11 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			//FIXME: It it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
 			this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
 			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.SIMULATION_TREE)));
-			
+						
 			IModel imodel =  node.getModel();
 			if(imodel instanceof ModelWrapper){
 				ModelWrapper wrapper = (ModelWrapper)imodel;
 				Map<String, EntityNode> mapping = (Map<String, EntityNode>) wrapper.getModel("entitiesMapping");
-				mapping.clear();
 				EntityNode entityNode = mapping.get(node.getParent().getId());
 				if (entityNode == null){
 					for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {

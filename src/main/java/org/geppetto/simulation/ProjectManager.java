@@ -36,15 +36,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IGeppettoProject;
+import org.geppetto.core.simulation.IProjectManager;
 
-public class ProjectManager
+public class ProjectManager implements IProjectManager
 {
-	
-	// TODO: implements IProjectManager which would be in core
-	// TODO: autowire IProjectManager into GeppettoMessageInbound
-	// TODO: move getGeppettoModelURL here
-	
+
 	private Map<IGeppettoProject, RuntimeProject> projects = new LinkedHashMap<>();
 
 	public void loadProject(IGeppettoProject project)
@@ -71,6 +69,23 @@ public class ProjectManager
 	public RuntimeProject getRuntimeProject(IGeppettoProject project)
 	{
 		return projects.get(project);
+	}
+
+	public String getGeppettoModelUrl(IGeppettoProject project)
+	{
+		if(project != null)
+		{
+			// this could be null when loaded from a json that may not include the model part
+			if(project.getGeppettoModel() == null)
+			{
+				project = DataManagerHelper.getDataManager().getGeppettoProjectById(project.getId());
+			}
+			if(project.getGeppettoModel() != null)
+			{
+				return project.getGeppettoModel().getUrl();
+			}
+		}
+		return "";
 	}
 
 }

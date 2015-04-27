@@ -42,13 +42,23 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+<<<<<<< HEAD
 import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
+=======
+import org.geppetto.core.features.IVariableWatchFeature;
+>>>>>>> refs/remotes/origin/development
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+<<<<<<< HEAD
 import org.geppetto.core.model.simulation.GeppettoModel;
+=======
+import org.geppetto.core.model.simulation.Simulation;
+import org.geppetto.core.model.simulation.Simulator;
+import org.geppetto.core.model.state.visitors.SerializeUpdateSimulationTreeVisitor;
+>>>>>>> refs/remotes/origin/development
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -60,6 +70,7 @@ import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
+import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.geppetto.simulation.visitor.SetParametersVisitor;
 import org.geppetto.simulation.visitor.WriteModelVisitor;
@@ -78,8 +89,6 @@ public class SimulationService implements ISimulation
 	private final SessionContext _sessionContext = new SessionContext();
 	private SimulationThread _simulationThread;
 	private ISimulationCallbackListener _simulationListener;
-	private List<WatchList> _watchLists = new ArrayList<WatchList>();
-	private boolean _watching = false;
 	private List<URL> _scripts = new ArrayList<URL>();
 
 	/**
@@ -171,11 +180,6 @@ public class SimulationService implements ISimulation
 
 		// clear watch lists
 		this.clearWatchLists();
-		if(_watching)
-		{
-			// stop the watching - will cause all previous stored watch values to be flushed
-			this.stopWatch();
-		}
 
 		_sessionContext.setSimulation(simulation);
 
@@ -292,19 +296,18 @@ public class SimulationService implements ISimulation
 		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
 		return simulationConfig;
 	}
-	
-	public ISimulationCallbackListener getSimulationCallbackListener(){
+
+	public ISimulationCallbackListener getSimulationCallbackListener()
+	{
 		return this._simulationListener;
 	}
 
-	/**
-	 * Gets the list of all watchable variables in a give simulation
-	 */
 	@Override
-	public VariableList listWatchableVariables()
+	public void setWatchedVariables(List<String> watchedVariables) throws GeppettoExecutionException, GeppettoInitializationException
 	{
-		return this.listVariablesHelper(true);
-	}
+		//Update the RunTimeTreeModel
+		SerializeUpdateSimulationTreeVisitor iterateWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor(watchedVariables);
+		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
 
 	/**
 	 * Gets the list of all forceable variables in a give simulation
@@ -457,9 +460,11 @@ public class SimulationService implements ISimulation
 	@Override
 	public void clearWatchLists()
 	{
-		// stop watching - wills top all simulators and clear watch data for each
-		this.stopWatch();
-
+		//Update the RunTimeTreeModel setting watched to false for every node
+		SerializeUpdateSimulationTreeVisitor iterateWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor();
+		iterateWatchableVariableListVisitor.setMode("setWatched");
+		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
+		
 		// instruct aspects to clear watch variables
 //		for(ISimulator simulator : _sessionContext.getSimulators().values())
 //		{
@@ -472,20 +477,6 @@ public class SimulationService implements ISimulation
 //				}
 //			}
 //		}
-
-		// clear locally stored watch lists
-		_watchLists.clear();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#getWatchLists()
-	 */
-	@Override
-	public List<WatchList> getWatchLists()
-	{
-		return _watchLists;
 	}
 
 	/*
@@ -559,7 +550,6 @@ public class SimulationService implements ISimulation
 	public String getSimulatorName()
 	{
 		String simulatorName = "Simulation";
-
 		return simulatorName;
 	}
 
@@ -573,7 +563,6 @@ public class SimulationService implements ISimulation
 	{
 
 		int capacity = this.appConfig.getSimulationCapacity();
-
 		return capacity;
 	}
 
@@ -588,20 +577,20 @@ public class SimulationService implements ISimulation
 	{
 		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener, instancePath);
 		this._sessionContext.getRuntimeTreeRoot().apply(populateModelVisitor);
-		
+
 		String modelTree = "[";
-		for (Map.Entry<String, AspectSubTreeNode> entry : populateModelVisitor.getPopulatedModelTree().entrySet()){
+		for(Map.Entry<String, AspectSubTreeNode> entry : populateModelVisitor.getPopulatedModelTree().entrySet())
+		{
 			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 			entry.getValue().apply(updateClientVisitor);
-			modelTree +=  "{\"aspectInstancePath\":" + '"' +  entry.getKey() + '"' + ",\"modelTree\":{" + updateClientVisitor.getSerializedTree() + "} },";
+			modelTree += "{\"aspectInstancePath\":" + '"' + entry.getKey() + '"' + ",\"modelTree\":{" + updateClientVisitor.getSerializedTree() + "} },";
 		}
 		modelTree = modelTree.substring(0, modelTree.length() - 1);
 		modelTree += "]";
 
 		return modelTree;
 	}
-	
-		
+
 	/**
 	 * Takes the id of aspect and the file format and write the model to this format
 	 * 
@@ -614,9 +603,9 @@ public class SimulationService implements ISimulation
 	{
 		WriteModelVisitor writeModelVisitor = new WriteModelVisitor(_simulationListener, instancePath, format);
 		this._sessionContext.getRuntimeTreeRoot().apply(writeModelVisitor);
-		
-		//Read returned value
-		
+
+		// Read returned value
+
 		return "";
 	}
 
@@ -629,4 +618,22 @@ public class SimulationService implements ISimulation
 
 		return _sessionContext.getRuntimeTreeRoot().apply(parameterVisitor);
 	}	
+
+	public String getSimulationTree(String instancePath)
+	{
+		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationListener, instancePath);
+		this._sessionContext.getRuntimeTreeRoot().apply(populateSimulationVisitor);
+
+		String simulationTree = "[";
+		for(Map.Entry<String, AspectSubTreeNode> entry : populateSimulationVisitor.getPopulatedSimulationTree().entrySet())
+		{
+			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+			entry.getValue().apply(updateClientVisitor);
+			simulationTree += "{\"aspectInstancePath\":" + '"' + entry.getKey() + '"' + ",\"simulationTree\":{" + updateClientVisitor.getSerializedTree() + "} },";
+		}
+		simulationTree = simulationTree.substring(0, simulationTree.length() - 1);
+		simulationTree += "]";
+
+		return simulationTree;
+	}
 }

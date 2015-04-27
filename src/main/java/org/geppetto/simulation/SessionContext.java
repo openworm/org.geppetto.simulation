@@ -165,7 +165,7 @@ public class SessionContext
 					for(AspectNode a : ((EntityNode) node).getAspects())
 					{
 						a.flushSubTree(AspectTreeType.VISUALIZATION_TREE);
-						a.flushSubTree(AspectTreeType.WATCH_TREE);
+						a.flushSubTree(AspectTreeType.SIMULATION_TREE);
 					}
 				}
 			}

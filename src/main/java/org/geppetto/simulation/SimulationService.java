@@ -42,23 +42,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.data.model.AVariable;
-import org.geppetto.core.data.model.VariableList;
-import org.geppetto.core.data.model.WatchList;
-import org.geppetto.core.features.IVariableWatchFeature;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
-import org.geppetto.core.model.simulation.Simulation;
-import org.geppetto.core.model.simulation.Simulator;
-import org.geppetto.core.model.state.visitors.SerializeUpdateSimulationTreeVisitor;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
+import org.geppetto.core.model.state.visitors.SerializeUpdateSimulationTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
-import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
+import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
@@ -83,8 +77,6 @@ public class SimulationService implements ISimulation
 	private final SessionContext _sessionContext = new SessionContext();
 	private SimulationThread _simulationThread;
 	private ISimulationCallbackListener _simulationListener;
-	private List<WatchList> _watchLists = new ArrayList<WatchList>();
-	private boolean _watching = false;
 	private List<URL> _scripts = new ArrayList<URL>();
 
 	/**
@@ -304,154 +296,28 @@ public class SimulationService implements ISimulation
 		//Update the RunTimeTreeModel
 		SerializeUpdateSimulationTreeVisitor iterateWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor(watchedVariables);
 		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
-	}
-	
-	/**
-	 * Gets the list of all forceable variables in a give simulation
-	 */
-	@Override
-	public VariableList listForceableVariables()
-	{
-		return this.listVariablesHelper(false);
-	}
 
-	/**
-	 * Fetches variables from simulators
-	 * 
-	 * @param isWatch
-	 *            specifies is the helper should fetch watch- or force-able variables
-	 * @return
-	 */
-	public VariableList listVariablesHelper(boolean isWatch)
-	{
-		VariableList varsList = new VariableList();
-		List<AVariable> vars = new ArrayList<AVariable>();
-
+		//SIM TODO
+		//Call the function for each simulator
 //		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
 //		{
-//			ISimulator simulator = _sessionContext.getSimulators().get(simulatorModel);
-//			if(simulator != null)
-//			{
-//				SimpleVariable v = new SimpleVariable();
-//				v.setAspect("aspect");
-//				v.setName(simulatorModel.getParentAspect().getId());
-//
-//				vars.add(v);
-//				vars.addAll(isWatch ? ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE)).getWatcheableVariables().getVariables() : simulator.getForceableVariables().getVariables());
-//			}
-//		}
-
-		varsList.setVariables(vars);
-
-		return varsList;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#addWatchLists(java.util.List)
-	 */
-	@Override
-	public void addWatchLists(List<WatchList> lists) throws GeppettoExecutionException, GeppettoInitializationException
-	{
-		// add to local container
-		_watchLists.addAll(lists);
-
-//		// iterate through aspects and set variables to be watched for each
-//		for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
-//		{
-//
 //			ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
-//
-//			if(simulator != null)
+//			IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+//			if(watchFeature != null)
 //			{
-//				List<String> variableNames = new ArrayList<String>();
-//
-//				for(WatchList list : lists)
-//				{
-//					for(String varPath : list.getVariablePaths())
-//					{
-//
-//						for(Model model : _sessionContext.getModelsFromSimulator(simulatorModel))
-//						{
-//							// A variable watch belongs to a specific simulator if the simulator
-//							// is responsible for the specific model where this variable comes from
-//							// The instance path here is used to perform this check
-//							// FIXME: The check was commented as it doesn't work in case subentities are extracted
-//							// e.g. "c302.ADAL_0.electrical.a".startsWith("c302.electrical")==FALSE
-//							// The check has to be more sophisticated and we should have a mapping of what
-//							// simulator is responsible for what subentities
-//							// if(varPath.startsWith(model.getInstancePath()))
-//							// {
-//							variableNames.add(varPath);
-//							// }
-//						}
-//					}
-//				}
-//				IVariableWatchFeature watchFeature =
-//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-//				if(watchFeature!=null){
-//					watchFeature.addWatchVariables(variableNames);
-//				}
+//				watchFeature.setWatchedVariables(watchedVariables);
 //			}
 //		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#startWatch()
-	 */
-	public void startWatch()
-	{
-		// set local watch flag
-		_watching = true;
 
-//		// iterate through aspects and instruct them to start watching
-//		for(ISimulator simulator : _sessionContext.getSimulators().values())
-//		{
-//			if(simulator != null)
-//			{
-//				IVariableWatchFeature watchFeature = 
-//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-//				if(watchFeature !=null){
-//					watchFeature.startWatch();
-//				}
-//			}
-//		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#stopWatch()
-	 */
-	public void stopWatch()
-	{
-		// set local watch flag
-		_watching = false;
-
-		// iterate through aspects and instruct them to stop watching
-//		for(ISimulator simulator : _sessionContext.getSimulators().values())
-//		{
-//
-//			if(simulator != null)
-//			{
-//				// stop watch and reset state tree for variable watch for each simulator
-//				IVariableWatchFeature watchFeature = 
-//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-//				if(watchFeature !=null){
-//					watchFeature.stopWatch();
-//				}
-//			}
-//		}
-	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#clearWatchLists()
 	 */
+	@Override
 	public void clearWatchLists()
 	{
 		//Update the RunTimeTreeModel setting watched to false for every node
@@ -459,18 +325,20 @@ public class SimulationService implements ISimulation
 		iterateWatchableVariableListVisitor.setMode("setWatched");
 		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
 		
+		//SIM TODO
 		// instruct aspects to clear watch variables
 //		for(ISimulator simulator : _sessionContext.getSimulators().values())
 //		{
 //			if(simulator != null)
 //			{
-//				IVariableWatchFeature watchFeature =
-//						((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-//				if(watchFeature!=null){
+//				IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+//				if(watchFeature != null)
+//				{
 //					watchFeature.clearWatchVariables();
 //				}
 //			}
 //		}
+
 	}
 
 	/*

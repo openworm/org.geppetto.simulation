@@ -42,23 +42,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
-<<<<<<< HEAD
 import org.geppetto.core.data.model.AVariable;
 import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.data.model.WatchList;
-=======
 import org.geppetto.core.features.IVariableWatchFeature;
->>>>>>> refs/remotes/origin/development
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
-<<<<<<< HEAD
 import org.geppetto.core.model.simulation.GeppettoModel;
-=======
 import org.geppetto.core.model.simulation.Simulation;
 import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.state.visitors.SerializeUpdateSimulationTreeVisitor;
->>>>>>> refs/remotes/origin/development
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -89,6 +83,8 @@ public class SimulationService implements ISimulation
 	private final SessionContext _sessionContext = new SessionContext();
 	private SimulationThread _simulationThread;
 	private ISimulationCallbackListener _simulationListener;
+	private List<WatchList> _watchLists = new ArrayList<WatchList>();
+	private boolean _watching = false;
 	private List<URL> _scripts = new ArrayList<URL>();
 
 	/**
@@ -308,7 +304,8 @@ public class SimulationService implements ISimulation
 		//Update the RunTimeTreeModel
 		SerializeUpdateSimulationTreeVisitor iterateWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor(watchedVariables);
 		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
-
+	}
+	
 	/**
 	 * Gets the list of all forceable variables in a give simulation
 	 */
@@ -405,7 +402,6 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#startWatch()
 	 */
-	@Override
 	public void startWatch()
 	{
 		// set local watch flag
@@ -430,7 +426,6 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#stopWatch()
 	 */
-	@Override
 	public void stopWatch()
 	{
 		// set local watch flag
@@ -457,7 +452,6 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#clearWatchLists()
 	 */
-	@Override
 	public void clearWatchLists()
 	{
 		//Update the RunTimeTreeModel setting watched to false for every node

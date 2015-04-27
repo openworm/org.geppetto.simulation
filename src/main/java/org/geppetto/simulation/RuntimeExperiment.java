@@ -32,33 +32,105 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
+import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
+import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
+import org.geppetto.simulation.visitor.LoadSimulationVisitor;
+import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
+import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
-public class RuntimeExperiment
+public class RuntimeExperiment implements ISimulationCallbackListener
 {
 
 	private Map<String, IModelInterpreter> modelInterpreters = new HashMap<String, IModelInterpreter>();
 
 	private RuntimeTreeRoot root;
 
-	public RuntimeExperiment()
+	public RuntimeExperiment(IPersistedData geppettoModel) throws MalformedURLException, GeppettoInitializationException
 	{
+		init(geppettoModel);
+	}
+	
+	private void init(IPersistedData geppettoModel) throws MalformedURLException, GeppettoInitializationException {
+		URL url = new URL(geppettoModel.getUrl());
+		GeppettoModel simulation = SimulationConfigReader.readConfig(url);
+
+		// decorate Simulation model
+		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
+		simulation.accept(instancePathdecoratorVisitor);
+		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
+		simulation.accept(parentDecoratorVisitor);
+
+		// // clear watch lists
+		// this.clearWatchLists();
+		//
+		// _sessionContext.setSimulation(simulation);
+
+		// TODO:
+		// retrieve model interpreters and simulators
+//		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(_sessionContext, this);
+//		simulation.accept(createServicesVisitor);
+//
+//		// populateScripts(simulation);
+//
+//		// _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
+//
+//		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, this);
+//		simulation.accept(loadSimulationVisitor);
+//
+//		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, this);
+//		simulation.accept(runtimeTreeVisitor);
+//
+//		root = runtimeTreeVisitor.getRuntimeModel();
+
+		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(this);
+		root.apply(populateVisualVisitor);
+		
+
 		// TODO: figure out how to build the modelInterpreters map
 		// retrieve model interpreters and simulators
 		// TODO: use the GeppettoModel that is in RuntimeProject
-//		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, _simulationListener);
-//		simulation.accept(createServicesVisitor);
+		// CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, _simulationListener);
+		// simulation.accept(createServicesVisitor);
 
 	}
 
 	public void release()
 	{
 		// TODO: release the instantiated services
+	}
+
+	@Override
+	public void updateReady(SimulationEvents event, String requestID, String sceneUpdate)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void error(GeppettoErrorCodes error, String classSource, String errorMessage, Exception e)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void message(String message)
+	{
+		// TODO Auto-generated method stub
+
 	}
 
 }

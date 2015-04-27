@@ -32,11 +32,15 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.core.data.model.IGeppettoProject;
+import org.geppetto.core.data.model.IPersistedData;
 
 public class RuntimeProject
 {
@@ -45,16 +49,17 @@ public class RuntimeProject
 
 	private Map<IExperiment, RuntimeExperiment> experimentRuntime = new HashMap<IExperiment, RuntimeExperiment>();
 
-	// TODO: store object model for GeppettoModel
-	// TODO: hold GeppettoModel reference and then copy from SimulationService.load - InstancePathVisitor...
-	public RuntimeProject()
+	private IPersistedData geppettoModel;
+
+	public RuntimeProject(IGeppettoProject project)
 	{
+		geppettoModel = project.getGeppettoModel();
 	}
 
-	public void openExperiment(IExperiment experiment)
+	public void openExperiment(IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
-		RuntimeExperiment runtimeExperiment = new RuntimeExperiment();
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(geppettoModel);
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 

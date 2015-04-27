@@ -160,35 +160,36 @@ public class SimulationService implements ISimulation
 		// refresh simulation context
 		_sessionContext.reset();
 
+		// TODO: moved this to RuntimeProject
 		// decorate Simulation model
-		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
-		simulation.accept(instancePathdecoratorVisitor);
-		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
-		simulation.accept(parentDecoratorVisitor);
-
-		// clear watch lists
-		this.clearWatchLists();
-
-		_sessionContext.setSimulation(simulation);
-
-		// retrieve model interpreters and simulators
-		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(_sessionContext, _simulationListener);
-		simulation.accept(createServicesVisitor);
-
-		populateScripts(simulation);
-
-		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
-
-		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationListener);
-		simulation.accept(loadSimulationVisitor);
-
-		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, _simulationListener);
-		simulation.accept(runtimeTreeVisitor);
-
-		RuntimeTreeRoot runtimeModel = runtimeTreeVisitor.getRuntimeModel();
-
-		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
-		runtimeModel.apply(populateVisualVisitor);
+//		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
+//		simulation.accept(instancePathdecoratorVisitor);
+//		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
+//		simulation.accept(parentDecoratorVisitor);
+//
+//		// clear watch lists
+//		this.clearWatchLists();
+//
+//		_sessionContext.setSimulation(simulation);
+//
+//		// retrieve model interpreters and simulators
+//		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(_sessionContext, _simulationListener);
+//		simulation.accept(createServicesVisitor);
+//
+//		populateScripts(simulation);
+//
+//		_sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
+//
+//		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, _simulationListener);
+//		simulation.accept(loadSimulationVisitor);
+//
+//		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, _simulationListener);
+//		simulation.accept(runtimeTreeVisitor);
+//
+//		RuntimeTreeRoot runtimeModel = runtimeTreeVisitor.getRuntimeModel();
+//
+//		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
+//		runtimeModel.apply(populateVisualVisitor);
 
 		updateClientWithSimulation(requestID);
 	}

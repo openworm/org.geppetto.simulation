@@ -48,7 +48,7 @@ public class ProjectManager implements IProjectManager
 	public void loadProject(IGeppettoProject project)
 	{
 		// RuntimeProject is created and populated when loadProject is called
-		RuntimeProject runtimeProject = new RuntimeProject();
+		RuntimeProject runtimeProject = new RuntimeProject(project);
 		projects.put(project, runtimeProject);
 	}
 

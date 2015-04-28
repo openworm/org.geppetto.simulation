@@ -33,7 +33,6 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.features.IVisualTreeFeature;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -42,7 +41,6 @@ import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulator.ISimulator;
 
 /**
  * Visitor used for retrieving simulator from aspect node's and sending call to simulator

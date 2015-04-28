@@ -295,6 +295,8 @@ public class SimulationService implements ISimulation
 	@Override
 	public void setWatchedVariables(List<String> watchedVariables) throws GeppettoExecutionException, GeppettoInitializationException
 	{
+		_logger.info("Setting watched variables in simulation tree");
+		
 		//Update the RunTimeTreeModel
 		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
 		this._sessionContext.getRuntimeTreeRoot().apply(setWatchedVariablesVisitor);
@@ -319,6 +321,8 @@ public class SimulationService implements ISimulation
 	@Override
 	public void clearWatchLists()
 	{
+		_logger.info("Clearing watched variables in simulation tree");
+		
 		//Update the RunTimeTreeModel setting watched to false for every node
 		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
 		this._sessionContext.getRuntimeTreeRoot().apply(clearWatchedVariablesVisitor);
@@ -432,6 +436,8 @@ public class SimulationService implements ISimulation
 	@Override
 	public String getModelTree(String instancePath)
 	{
+		_logger.info("Populating Model Tree");
+		
 		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener, instancePath);
 		this._sessionContext.getRuntimeTreeRoot().apply(populateModelVisitor);
 
@@ -469,6 +475,8 @@ public class SimulationService implements ISimulation
 	@Override
 	public String getSimulationTree(String instancePath)
 	{
+		_logger.info("Populating Simulation Tree");
+		
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationListener, instancePath);
 		this._sessionContext.getRuntimeTreeRoot().apply(populateSimulationVisitor);
 

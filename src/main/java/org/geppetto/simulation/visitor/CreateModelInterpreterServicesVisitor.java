@@ -32,6 +32,8 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import java.util.Map;
+
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
@@ -42,9 +44,8 @@ import org.geppetto.simulation.ServiceCreator;
 import org.geppetto.simulation.SessionContext;
 
 /**
- * This visitor discovers and instantiates the services for each model interpreter and simulator.
- * A thread is used to instantiate the services so that a new instance of the services is created
- * at each time (the services use a ThreadScope).
+ * This visitor discovers and instantiates the services for each model interpreter and simulator. A thread is used to instantiate the services so that a new instance of the services is created at each
+ * time (the services use a ThreadScope).
  * 
  * @author matteocantarelli
  * 
@@ -52,15 +53,14 @@ import org.geppetto.simulation.SessionContext;
 public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 {
 
-	private SessionContext _sessionContext;
+	private Map<String, IModelInterpreter> _model;
 	private ISimulationCallbackListener _simulationCallBack;
 
-	// TODO: get a Map<String, IModelInterpreter> as a parameter
-	public CreateModelInterpreterServicesVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallBack)
+	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> model, ISimulationCallbackListener simulationCallBack)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_sessionContext = sessionContext;
-		_simulationCallBack=simulationCallBack;
+		_model = model;
+		_simulationCallBack = simulationCallBack;
 	}
 
 	/*
@@ -72,11 +72,13 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 	public void visit(Model model)
 	{
 		super.visit(model);
-		// TODO:
-//		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(),
-//				_sessionContext.getModelInterpreters(),_simulationCallBack);
-		ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
-				_sessionContext.getModelInterpreters(),_simulationCallBack);
+		// TODO: blocked here
+		ServiceCreator<Model, IModelInterpreter> sc = null;
+//				new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), 
+//				model.getInstancePath(), _simulationCallBack);
+		
+		// ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
+		// _sessionContext.getModelInterpreters(),_simulationCallBack);
 		Thread t = new Thread(sc);
 		t.start();
 
@@ -86,7 +88,7 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 		}
 		catch(InterruptedException e)
 		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
 		}
 	}
 
@@ -95,37 +97,37 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
-//	@Override
+	// @Override
 	// SIM TODO
-//	public void visit(Simulator simulatorModel)
-//	{
-//		super.visit(simulatorModel);
-//		
-//		if (simulatorModel.getConversionServiceId() != null){
-//			ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
-//					_sessionContext.getConversions(),_simulationCallBack);
-//			scc.run();
-//		}
-//		//Do we need this for conversion?
-////		if(simulatorModel.getSimulatorId()!=null){
-////			_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
-////		}
-//		
-//		ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
-//				_sessionContext.getSimulators(),_simulationCallBack);
-//		Thread tscs = new Thread(scs);
-//		tscs.start();
-//		try
-//		{
-//			tscs.join();
-//		}
-//		catch(InterruptedException e)
-//		{
-//			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-//		}
-//		if(simulatorModel.getSimulatorId()!=null){
-//			_sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
-//		}
-//	}
+	// public void visit(Simulator simulatorModel)
+	// {
+	// super.visit(simulatorModel);
+	//
+	// if (simulatorModel.getConversionServiceId() != null){
+	// ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
+	// _sessionContext.getConversions(),_simulationCallBack);
+	// scc.run();
+	// }
+	// //Do we need this for conversion?
+	// // if(simulatorModel.getSimulatorId()!=null){
+	// // _sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
+	// // }
+	//
+	// ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
+	// _sessionContext.getSimulators(),_simulationCallBack);
+	// Thread tscs = new Thread(scs);
+	// tscs.start();
+	// try
+	// {
+	// tscs.join();
+	// }
+	// catch(InterruptedException e)
+	// {
+	// _simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+	// }
+	// if(simulatorModel.getSimulatorId()!=null){
+	// _sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
+	// }
+	// }
 
 }

@@ -41,7 +41,9 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
+import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
@@ -70,15 +72,16 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 		//
 		// _sessionContext.setSimulation(simulation);
 
-		// TODO:
+		// TODO: blocked here - how should I build this map?
+		Map<String, IModelInterpreter> model = null;
 		// retrieve model interpreters and simulators
-		// CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(_sessionContext, this);
-		// simulation.accept(createServicesVisitor);
-		//
+		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(model, this);
+		simulation.accept(createServicesVisitor);
+
 		// // populateScripts(simulation);
 		//
 		// // _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
-		//
+
 		// LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, this);
 		// simulation.accept(loadSimulationVisitor);
 		//

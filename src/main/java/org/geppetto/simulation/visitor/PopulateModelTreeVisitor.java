@@ -36,8 +36,6 @@ package org.geppetto.simulation.visitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -57,8 +55,6 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
  *
  */
 public class PopulateModelTreeVisitor extends DefaultStateVisitor{
-
-	private static Log _logger = LogFactory.getLog(PopulateModelTreeVisitor.class);
 
 	//Listener used to send back errors 
 	private ISimulationCallbackListener _simulationCallBack;

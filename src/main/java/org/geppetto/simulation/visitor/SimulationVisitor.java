@@ -40,16 +40,16 @@ import org.geppetto.core.features.IVariableWatchFeature;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.model.state.visitors.SerializeUpdateSimulationTreeVisitor;
+import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
 import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.SimulatorRuntimeStatus;
-import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 
 /**
  * This is the simulation visitor which traverse the simulation tree and orchestrates the simulation of the different models.
@@ -121,8 +121,8 @@ public class SimulationVisitor extends DefaultStateVisitor
 					
 					//restarting of simulation needs updating simulation tree 
 					IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-					SerializeUpdateSimulationTreeVisitor readWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor(watchFeature.getWatchedVariables());
-					node.apply(readWatchableVariableListVisitor);
+					SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchFeature.getWatchedVariables());
+					node.apply(clearWatchedVariablesVisitor);
 				}
 
 				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())

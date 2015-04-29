@@ -122,7 +122,7 @@ public class SimulationVisitor extends DefaultStateVisitor
 					//restarting of simulation needs updating simulation tree 
 					IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 					SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchFeature.getWatchedVariables());
-					node.apply(clearWatchedVariablesVisitor);
+					_sessionContext.getRuntimeTreeRoot().apply(clearWatchedVariablesVisitor);
 				}
 
 				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())

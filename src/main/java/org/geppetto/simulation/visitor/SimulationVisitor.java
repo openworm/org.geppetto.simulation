@@ -36,9 +36,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.features.IVariableWatchFeature;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.SerializeUpdateSimulationTreeVisitor;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
@@ -115,6 +118,11 @@ public class SimulationVisitor extends DefaultStateVisitor
 					
 					PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationCallBack, node.getInstancePath());
 					node.apply(populateSimulationVisitor);
+					
+					//restarting of simulation needs updating simulation tree 
+					IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+					SerializeUpdateSimulationTreeVisitor readWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor(watchFeature.getWatchedVariables());
+					node.apply(readWatchableVariableListVisitor);
 				}
 
 				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())

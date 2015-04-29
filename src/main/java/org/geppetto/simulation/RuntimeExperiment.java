@@ -54,7 +54,8 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 
 	private Map<String, IModelInterpreter> modelInterpreters = new HashMap<String, IModelInterpreter>();
 
-	private RuntimeTreeRoot root;
+	// Head node that holds the entities
+	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
 	public RuntimeExperiment(GeppettoModel simulation, IPersistedData geppettoModel)
 	{
@@ -86,13 +87,13 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, model, this);
 		simulation.accept(loadSimulationVisitor);
 
-		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, model, this);
+		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, model, _runtimeTreeRoot, this);
 		simulation.accept(runtimeTreeVisitor);
 
-		root = runtimeTreeVisitor.getRuntimeModel();
+		_runtimeTreeRoot = runtimeTreeVisitor.getRuntimeModel();
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(this);
-		root.apply(populateVisualVisitor);
+		_runtimeTreeRoot.apply(populateVisualVisitor);
 	}
 
 	public void release()

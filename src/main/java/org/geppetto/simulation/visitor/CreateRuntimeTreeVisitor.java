@@ -57,7 +57,6 @@ import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.model.values.FloatValue;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.visualisation.model.Point;
-import org.geppetto.simulation.SessionContext;
 
 /**
  * Visitor used for retrieving entities and aspects from simulation file. a Entity and Aspect nodes are created, and used to create skeleton of run time tree.
@@ -68,16 +67,17 @@ import org.geppetto.simulation.SessionContext;
 public class CreateRuntimeTreeVisitor extends TraversingVisitor
 {
 
-	// TODO
-	private SessionContext _sessionContext;
+	// private SessionContext _sessionContext;
 	private Map<String, IModelInterpreter> _modelInterpreters;
 	private Map<String, IModel> _model;
 	private ISimulationCallbackListener _simulationCallback;
+	// Head node that holds the entities
+	private RuntimeTreeRoot _runtimeTreeRoot;
 
-	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, ISimulationCallbackListener simulationCallback)
+	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot, ISimulationCallbackListener simulationCallback)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-//		this._sessionContext = sessionContext;
+		// this._sessionContext = sessionContext;
 		_modelInterpreters = modelInterpreters;
 		_model = model;
 		this._simulationCallback = simulationCallback;
@@ -96,12 +96,12 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		 */
 		Model model = aspect.getModel();
 		// SIM TODO
-//		Simulator simulator = aspect.getSimulator();
+		// Simulator simulator = aspect.getSimulator();
 		AspectNode clientAspect = new AspectNode(aspect.getId());
 		clientAspect.setName(aspect.getId());
 
 		// attach to parent entity before populating skeleton of aspect node
-		addAspectToEntity(clientAspect, aspect.getParentEntity(), this._sessionContext.getRuntimeTreeRoot().getChildren());
+		addAspectToEntity(clientAspect, aspect.getParentEntity(), _runtimeTreeRoot.getChildren());
 
 		if(model != null)
 		{
@@ -114,10 +114,10 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 				clientAspect.setModelInterpreter(modelInterpreter);
 				modelInterpreter.populateRuntimeTree(clientAspect);
 			}
-//			catch(GeppettoInitializationException e)
-//			{
-//				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-//			}
+			// catch(GeppettoInitializationException e)
+			// {
+			// _simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+			// }
 			catch(ModelInterpreterException e)
 			{
 				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null, e);
@@ -128,18 +128,18 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		 * Extract simulator from aspect and set it to client aspect node
 		 */
 		// SIM TODO
-//		if(simulator != null)
-//		{
-//			try
-//			{
-//				ISimulator simulatorService = _sessionContext.getSimulator(simulator);
-//				clientAspect.setSimulator(simulatorService);
-//			}
-//			catch(GeppettoInitializationException e)
-//			{
-//				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-//			}
-//		}
+		// if(simulator != null)
+		// {
+		// try
+		// {
+		// ISimulator simulatorService = _sessionContext.getSimulator(simulator);
+		// clientAspect.setSimulator(simulatorService);
+		// }
+		// catch(GeppettoInitializationException e)
+		// {
+		// _simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+		// }
+		// }
 	}
 
 	/*
@@ -159,29 +159,33 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 			position.setZ(new Double(entity.getPosition().getZ()));
 			clientEntity.setPosition(position);
 		}
-		if(entity.getConnections()!=null){
-			for(Connection c : entity.getConnections()){
+		if(entity.getConnections() != null)
+		{
+			for(Connection c : entity.getConnections())
+			{
 				ConnectionNode clientConnection = new ConnectionNode(c.getId());
 				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
 				clientConnection.setType(c.getType());
 				clientConnection.setName(c.getId());
 				clientConnection.setParent(clientEntity);
 				clientEntity.getConnections().add(clientConnection);
-				
-				for(VisualObjectReference ref : c.getVisualObjectReferences()){
+
+				for(VisualObjectReference ref : c.getVisualObjectReferences())
+				{
 					VisualObjectReferenceNode refNode = new VisualObjectReferenceNode(ref.getId());
 					refNode.setAspectInstancePath(ref.getAspectInstancePath());
 					refNode.setVisualObjectId(ref.getVisualObjectID());
 					refNode.setParent(clientConnection);
 					clientConnection.getVisualReferences().add(refNode);
-				}	
-				
-				for(CustomProperty custom : c.getCustomProperties()){
+				}
+
+				for(CustomProperty custom : c.getCustomProperties())
+				{
 					TextMetadataNode text = new TextMetadataNode(custom.getId());
 					text.setValue(new FloatValue(custom.getValue()));
 					text.setName(custom.getName());
 					text.setParent(clientConnection);
-					
+
 					clientConnection.getCustomNodes().add(text);
 				}
 			}
@@ -234,9 +238,8 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		}
 	}
 
-
 	public RuntimeTreeRoot getRuntimeModel()
 	{
-		return _sessionContext.getRuntimeTreeRoot();
+		return _runtimeTreeRoot;
 	}
 }

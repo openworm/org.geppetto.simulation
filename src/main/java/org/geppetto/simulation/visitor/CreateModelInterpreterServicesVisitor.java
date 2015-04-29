@@ -41,7 +41,6 @@ import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.simulation.ServiceCreator;
-import org.geppetto.simulation.SessionContext;
 
 /**
  * This visitor discovers and instantiates the services for each model interpreter and simulator. A thread is used to instantiate the services so that a new instance of the services is created at each
@@ -72,10 +71,9 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 	public void visit(Model model)
 	{
 		super.visit(model);
-		// TODO: Dan, see below
-		ServiceCreator<String, IModelInterpreter> sc = null;
-		new ServiceCreator<String, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(), _model, _simulationCallBack);
-		
+		ServiceCreator<String, IModelInterpreter> sc = new ServiceCreator<String, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(), _model,
+				_simulationCallBack);
+
 		// ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
 		// _sessionContext.getModelInterpreters(),_simulationCallBack);
 		Thread t = new Thread(sc);

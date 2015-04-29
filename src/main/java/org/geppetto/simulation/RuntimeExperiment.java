@@ -37,11 +37,13 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.data.model.IPersistedData;
+import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
+import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
@@ -72,24 +74,23 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 		//
 		// _sessionContext.setSimulation(simulation);
 
-		// TODO: blocked here - how should I build this map?
-		// The visitor will build it. every time service creator it is called it will add the created service to the map using the istance path as the key
-		Map<String, IModelInterpreter> model = null;
+		Map<String, IModelInterpreter> modelInterpreters = new HashMap<>();
 		// retrieve model interpreters and simulators
-		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(model, this);
+		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, this);
 		simulation.accept(createServicesVisitor);
 
 		// // populateScripts(simulation);
 		//
 		// // _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
-		// LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, this);
-		// simulation.accept(loadSimulationVisitor);
-		//
-		// CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, this);
-		// simulation.accept(runtimeTreeVisitor);
-		//
-		// root = runtimeTreeVisitor.getRuntimeModel();
+		Map<String, IModel> model = new HashMap<>();
+		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, model, this);
+		simulation.accept(loadSimulationVisitor);
+
+		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, model, this);
+		simulation.accept(runtimeTreeVisitor);
+
+		root = runtimeTreeVisitor.getRuntimeModel();
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(this);
 		root.apply(populateVisualVisitor);

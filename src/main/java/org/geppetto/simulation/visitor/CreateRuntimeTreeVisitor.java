@@ -33,9 +33,9 @@
 package org.geppetto.simulation.visitor;
 
 import java.util.List;
+import java.util.Map;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -68,13 +68,18 @@ import org.geppetto.simulation.SessionContext;
 public class CreateRuntimeTreeVisitor extends TraversingVisitor
 {
 
+	// TODO
 	private SessionContext _sessionContext;
+	private Map<String, IModelInterpreter> _modelInterpreters;
+	private Map<String, IModel> _model;
 	private ISimulationCallbackListener _simulationCallback;
 
-	public CreateRuntimeTreeVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallback)
+	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, ISimulationCallbackListener simulationCallback)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		this._sessionContext = sessionContext;
+//		this._sessionContext = sessionContext;
+		_modelInterpreters = modelInterpreters;
+		_model = model;
 		this._simulationCallback = simulationCallback;
 	}
 
@@ -103,16 +108,16 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 			try
 			{
 				// use model interpreter from aspect to populate runtime tree
-				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
-				IModel wrapper = _sessionContext.getModels().get(model.getInstancePath());
+				IModelInterpreter modelInterpreter = _modelInterpreters.get(model.getInstancePath());
+				IModel wrapper = _model.get(model.getInstancePath());
 				clientAspect.setModel(wrapper);
 				clientAspect.setModelInterpreter(modelInterpreter);
 				modelInterpreter.populateRuntimeTree(clientAspect);
 			}
-			catch(GeppettoInitializationException e)
-			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-			}
+//			catch(GeppettoInitializationException e)
+//			{
+//				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+//			}
 			catch(ModelInterpreterException e)
 			{
 				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null, e);

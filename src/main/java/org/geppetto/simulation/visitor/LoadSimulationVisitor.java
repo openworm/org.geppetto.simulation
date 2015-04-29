@@ -36,6 +36,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,7 +50,6 @@ import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.simulation.SessionContext;
 
 /**
  * This visitor loads a simulation
@@ -60,14 +60,18 @@ import org.geppetto.simulation.SessionContext;
 public class LoadSimulationVisitor extends TraversingVisitor
 {
 
-	private SessionContext _sessionContext;
+//	private SessionContext _sessionContext;
+	private Map<String, IModelInterpreter> _modelInterpreters;
+	private Map<String, IModel> _model;
 	private ISimulationCallbackListener _simulationCallback;
 	private static Log _logger = LogFactory.getLog(LoadSimulationVisitor.class);
 
-	public LoadSimulationVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationListener)
+	public LoadSimulationVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, ISimulationCallbackListener simulationListener)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_sessionContext = sessionContext;
+//		_sessionContext = sessionContext;
+		_modelInterpreters = modelInterpreters;
+		_model = model;
 		_simulationCallback = simulationListener;
 	}
 
@@ -82,8 +86,8 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		super.visit(pModel);
 		try
 		{
-			IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(pModel);
-			IModel model = _sessionContext.getIModel(pModel.getInstancePath());
+			IModelInterpreter modelInterpreter = _modelInterpreters.get(pModel.getInstancePath());
+			IModel model = _model.get(pModel.getInstancePath());
 			if(model == null)
 			{
 				List<URL> recordings = new ArrayList<URL>();
@@ -110,7 +114,8 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				}
 				model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
 				model.setInstancePath(pModel.getInstancePath());
-				_sessionContext.getModels().put(pModel.getInstancePath(), model);
+				_model.put(pModel.getInstancePath(), model);
+//				_sessionContext.getModels().put(pModel.getInstancePath(), model);
 
 				long end = System.currentTimeMillis();
 				_logger.info("Finished reading model, took " + (end - start) + " ms ");
@@ -122,11 +127,11 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			}
 
 		}
-		catch(GeppettoInitializationException e)
-		{
-			_logger.error("Error: ", e);
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-		}
+//		catch(GeppettoInitializationException e)
+//		{
+//			_logger.error("Error: ", e);
+//			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+//		}
 		catch(MalformedURLException e)
 		{
 			_logger.error("Malformed URL for model", e);

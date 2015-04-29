@@ -105,9 +105,10 @@ public class SimulationVisitor extends DefaultStateVisitor
 				// Load Model if it is at the initial conditions, this happens if the simulation was stopped
 				if(!simulator.isInitialized())
 				{
-					LoadSimulationVisitor loadSimulationVisitor = 
-							new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
-					_sessionContext.getSimulation().accept(loadSimulationVisitor);
+					// TODO:
+//					LoadSimulationVisitor loadSimulationVisitor = 
+//							new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
+//					_sessionContext.getSimulation().accept(loadSimulationVisitor);
 
 					// populate visual tree
 					PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationCallBack);

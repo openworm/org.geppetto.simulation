@@ -32,10 +32,12 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.simulation.IProjectManager;
@@ -45,7 +47,7 @@ public class ProjectManager implements IProjectManager
 
 	private Map<IGeppettoProject, RuntimeProject> projects = new LinkedHashMap<>();
 
-	public void loadProject(IGeppettoProject project)
+	public void loadProject(IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException
 	{
 		// RuntimeProject is created and populated when loadProject is called
 		RuntimeProject runtimeProject = new RuntimeProject(project);

@@ -33,6 +33,7 @@
 package org.geppetto.simulation;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +42,7 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
+import org.geppetto.core.model.simulation.GeppettoModel;
 
 public class RuntimeProject
 {
@@ -51,15 +53,19 @@ public class RuntimeProject
 
 	private IPersistedData geppettoModel;
 
-	public RuntimeProject(IGeppettoProject project)
+	private GeppettoModel simulation;
+
+	public RuntimeProject(IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException
 	{
 		geppettoModel = project.getGeppettoModel();
+		URL url = new URL(geppettoModel.getUrl());
+		simulation = SimulationConfigReader.readConfig(url);
 	}
 
 	public void openExperiment(IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
-		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(geppettoModel);
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(simulation, geppettoModel);
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 

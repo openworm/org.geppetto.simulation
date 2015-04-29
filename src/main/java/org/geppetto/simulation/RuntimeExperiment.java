@@ -32,22 +32,16 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
-import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
-import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
@@ -58,15 +52,13 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 
 	private RuntimeTreeRoot root;
 
-	public RuntimeExperiment(IPersistedData geppettoModel) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeExperiment(GeppettoModel simulation, IPersistedData geppettoModel)
 	{
-		init(geppettoModel);
+		init(simulation);
 	}
-	
-	private void init(IPersistedData geppettoModel) throws MalformedURLException, GeppettoInitializationException {
-		URL url = new URL(geppettoModel.getUrl());
-		GeppettoModel simulation = SimulationConfigReader.readConfig(url);
 
+	private void init(GeppettoModel simulation)
+	{
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		simulation.accept(instancePathdecoratorVisitor);
@@ -80,24 +72,23 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 
 		// TODO:
 		// retrieve model interpreters and simulators
-//		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(_sessionContext, this);
-//		simulation.accept(createServicesVisitor);
-//
-//		// populateScripts(simulation);
-//
-//		// _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
-//
-//		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, this);
-//		simulation.accept(loadSimulationVisitor);
-//
-//		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, this);
-//		simulation.accept(runtimeTreeVisitor);
-//
-//		root = runtimeTreeVisitor.getRuntimeModel();
+		// CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(_sessionContext, this);
+		// simulation.accept(createServicesVisitor);
+		//
+		// // populateScripts(simulation);
+		//
+		// // _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
+		//
+		// LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(_sessionContext, this);
+		// simulation.accept(loadSimulationVisitor);
+		//
+		// CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(_sessionContext, this);
+		// simulation.accept(runtimeTreeVisitor);
+		//
+		// root = runtimeTreeVisitor.getRuntimeModel();
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(this);
 		root.apply(populateVisualVisitor);
-		
 
 		// TODO: figure out how to build the modelInterpreters map
 		// retrieve model interpreters and simulators

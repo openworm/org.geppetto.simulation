@@ -32,6 +32,7 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -62,7 +63,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		{
 			loadExperiments();
 		}
-		catch(GeppettoInitializationException e)
+		catch(GeppettoInitializationException | MalformedURLException e)
 		{
 			e.printStackTrace();
 		}
@@ -103,7 +104,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 	}
 
-	private void loadExperiments() throws GeppettoInitializationException
+	private void loadExperiments() throws GeppettoInitializationException, MalformedURLException
 	{
 		IGeppettoDataManager dataManager = DataManagerHelper.getDataManager();
 		List<? extends IUser> users = dataManager.getAllUsers();
@@ -185,10 +186,12 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 					}
 					List<? extends IExperiment> experiments = project.getExperiments();
 					boolean closeProject = runtimeProject.getActiveExperiment() == null;
-					for (int i = 0; i < experiments.size() && closeProject; i++) {
+					for(int i = 0; i < experiments.size() && closeProject; i++)
+					{
 						closeProject = experiments.get(i).getStatus() == ExperimentStatus.COMPLETED;
 					}
-					if (closeProject) {
+					if(closeProject)
+					{
 						// close the project when all the user experiments are completed and none of the experiments is active
 						projectManager.closeProject(project);
 					}

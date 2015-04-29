@@ -73,6 +73,7 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 		// _sessionContext.setSimulation(simulation);
 
 		// TODO: blocked here - how should I build this map?
+		// The visitor will build it. every time service creator it is called it will add the created service to the map using the istance path as the key
 		Map<String, IModelInterpreter> model = null;
 		// retrieve model interpreters and simulators
 		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(model, this);

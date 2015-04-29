@@ -72,10 +72,9 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 	public void visit(Model model)
 	{
 		super.visit(model);
-		// TODO: blocked here
-		ServiceCreator<Model, IModelInterpreter> sc = null;
-//				new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), 
-//				model.getInstancePath(), _simulationCallBack);
+		// TODO: Dan, see below
+		ServiceCreator<String, IModelInterpreter> sc = null;
+		new ServiceCreator<String, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(), _model, _simulationCallBack);
 		
 		// ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
 		// _sessionContext.getModelInterpreters(),_simulationCallBack);

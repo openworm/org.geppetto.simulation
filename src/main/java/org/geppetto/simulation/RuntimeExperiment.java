@@ -74,7 +74,6 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 		//
 		// _sessionContext.setSimulation(simulation);
 
-		Map<String, IModelInterpreter> modelInterpreters = new HashMap<>();
 		// retrieve model interpreters and simulators
 		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, this);
 		simulation.accept(createServicesVisitor);
@@ -94,13 +93,6 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(this);
 		root.apply(populateVisualVisitor);
-
-		// TODO: figure out how to build the modelInterpreters map
-		// retrieve model interpreters and simulators
-		// TODO: use the GeppettoModel that is in RuntimeProject
-		// CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, _simulationListener);
-		// simulation.accept(createServicesVisitor);
-
 	}
 
 	public void release()

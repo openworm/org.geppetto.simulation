@@ -1,7 +1,7 @@
 /*******************************************************************************
  * The MIT License (MIT)
  *
- * Copyright (c) 2011 - 2015 OpenWorm.
+ * Copyright (c) 2011, 2013 OpenWorm.
  * http://openworm.org
  *
  * All rights reserved. This program and the accompanying materials
@@ -32,30 +32,50 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.features.IVisualTreeFeature;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.ModelWrapper;
+import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.EntityNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 
 /**
- * Visitor used for retrieving simulator from aspect node's and sending call to simulator
- * for populating the visualization tree
+ * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter
+ * for writing model
  * 
- * @author  Jesus R. Martinez (jesus@metacell.us)
+ * Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
-	
-	private ISimulationCallbackListener _simulationCallBack;
+public class WriteModelVisitor extends DefaultStateVisitor{
 
-	public PopulateVisualTreeVisitor(ISimulationCallbackListener simulationListener)
+	private static Log _logger = LogFactory.getLog(WriteModelVisitor.class);
+
+	//Listener used to send back errors 
+	private ISimulationCallbackListener _simulationCallBack;
+	//The id of aspect we will be populating
+	private String _instancePath;
+	private String _format;
+//	private HashMap<String, AspectSubTreeNode> _populateModelTree;
+
+	public WriteModelVisitor(ISimulationCallbackListener simulationListener, String instancePath, String format)
 	{
 		this._simulationCallBack = simulationListener;
+		this._instancePath = instancePath;
+		this._format = format;
 	}
 
 	/* (non-Javadoc)
@@ -64,36 +84,23 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		IModelInterpreter model = node.getModelInterpreter();
-		try
-		{
-			if(model!=null){
-				((IVisualTreeFeature) model.getFeature(GeppettoFeature.VISUAL_TREE_FEATURE)).populateVisualTree(node);
-			}
+		if(this._instancePath.equals(node.getInstancePath())){
+			IModelInterpreter modelInterpreter = node.getModelInterpreter();
+//			try
+//			{
+//				modelInterpreter.writeModel(node, this._format);
+//			}
+//			catch(ModelInterpreterException e)
+//			{
+//				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+//			}		
+			
 		}
-		catch(ModelInterpreterException e)
-		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-		}
-		
+
 		return super.inAspectNode(node);
 	}
-
-	/* (non-Javadoc)
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
-	 */
-	@Override
-	public boolean outAspectNode(AspectNode node)
-	{
-		return super.outAspectNode(node);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#visitSimpleStateNode(org.geppetto.core.model.state.SimpleStateNode)
-	 */
-	@Override
-	public boolean visitVariableNode(VariableNode node)
-	{
-		return super.visitVariableNode(node);
-	}
+	
+//	public HashMap<String, AspectSubTreeNode> getPopulatedModelTree(){
+//		return this._populateModelTree;
+//	}
 }

@@ -1,5 +1,6 @@
 target
 /bin
+*.jnilib
 *.DS_Store
 src/main/java/META-INF/MANIFEST.MF
 /.externalToolBuilders/

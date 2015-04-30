@@ -111,7 +111,6 @@ class SimulationThread extends Thread
 
 		if(checkSteppedSimulatorsVisitor.allStepped() && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 		{
-			
 			//Visit simulators to extract time from them
 			TimeVisitor timeVisitor = new TimeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(timeVisitor);
@@ -136,11 +135,6 @@ class SimulationThread extends Thread
 					_logger.info("Update sent to Simulation Callback Listener");
 				}
 			}
-		}
-		else if(getSessionContext().getStatus().equals(SimulationRuntimeStatus.STOPPED)){
-			_simulationCallback.updateReady(SimulationEvents.STOP_SIMULATION, _requestID,null);
-			_logger.info("Stop simulation ");
-			this._simulationStarted = true;
 		}
 	}
 

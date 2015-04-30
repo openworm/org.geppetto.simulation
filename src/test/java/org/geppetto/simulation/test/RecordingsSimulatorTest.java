@@ -44,7 +44,6 @@ import ncsa.hdf.utils.SetNatives;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
-import org.geppetto.core.data.model.VariableList;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;
@@ -128,7 +127,7 @@ public class RecordingsSimulatorTest
 		List<IModel> models=new ArrayList<IModel>();
 		models.add(recording);
 		simulator.initialize(models, listener);
-		VariableList vlist=simulator.getWatchableVariables();
+//		VariableList vlist=simulator.getWatchableVariables();
 //		Assert.assertNotNull(vlist);
 //		Assert.assertFalse(vlist.getVariables().isEmpty());
 //		List<String> variablesToWatch=new ArrayList<String>();
@@ -136,7 +135,6 @@ public class RecordingsSimulatorTest
 //		variablesToWatch.add("Entity.Aspect.SimulationTree.P.neuron0.ge");
 //		variablesToWatch.add("Entity.Aspect.SimulationTree.P.neuron0.gi");
 //		simulator.addWatchVariables(variablesToWatch);
-//		simulator.startWatch();
 //		runtime.addChild(entity);
 //		entity.addChild(aspectNode);
 //		simulator.simulate(null,aspectNode);

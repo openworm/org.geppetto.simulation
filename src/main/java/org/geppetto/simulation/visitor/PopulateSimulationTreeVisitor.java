@@ -32,11 +32,19 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.features.IVisualTreeFeature;
+import org.geppetto.core.features.IWatchableVariableListFeature;
+import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
+import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.services.GeppettoFeature;
@@ -46,16 +54,22 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
  * Visitor used for retrieving simulator from aspect node's and sending call to simulator
  * for populating the visualization tree
  * 
- * @author  Jesus R. Martinez (jesus@metacell.us)
+ * @author  Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
+public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 	
 	private ISimulationCallbackListener _simulationCallBack;
+	//The id of aspect we will be populating
+	private String _instancePath;
+	
+	//This is not being used at the moment
+	private HashMap<String, AspectSubTreeNode> _populateSimulationTree;
 
-	public PopulateVisualTreeVisitor(ISimulationCallbackListener simulationListener)
+	public PopulateSimulationTreeVisitor(ISimulationCallbackListener simulationListener, String instancePath)
 	{
 		this._simulationCallBack = simulationListener;
+		this._instancePath = instancePath;
 	}
 
 	/* (non-Javadoc)
@@ -64,17 +78,42 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		IModelInterpreter model = node.getModelInterpreter();
-		try
-		{
-			if(model!=null){
-				((IVisualTreeFeature) model.getFeature(GeppettoFeature.VISUAL_TREE_FEATURE)).populateVisualTree(node);
+		if(this._instancePath.equals(node.getInstancePath())){
+			IModelInterpreter model = node.getModelInterpreter();
+			try
+			{
+				if(model!=null){
+					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariables(node);
+				}
+			}
+			catch(ModelInterpreterException e)
+			{
+				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+			}
+			
+			//FIXME: It it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
+			this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
+			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.SIMULATION_TREE)));
+						
+			IModel imodel =  node.getModel();
+			if(imodel instanceof ModelWrapper){
+				ModelWrapper wrapper = (ModelWrapper)imodel;
+				Map<String, EntityNode> mapping = (Map<String, EntityNode>) wrapper.getModel("entitiesMapping");
+				EntityNode entityNode = mapping.get(node.getParent().getId());
+				if (entityNode == null){
+					for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
+						String key = entry.getKey();
+
+						for (AspectNode aspectNode : entry.getValue().getAspects()){
+							if (aspectNode.getId() == node.getId()){
+								this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
+							}
+						}	
+					}
+				}
 			}
 		}
-		catch(ModelInterpreterException e)
-		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-		}
+		
 		
 		return super.inAspectNode(node);
 	}
@@ -95,5 +134,9 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 	public boolean visitVariableNode(VariableNode node)
 	{
 		return super.visitVariableNode(node);
+	}
+	
+	public HashMap<String, AspectSubTreeNode> getPopulatedSimulationTree(){
+		return this._populateSimulationTree;
 	}
 }

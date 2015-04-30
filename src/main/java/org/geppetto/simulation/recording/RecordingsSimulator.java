@@ -32,15 +32,20 @@
  *******************************************************************************/
 package org.geppetto.simulation.recording;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.services.GeppettoFeature;
+import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulation.IRunConfiguration;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
@@ -61,7 +66,6 @@ public class RecordingsSimulator extends ASimulator
 	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
 	{
 		super.initialize(models, listener);
-		setWatchableVariablesFromRecordings();
 	}
 
 	@Override
@@ -79,14 +83,29 @@ public class RecordingsSimulator extends ASimulator
 	}
 
 	@Override
-	public boolean populateVisualTree(AspectNode aspectNode) throws ModelInterpreterException
+	public String getId()
 	{
+		return "recordingsSimulator";
+	}
+
+	@Override
+	public void registerGeppettoService()
+	{
+		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
+		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
+		ServicesRegistry.registerSimulatorService(this, modelFormatList);
+		
+	}
+
+	@Override
+	public boolean isSupported(GeppettoFeature feature) {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public String getId()
-	{
-		return "recordingsSimulator";
+	public IFeature getFeature(GeppettoFeature feature) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

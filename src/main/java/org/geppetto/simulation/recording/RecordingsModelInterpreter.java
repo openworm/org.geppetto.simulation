@@ -33,6 +33,7 @@
 package org.geppetto.simulation.recording;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import ncsa.hdf.object.h5.H5File;
@@ -41,19 +42,22 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
+import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 import org.springframework.stereotype.Service;
 /**
  * @author matteocantarelli
  * 
  */
 @Service
-public class RecordingsModelInterpreter implements IModelInterpreter
+public class RecordingsModelInterpreter extends AModelInterpreter
 {
 	
 	private static Log _logger = LogFactory.getLog(RecordingsModelInterpreter.class);
@@ -110,6 +114,14 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	public String getName()
 	{
 		return "Recording Model Interpreter";
+	}
+
+	@Override
+	public void registerGeppettoService() {
+		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
+		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
+		ServicesRegistry.registerModelInterpreterService(this, modelFormatList);
+		
 	}
 
 }

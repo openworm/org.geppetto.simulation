@@ -35,54 +35,90 @@ package org.geppetto.simulation;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
-public class RuntimeExperiment implements ISimulationCallbackListener
+public class RuntimeExperiment implements ISimulatorCallbackListener
 {
 
 	private Map<String, IModelInterpreter> modelInterpreters = new HashMap<String, IModelInterpreter>();
 
-	// Head node that holds the entities
-	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
+	private Map<String, IModel> instancePathToIModelMap = new HashMap<>();
 
-	public RuntimeExperiment(RuntimeProject runtimeProject)
+	// Head node that holds the entities
+	private RuntimeTreeRoot runtimeTreeRoot = new RuntimeTreeRoot("scene");
+
+	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
+
+	public RuntimeExperiment(RuntimeProject runtimeProject, ISimulationCallbackListener listener)
 	{
-		init(runtimeProject.getGeppettoModel());
+		init(runtimeProject.getGeppettoModel(), listener);
 	}
 
-	private void init(GeppettoModel geppettoModel)
+	private void init(GeppettoModel geppettoModel, ISimulationCallbackListener listener)
 	{
-		// // clear watch lists
-		// this.clearWatchLists();
+		// clear watch lists
+		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
-		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, this);
+		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, listener);
 		geppettoModel.accept(createServicesVisitor);
 
 		// // populateScripts(simulation);
 		//
 		// // _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
-		Map<String, IModel> model = new HashMap<>();
-		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, model, this);
+		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, instancePathToIModelMap, listener);
 		geppettoModel.accept(loadSimulationVisitor);
 
-		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, model, _runtimeTreeRoot, this);
+		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, instancePathToIModelMap, runtimeTreeRoot, listener);
 		geppettoModel.accept(runtimeTreeVisitor);
 
-		_runtimeTreeRoot = runtimeTreeVisitor.getRuntimeModel();
+		runtimeTreeRoot = runtimeTreeVisitor.getRuntimeModel();
 
-		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(this);
-		_runtimeTreeRoot.apply(populateVisualVisitor);
+		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(listener);
+		runtimeTreeRoot.apply(populateVisualVisitor);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulation#clearWatchLists()
+	 */
+	public void clearWatchLists()
+	{
+		logger.info("Clearing watched variables in simulation tree");
+
+		// Update the RunTimeTreeModel setting watched to false for every node
+		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
+		runtimeTreeRoot.apply(clearWatchedVariablesVisitor);
+
+		// SIM TODO
+		// instruct aspects to clear watch variables
+		// for(ISimulator simulator : _sessionContext.getSimulators().values())
+		// {
+		// if(simulator != null)
+		// {
+		// IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+		// if(watchFeature != null)
+		// {
+		// watchFeature.clearWatchVariables();
+		// }
+		// }
+		// }
+
 	}
 
 	public void release()
@@ -91,21 +127,14 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 	}
 
 	@Override
-	public void updateReady(SimulationEvents event, String requestID, String sceneUpdate)
+	public void endOfSteps(String message)
 	{
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void error(GeppettoErrorCodes error, String classSource, String errorMessage, Exception e)
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void message(String message)
+	public void stateTreeUpdated() throws GeppettoExecutionException
 	{
 		// TODO Auto-generated method stub
 

@@ -38,19 +38,19 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.simulation.IProjectManager;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 
 public class ProjectManager implements IProjectManager
 {
 
 	private Map<IGeppettoProject, RuntimeProject> projects = new LinkedHashMap<>();
 
-	public void loadProject(IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException
+	public void loadProject(IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
 	{
 		// RuntimeProject is created and populated when loadProject is called
-		RuntimeProject runtimeProject = new RuntimeProject(project);
+		RuntimeProject runtimeProject = new RuntimeProject(project, listener);
 		projects.put(project, runtimeProject);
 	}
 
@@ -73,21 +73,21 @@ public class ProjectManager implements IProjectManager
 		return projects.get(project);
 	}
 
-	public String getGeppettoModelUrl(IGeppettoProject project)
-	{
-		if(project != null)
-		{
-			// this could be null when loaded from a json that may not include the model part
-			if(project.getGeppettoModel() == null)
-			{
-				project = DataManagerHelper.getDataManager().getGeppettoProjectById(project.getId());
-			}
-			if(project.getGeppettoModel() != null)
-			{
-				return project.getGeppettoModel().getUrl();
-			}
-		}
-		return "";
-	}
+	// private String getGeppettoModelUrl(IGeppettoProject project)
+	// {
+	// if(project != null)
+	// {
+	// // this could be null when loaded from a json that may not include the model part
+	// if(project.getGeppettoModel() == null)
+	// {
+	// project = DataManagerHelper.getDataManager().getGeppettoProjectById(project.getId());
+	// }
+	// if(project.getGeppettoModel() != null)
+	// {
+	// return project.getGeppettoModel().getUrl();
+	// }
+	// }
+	// return "";
+	// }
 
 }

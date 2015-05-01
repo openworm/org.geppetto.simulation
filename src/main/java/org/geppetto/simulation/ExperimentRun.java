@@ -34,13 +34,17 @@ package org.geppetto.simulation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.data.IGeppettoDataManager;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 
@@ -51,16 +55,22 @@ public class ExperimentRun implements ISimulatorCallbackListener
 
 	private IExperiment experiment;
 
-	private List<ISimulator> simulatorServices = new ArrayList<>();
+	private Map<String, ISimulator> simulatorServices = new ConcurrentHashMap<>();
 
-	private List<IConversion> conversionServices = new ArrayList<>();
+	private Map<String, IConversion> conversionServices = new ConcurrentHashMap<>();
 
 	private List<IExperimentListener> experimentListeners = new ArrayList<>();
 
-	public ExperimentRun(IGeppettoDataManager dataManager, IExperiment experiment)
+	// This map contains the simulator runtime for each one of the simulators
+	private Map<String, SimulatorRuntime> simulatorRuntimes = new ConcurrentHashMap<String, SimulatorRuntime>();
+
+	private ISimulationCallbackListener simulationCallbackListener;
+
+	public ExperimentRun(IGeppettoDataManager dataManager, IExperiment experiment, ISimulationCallbackListener simulationCallbackListener)
 	{
 		this.dataManager = dataManager;
 		this.experiment = experiment;
+		this.simulationCallbackListener = simulationCallbackListener;
 		init(experiment);
 	}
 
@@ -80,37 +90,34 @@ public class ExperimentRun implements ISimulatorCallbackListener
 		for(IAspectConfiguration aspectConfig : aspectConfigs)
 		{
 			ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
-			simConfig.getSimulatorId();
+			String simulatorId = simConfig.getSimulatorId();
+			// TODO: add IInstancePath.getInstancePath() returning entityInstancePath + "." + aspect + "." + localInstancePath
+			String instancePath = null;//aspectConfig.getAspect().getInstancePath();
 
-			// TODO: copy from CreateSimulationServices.visit()
-			// Outstanding and now what?
+			// TODO: add conversionServiceID to ISimulatorConfiguration
+//			if(simConfig.getConversionServiceId() != null)
+//			{
+//				ServiceCreator<String, IConversion> scc = new ServiceCreator<String, IConversion>(simConfig.getConversionServiceId(), IConversion.class.getName(), instancePath, conversionServices, simulationCallbackListener);
+//				scc.run();
+//			}
 
-			// if(simulatorModel.getConversionServiceId() != null)
-			// {
-			// ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simConfig.getSimulatorId(), IConversion.class.getName(), simulatorModel,
-			// _sessionContext.getConversions(), _simulationCallBack);
-			// scc.run();
-			// }
-			//
-			// ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
-			// _sessionContext.getSimulators(), _simulationCallBack);
-			// Thread tscs = new Thread(scs);
-			// tscs.start();
-			// try
-			// {
-			// tscs.join();
-			// }
-			// catch(InterruptedException e)
-			// {
-			// _simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
-			// }
-			// if(simulatorModel.getSimulatorId() != null)
-			// {
-			// _sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
-			// }
-
-			// TODO: copy from LoadSimulationVisitor.visit()
-
+			ServiceCreator<String, ISimulator> scs = new ServiceCreator<String, ISimulator>(simulatorId, ISimulator.class.getName(), instancePath, simulatorServices,
+					simulationCallbackListener);
+			Thread tscs = new Thread(scs);
+			tscs.start();
+			try
+			{
+				tscs.join();
+			}
+			catch(InterruptedException e)
+			{
+				simulationCallbackListener.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+			}
+			if(simulatorId != null)
+			{
+				SimulatorRuntime simRuntime = new SimulatorRuntime();
+				simulatorRuntimes.put(instancePath, simRuntime);
+			}
 		}
 	}
 

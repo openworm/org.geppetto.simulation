@@ -43,6 +43,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 
@@ -55,17 +56,20 @@ public class RuntimeProject
 
 	private GeppettoModel geppettoModel;
 
+	private ISimulationCallbackListener listener;
+
 	public GeppettoModel getGeppettoModel()
 	{
 		return geppettoModel;
 	}
 
-	public RuntimeProject(IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeProject(IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
 	{
+		this.listener = listener;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 		URL url = new URL(geppettoModelData.getUrl());
 		geppettoModel = SimulationConfigReader.readConfig(url);
-	
+
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		geppettoModel.accept(instancePathdecoratorVisitor);
@@ -76,7 +80,7 @@ public class RuntimeProject
 	public void openExperiment(IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
-		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this);
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this, listener);
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 

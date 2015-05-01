@@ -48,6 +48,8 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.simulation.IExperimentRunManager;
+import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ExperimentRunManager implements IExperimentRunManager, IExperimentListener
 {
@@ -56,6 +58,9 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	private List<ExperimentRun> experimentRuns = new ArrayList<>();
 
 	private ProjectManager projectManager = new ProjectManager();
+
+	@Autowired
+	private ISimulationCallbackListener simulationCallbackListener;
 
 	public ExperimentRunManager()
 	{
@@ -85,7 +90,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	{
 		try
 		{
-			ExperimentRun experimentRun = new ExperimentRun(DataManagerHelper.getDataManager(), experiment);
+			ExperimentRun experimentRun = new ExperimentRun(DataManagerHelper.getDataManager(), experiment, simulationCallbackListener);
 			experimentRun.addExperimentListener(this);
 			experiment.setStatus(ExperimentStatus.RUNNING);
 			IUser user = getUserForExperiment(experiment);
@@ -114,7 +119,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 			for(IGeppettoProject project : projects)
 			{
 				// This could be either when the user decides to open a project or when the ExperimentsRunManager queues an Experiment
-				projectManager.loadProject(project);
+				projectManager.loadProject(project, simulationCallbackListener);
 				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
 				addExperimentsToQueue(user, experiments, ExperimentStatus.RUNNING);
 				addExperimentsToQueue(user, experiments, ExperimentStatus.QUEUED);

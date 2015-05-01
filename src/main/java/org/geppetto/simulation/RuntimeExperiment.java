@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
@@ -44,9 +43,7 @@ import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
-import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
-import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
 public class RuntimeExperiment implements ISimulationCallbackListener
@@ -57,27 +54,19 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 	// Head node that holds the entities
 	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
-	public RuntimeExperiment(GeppettoModel simulation, IPersistedData geppettoModel)
+	public RuntimeExperiment(RuntimeProject runtimeProject)
 	{
-		init(simulation);
+		init(runtimeProject.getGeppettoModel());
 	}
 
-	private void init(GeppettoModel simulation)
+	private void init(GeppettoModel geppettoModel)
 	{
-		// decorate Simulation model
-		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
-		simulation.accept(instancePathdecoratorVisitor);
-		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
-		simulation.accept(parentDecoratorVisitor);
-
 		// // clear watch lists
 		// this.clearWatchLists();
-		//
-		// _sessionContext.setSimulation(simulation);
 
 		// retrieve model interpreters and simulators
 		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, this);
-		simulation.accept(createServicesVisitor);
+		geppettoModel.accept(createServicesVisitor);
 
 		// // populateScripts(simulation);
 		//
@@ -85,10 +74,10 @@ public class RuntimeExperiment implements ISimulationCallbackListener
 
 		Map<String, IModel> model = new HashMap<>();
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, model, this);
-		simulation.accept(loadSimulationVisitor);
+		geppettoModel.accept(loadSimulationVisitor);
 
 		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, model, _runtimeTreeRoot, this);
-		simulation.accept(runtimeTreeVisitor);
+		geppettoModel.accept(runtimeTreeVisitor);
 
 		_runtimeTreeRoot = runtimeTreeVisitor.getRuntimeModel();
 

@@ -43,6 +43,8 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
+import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 
 public class RuntimeProject
 {
@@ -51,21 +53,30 @@ public class RuntimeProject
 
 	private Map<IExperiment, RuntimeExperiment> experimentRuntime = new HashMap<IExperiment, RuntimeExperiment>();
 
-	private IPersistedData geppettoModel;
+	private GeppettoModel geppettoModel;
 
-	private GeppettoModel simulation;
+	public GeppettoModel getGeppettoModel()
+	{
+		return geppettoModel;
+	}
 
 	public RuntimeProject(IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException
 	{
-		geppettoModel = project.getGeppettoModel();
-		URL url = new URL(geppettoModel.getUrl());
-		simulation = SimulationConfigReader.readConfig(url);
+		IPersistedData geppettoModelData = project.getGeppettoModel();
+		URL url = new URL(geppettoModelData.getUrl());
+		geppettoModel = SimulationConfigReader.readConfig(url);
+	
+		// decorate Simulation model
+		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
+		geppettoModel.accept(instancePathdecoratorVisitor);
+		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
+		geppettoModel.accept(parentDecoratorVisitor);
 	}
 
 	public void openExperiment(IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
-		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(simulation, geppettoModel);
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this);
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 

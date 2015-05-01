@@ -47,7 +47,7 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
-import org.geppetto.core.model.state.visitors.SerializeUpdateSimulationTreeVisitor;
+import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
@@ -294,9 +294,11 @@ public class SimulationService implements ISimulation
 	@Override
 	public void setWatchedVariables(List<String> watchedVariables) throws GeppettoExecutionException, GeppettoInitializationException
 	{
+		_logger.info("Setting watched variables in simulation tree");
+		
 		//Update the RunTimeTreeModel
-		SerializeUpdateSimulationTreeVisitor iterateWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor(watchedVariables);
-		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
+		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
+		this._sessionContext.getRuntimeTreeRoot().apply(setWatchedVariablesVisitor);
 
 		//SIM TODO
 		//Call the function for each simulator
@@ -321,10 +323,11 @@ public class SimulationService implements ISimulation
 	@Override
 	public void clearWatchLists()
 	{
+		_logger.info("Clearing watched variables in simulation tree");
+		
 		//Update the RunTimeTreeModel setting watched to false for every node
-		SerializeUpdateSimulationTreeVisitor iterateWatchableVariableListVisitor = new SerializeUpdateSimulationTreeVisitor();
-		iterateWatchableVariableListVisitor.setMode("setWatched");
-		this._sessionContext.getRuntimeTreeRoot().apply(iterateWatchableVariableListVisitor);
+		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
+		this._sessionContext.getRuntimeTreeRoot().apply(clearWatchedVariablesVisitor);
 		
 		//SIM TODO
 		// instruct aspects to clear watch variables
@@ -438,6 +441,8 @@ public class SimulationService implements ISimulation
 	@Override
 	public String getModelTree(String instancePath)
 	{
+		_logger.info("Populating Model Tree");
+		
 		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener, instancePath);
 		this._sessionContext.getRuntimeTreeRoot().apply(populateModelVisitor);
 
@@ -484,6 +489,8 @@ public class SimulationService implements ISimulation
 
 	public String getSimulationTree(String instancePath)
 	{
+		_logger.info("Populating Simulation Tree");
+		
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationListener, instancePath);
 		this._sessionContext.getRuntimeTreeRoot().apply(populateSimulationVisitor);
 

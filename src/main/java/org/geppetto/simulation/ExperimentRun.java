@@ -91,18 +91,16 @@ public class ExperimentRun implements ISimulatorCallbackListener
 		{
 			ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
 			String simulatorId = simConfig.getSimulatorId();
-			// TODO: add IInstancePath.getInstancePath() returning entityInstancePath + "." + aspect + "." + localInstancePath
-			String instancePath = null;//aspectConfig.getAspect().getInstancePath();
+			String instancePath = aspectConfig.getAspect().getInstancePath();
 
-			// TODO: add conversionServiceID to ISimulatorConfiguration
-//			if(simConfig.getConversionServiceId() != null)
-//			{
-//				ServiceCreator<String, IConversion> scc = new ServiceCreator<String, IConversion>(simConfig.getConversionServiceId(), IConversion.class.getName(), instancePath, conversionServices, simulationCallbackListener);
-//				scc.run();
-//			}
+			if(simConfig.getConversionServiceId() != null)
+			{
+				ServiceCreator<String, IConversion> scc = new ServiceCreator<String, IConversion>(simConfig.getConversionServiceId(), IConversion.class.getName(), instancePath, conversionServices,
+						simulationCallbackListener);
+				scc.run();
+			}
 
-			ServiceCreator<String, ISimulator> scs = new ServiceCreator<String, ISimulator>(simulatorId, ISimulator.class.getName(), instancePath, simulatorServices,
-					simulationCallbackListener);
+			ServiceCreator<String, ISimulator> scs = new ServiceCreator<String, ISimulator>(simulatorId, ISimulator.class.getName(), instancePath, simulatorServices, simulationCallbackListener);
 			Thread tscs = new Thread(scs);
 			tscs.start();
 			try

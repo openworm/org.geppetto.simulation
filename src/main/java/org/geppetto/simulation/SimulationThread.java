@@ -54,7 +54,7 @@ class SimulationThread extends Thread
 	private SessionContext _sessionContext = null;
 	private ISimulationCallbackListener _simulationCallback;
 	private int _updateCycles = 0;
-	private long _timeElapsed;
+	private long _updateStartTime = 0;
 	private boolean _simulationStarted = false;
 	private String _requestID;
 	private double _runtime;
@@ -71,7 +71,7 @@ class SimulationThread extends Thread
 		_simulationCallback=simulationListener;
 		_updateCycles = cycle;
 		_requestID = requestID;
-		_timeElapsed = System.currentTimeMillis();
+		_updateStartTime = System.currentTimeMillis();
 	}
 
 	/**
@@ -88,17 +88,17 @@ class SimulationThread extends Thread
 		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext,_simulationCallback,_requestID);
 		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING) )
 		{
-				long calculateTime =System.currentTimeMillis() - _timeElapsed;
-				
-				//update only if time elapsed since last client update doesn't exceed
-				//the update cycle of application.
-				if( calculateTime >= _updateCycles){
-					_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
-					updateRuntimeTreeClient();
+			long timeSinceLastUpdate = System.currentTimeMillis() - _updateStartTime;
 
-					_timeElapsed = System.currentTimeMillis();
-					_logger.info("Updating after " + calculateTime + " ms");
-				}
+			// Update only after a minimum time (updateCycles) has passed. For example, if updateCycles is 20ms
+			// and the previous update took 15ms, then wait 5ms before next update.
+			if (timeSinceLastUpdate >= _updateCycles) {
+				_logger.info("Updating after " + timeSinceLastUpdate + " ms");
+				_updateStartTime = System.currentTimeMillis();
+
+				_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
+				updateRuntimeTreeClient();
+			}
 		}
 	}
 	

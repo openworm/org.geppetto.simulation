@@ -93,6 +93,7 @@ public class SessionContext
 	// The status of the current simulation
 	private SimulationRuntimeStatus _status = SimulationRuntimeStatus.IDLE;
 
+	// TODO: comment this out
 	// Head node that holds the entities
 	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
@@ -130,7 +131,7 @@ public class SessionContext
 			simulatorRuntime.revertToInitialConditions();
 		}
 
-		this.resetRuntimeTree(this.getRuntimeTreeRoot().getChildren());
+//		this.resetRuntimeTree(this.getRuntimeTreeRoot().getChildren());
 		
 		// iterate through aspects and instruct them to start watching
 		// SIM TODO
@@ -187,7 +188,7 @@ public class SessionContext
 //		_conversions.clear();
 		_models.clear();
 		_simulation = null;
-		_runtimeTreeRoot = new RuntimeTreeRoot("scene");
+//		_runtimeTreeRoot = new RuntimeTreeRoot("scene");
 		setSimulationStatus(SimulationRuntimeStatus.IDLE);
 	}
 

@@ -38,6 +38,7 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.simulation.IProjectManager;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
@@ -52,6 +53,7 @@ public class ProjectManager implements IProjectManager
 		// RuntimeProject is created and populated when loadProject is called
 		RuntimeProject runtimeProject = new RuntimeProject(project, listener);
 		projects.put(project, runtimeProject);
+		// TODO: load the active experiment if there is one
 	}
 
 	public void closeProject(IGeppettoProject project) throws GeppettoExecutionException
@@ -71,6 +73,48 @@ public class ProjectManager implements IProjectManager
 	public RuntimeProject getRuntimeProject(IGeppettoProject project)
 	{
 		return projects.get(project);
+	}
+
+	@Override
+	public void loadProject(String requestId, IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void closeProject(String requestId, IGeppettoProject project) throws GeppettoExecutionException
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void loadExperiment(String requestId, IExperiment experiment)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void runExperiment(String requestId, IExperiment experiment)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void deleteExperiment(String requestId, IExperiment experiment)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void persistProject(String requestId, IGeppettoProject project)
+	{
+		// TODO Auto-generated method stub
+
 	}
 
 	// private String getGeppettoModelUrl(IGeppettoProject project)

@@ -33,20 +33,26 @@
 package org.geppetto.simulation;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
+import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
+import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
@@ -62,12 +68,12 @@ public class RuntimeExperiment implements ISimulatorCallbackListener
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
-	public RuntimeExperiment(RuntimeProject runtimeProject, ISimulationCallbackListener listener)
+	public RuntimeExperiment(String requestId, RuntimeProject runtimeProject, ISimulationCallbackListener listener)
 	{
-		init(runtimeProject.getGeppettoModel(), listener);
+		init(requestId, runtimeProject.getGeppettoModel(), listener);
 	}
 
-	private void init(GeppettoModel geppettoModel, ISimulationCallbackListener listener)
+	private void init(String requestId, GeppettoModel geppettoModel, ISimulationCallbackListener listener)
 	{
 		// clear watch lists
 		this.clearWatchLists();
@@ -90,6 +96,8 @@ public class RuntimeExperiment implements ISimulatorCallbackListener
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(listener);
 		runtimeTreeRoot.apply(populateVisualVisitor);
+
+		notifyExperimentLoaded(requestId, listener);
 	}
 
 	/*
@@ -119,6 +127,53 @@ public class RuntimeExperiment implements ISimulatorCallbackListener
 		// }
 		// }
 
+	}
+
+	public void setWatchedVariables(List<String> watchedVariables) throws GeppettoExecutionException, GeppettoInitializationException
+	{
+		logger.info("Setting watched variables in simulation tree");
+
+		// Update the RunTimeTreeModel
+		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
+		runtimeTreeRoot.apply(setWatchedVariablesVisitor);
+
+		// SIM TODO
+		// Call the function for each simulator
+		// for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
+		// {
+		// ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
+		// IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
+		// if(watchFeature != null)
+		// {
+		// watchFeature.setWatchedVariables(watchedVariables);
+		// }
+		// }
+	}
+
+	/**
+	 * Method that takes the oldest model in the buffer and send it to the client
+	 * 
+	 * @param event
+	 * @throws GeppettoExecutionException
+	 * @throws ModelInterpreterException
+	 * 
+	 */
+	private void notifyExperimentLoaded(String requestID, ISimulationCallbackListener simulationListener)
+	{
+
+		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+		runtimeTreeRoot.apply(updateClientVisitor);
+
+		ExitVisitor exitVisitor = new ExitVisitor(simulationListener);
+		runtimeTreeRoot.apply(exitVisitor);
+
+		String scene = updateClientVisitor.getSerializedTree();
+
+		if(scene != null)
+		{
+			simulationListener.updateReady(SimulationEvents.LOAD_MODEL, requestID, scene);
+			logger.info("Simulation sent to callback listener");
+		}
 	}
 
 	public void release()

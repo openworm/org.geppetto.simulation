@@ -191,7 +191,7 @@ public class SimulationService implements ISimulation
 //		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationListener);
 //		runtimeModel.apply(populateVisualVisitor);
 
-		updateClientWithSimulation(requestID);
+//		updateClientWithSimulation(requestID);
 	}
 
 	/*
@@ -296,9 +296,10 @@ public class SimulationService implements ISimulation
 	{
 		_logger.info("Setting watched variables in simulation tree");
 		
+		// SIM TODO: moved to RuntimeExperiment
 		//Update the RunTimeTreeModel
-		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
-		this._sessionContext.getRuntimeTreeRoot().apply(setWatchedVariablesVisitor);
+//		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
+//		this._sessionContext.getRuntimeTreeRoot().apply(setWatchedVariablesVisitor);
 
 		//SIM TODO
 		//Call the function for each simulator
@@ -325,9 +326,10 @@ public class SimulationService implements ISimulation
 	{
 		_logger.info("Clearing watched variables in simulation tree");
 		
+		// SIM TODO: moved to RuntimeExperiment
 		//Update the RunTimeTreeModel setting watched to false for every node
-		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
-		this._sessionContext.getRuntimeTreeRoot().apply(clearWatchedVariablesVisitor);
+//		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
+//		this._sessionContext.getRuntimeTreeRoot().apply(clearWatchedVariablesVisitor);
 		
 		//SIM TODO
 		// instruct aspects to clear watch variables
@@ -356,6 +358,7 @@ public class SimulationService implements ISimulation
 		return _scripts;
 	}
 
+	// SIM TODO: moved to RuntimeExperiment
 	/**
 	 * Method that takes the oldest model in the buffer and send it to the client
 	 * 
@@ -364,23 +367,23 @@ public class SimulationService implements ISimulation
 	 * @throws ModelInterpreterException
 	 * 
 	 */
-	private void updateClientWithSimulation(String requestID)
-	{
-
-		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
-
-		ExitVisitor exitVisitor = new ExitVisitor(_simulationListener);
-		_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
-
-		String scene = updateClientVisitor.getSerializedTree();
-
-		if(scene != null)
-		{
-			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, requestID, scene);
-			_logger.info("Simulation sent to callback listener");
-		}
-	}
+//	private void updateClientWithSimulation(String requestID)
+//	{
+//
+//		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+//		_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
+//
+//		ExitVisitor exitVisitor = new ExitVisitor(_simulationListener);
+//		_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
+//
+//		String scene = updateClientVisitor.getSerializedTree();
+//
+//		if(scene != null)
+//		{
+//			_simulationListener.updateReady(SimulationEvents.LOAD_MODEL, requestID, scene);
+//			_logger.info("Simulation sent to callback listener");
+//		}
+//	}
 
 	/**
 	 * @param simConfig

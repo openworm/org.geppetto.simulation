@@ -58,17 +58,19 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	private List<ExperimentRun> experimentRuns = new ArrayList<>();
 
 	private ProjectManager projectManager = new ProjectManager();
+	
+	private volatile int reqId = 0;
 
 	@Autowired
 	private ISimulationCallbackListener simulationCallbackListener;
-
+	
 	public ExperimentRunManager()
 	{
 		try
 		{
 			loadExperiments();
 		}
-		catch(GeppettoInitializationException | MalformedURLException e)
+		catch(GeppettoInitializationException | GeppettoExecutionException | MalformedURLException e)
 		{
 			e.printStackTrace();
 		}
@@ -86,30 +88,23 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		return true;
 	}
 
-	public void runExperiment(IExperiment experiment)
+	public void runExperiment(IExperiment experiment) throws GeppettoInitializationException
 	{
-		try
+		ExperimentRun experimentRun = new ExperimentRun(DataManagerHelper.getDataManager(), experiment, simulationCallbackListener);
+		experimentRun.addExperimentListener(this);
+		experiment.setStatus(ExperimentStatus.RUNNING);
+		IUser user = getUserForExperiment(experiment);
+		synchronized(this)
 		{
-			ExperimentRun experimentRun = new ExperimentRun(DataManagerHelper.getDataManager(), experiment, simulationCallbackListener);
-			experimentRun.addExperimentListener(this);
-			experiment.setStatus(ExperimentStatus.RUNNING);
-			IUser user = getUserForExperiment(experiment);
-			synchronized(this)
-			{
-				queue.get(user).remove(experiment);
-			}
-			synchronized(experimentRuns)
-			{
-				experimentRuns.add(experimentRun);
-			}
+			queue.get(user).remove(experiment);
 		}
-		catch(GeppettoInitializationException e)
+		synchronized(experimentRuns)
 		{
-			e.printStackTrace();
+			experimentRuns.add(experimentRun);
 		}
 	}
 
-	private void loadExperiments() throws GeppettoInitializationException, MalformedURLException
+	private void loadExperiments() throws GeppettoInitializationException, MalformedURLException, GeppettoExecutionException
 	{
 		IGeppettoDataManager dataManager = DataManagerHelper.getDataManager();
 		List<? extends IUser> users = dataManager.getAllUsers();
@@ -119,7 +114,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 			for(IGeppettoProject project : projects)
 			{
 				// This could be either when the user decides to open a project or when the ExperimentsRunManager queues an Experiment
-				projectManager.loadProject(project, simulationCallbackListener);
+				projectManager.loadProject("ERM" + getReqId(), user, project, simulationCallbackListener);
 				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
 				addExperimentsToQueue(user, experiments, ExperimentStatus.RUNNING);
 				addExperimentsToQueue(user, experiments, ExperimentStatus.QUEUED);
@@ -198,7 +193,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 					if(closeProject)
 					{
 						// close the project when all the user experiments are completed and none of the experiments is active
-						projectManager.closeProject(project);
+						projectManager.closeProject("ERM" + getReqId(), user, project);
 					}
 				}
 			}
@@ -207,6 +202,10 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	private synchronized int getReqId() {
+		return ++reqId;
 	}
 
 }

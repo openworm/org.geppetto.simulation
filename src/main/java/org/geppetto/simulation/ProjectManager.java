@@ -40,23 +40,33 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
+import org.geppetto.core.data.model.IUser;
+import org.geppetto.core.simulation.IExperimentRunManager;
 import org.geppetto.core.simulation.IProjectManager;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ProjectManager implements IProjectManager
 {
 
 	private Map<IGeppettoProject, RuntimeProject> projects = new LinkedHashMap<>();
 
-	public void loadProject(IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
+	@Autowired
+	private IExperimentRunManager experimentRunManager;
+
+	public void loadProject(String requestId, IUser user, IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException
 	{
 		// RuntimeProject is created and populated when loadProject is called
 		RuntimeProject runtimeProject = new RuntimeProject(project, listener);
 		projects.put(project, runtimeProject);
-		// TODO: load the active experiment if there is one
+		// load the active experiment if there is one
+		if(project.getExperiments().size() > 0)
+		{
+			loadExperiment(requestId, user, project.getExperiments().get(0));
+		}
 	}
 
-	public void closeProject(IGeppettoProject project) throws GeppettoExecutionException
+	public void closeProject(String requestId, IUser user, IGeppettoProject project) throws GeppettoExecutionException
 	{
 		if(!projects.containsKey(project) && projects.get(project) == null)
 		{
@@ -76,42 +86,36 @@ public class ProjectManager implements IProjectManager
 	}
 
 	@Override
-	public void loadProject(String requestId, IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
+	public void loadExperiment(String requestId, IUser user, IExperiment experiment) throws GeppettoExecutionException
+	{
+		IGeppettoProject project = null;
+		for (IGeppettoProject proj : projects.keySet()) {
+			if (proj.getExperiments().contains(experiment)) {
+				project = proj;
+			}
+		}
+		if(!projects.containsKey(project) && projects.get(project) == null)
+		{
+			throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
+		}
+		experimentRunManager.queueExperiment(user, experiment);
+	}
+
+	@Override
+	public void runExperiment(String requestId, IUser user, IExperiment experiment) throws GeppettoInitializationException
+	{
+		experimentRunManager.runExperiment(experiment);
+	}
+
+	@Override
+	public void deleteExperiment(String requestId, IUser user, IExperiment experiment)
 	{
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void closeProject(String requestId, IGeppettoProject project) throws GeppettoExecutionException
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void loadExperiment(String requestId, IExperiment experiment)
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void runExperiment(String requestId, IExperiment experiment)
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void deleteExperiment(String requestId, IExperiment experiment)
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void persistProject(String requestId, IGeppettoProject project)
+	public void persistProject(String requestId, IUser user, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
 

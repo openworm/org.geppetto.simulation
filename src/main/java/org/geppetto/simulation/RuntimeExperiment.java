@@ -48,7 +48,6 @@ import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
@@ -56,7 +55,7 @@ import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
-public class RuntimeExperiment implements ISimulatorCallbackListener
+public class RuntimeExperiment
 {
 
 	private Map<String, IModelInterpreter> modelInterpreters = new HashMap<String, IModelInterpreter>();
@@ -179,20 +178,6 @@ public class RuntimeExperiment implements ISimulatorCallbackListener
 	public void release()
 	{
 		// TODO: release the instantiated services
-	}
-
-	@Override
-	public void endOfSteps(String message)
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void stateTreeUpdated() throws GeppettoExecutionException
-	{
-		// TODO Auto-generated method stub
-
 	}
 
 }

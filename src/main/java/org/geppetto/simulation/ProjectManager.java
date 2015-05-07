@@ -54,7 +54,8 @@ public class ProjectManager implements IProjectManager
 	@Autowired
 	private IExperimentRunManager experimentRunManager;
 
-	public void loadProject(String requestId, IUser user, IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException
+	public void loadProject(String requestId, IUser user, IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException,
+			GeppettoExecutionException
 	{
 		// RuntimeProject is created and populated when loadProject is called
 		RuntimeProject runtimeProject = new RuntimeProject(project, listener);
@@ -89,8 +90,10 @@ public class ProjectManager implements IProjectManager
 	public void loadExperiment(String requestId, IUser user, IExperiment experiment) throws GeppettoExecutionException
 	{
 		IGeppettoProject project = null;
-		for (IGeppettoProject proj : projects.keySet()) {
-			if (proj.getExperiments().contains(experiment)) {
+		for(IGeppettoProject proj : projects.keySet())
+		{
+			if(proj.getExperiments().contains(experiment))
+			{
 				project = proj;
 			}
 		}

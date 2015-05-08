@@ -97,9 +97,6 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					{
 						URL url = null;
 						url = this.getClass().getResource(recording);
-						if(url == null){
-							url = new URL(recording);
-						}
 						recordings.add(url);
 					}
 				}
@@ -292,11 +289,13 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		if(formats!=null){
 			for(IModelFormat format : formats)
 			{
-				for(IModelFormat format2 : formats2)
-				{
-					if(format.toString().equals(format2.toString()))
+				if(formats2 != null){
+					for(IModelFormat format2 : formats2)
 					{
-						result.add(format);
+						if(format.toString().equals(format2.toString()))
+						{
+							result.add(format);
+						}
 					}
 				}
 			}

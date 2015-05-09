@@ -47,6 +47,13 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 
+/**
+ * The Runtime project holds the runtime state for an open project.
+ * 
+ * @author dandromereschi
+ * @author matteocantarelli
+ *
+ */
 public class RuntimeProject
 {
 

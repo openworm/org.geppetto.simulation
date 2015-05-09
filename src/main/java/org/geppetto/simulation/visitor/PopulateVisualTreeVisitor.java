@@ -40,7 +40,7 @@ import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 
 /**
  * Visitor used for retrieving simulator from aspect node's and sending call to simulator
@@ -51,9 +51,9 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
  */
 public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 	
-	private ISimulationCallbackListener _simulationCallBack;
+	private IProjectManagerCallbackListener _simulationCallBack;
 
-	public PopulateVisualTreeVisitor(ISimulationCallbackListener simulationListener)
+	public PopulateVisualTreeVisitor(IProjectManagerCallbackListener simulationListener)
 	{
 		this._simulationCallBack = simulationListener;
 	}

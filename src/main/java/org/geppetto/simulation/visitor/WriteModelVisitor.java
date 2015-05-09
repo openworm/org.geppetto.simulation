@@ -51,7 +51,7 @@ import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 
 /**
  * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter
@@ -65,13 +65,13 @@ public class WriteModelVisitor extends DefaultStateVisitor{
 	private static Log _logger = LogFactory.getLog(WriteModelVisitor.class);
 
 	//Listener used to send back errors 
-	private ISimulationCallbackListener _simulationCallBack;
+	private IProjectManagerCallbackListener _simulationCallBack;
 	//The id of aspect we will be populating
 	private String _instancePath;
 	private String _format;
 //	private HashMap<String, AspectSubTreeNode> _populateModelTree;
 
-	public WriteModelVisitor(ISimulationCallbackListener simulationListener, String instancePath, String format)
+	public WriteModelVisitor(IProjectManagerCallbackListener simulationListener, String instancePath, String format)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;

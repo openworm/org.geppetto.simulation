@@ -45,7 +45,7 @@ import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 
 /**
  * Visitor used for setting parameter(s) on an aspect's model.
@@ -58,12 +58,12 @@ public class SetParametersVisitor extends DefaultStateVisitor{
 	private static Log _logger = LogFactory.getLog(SetParametersVisitor.class);
 
 	//Listener used to send back errors 
-	private ISimulationCallbackListener _simulationCallBack;
+	private IProjectManagerCallbackListener _simulationCallBack;
 	//The id of aspect we will be populating
 	private String _instancePath;
 	private Map<String, String> _parameters = new HashMap<String,String>();
 
-	public SetParametersVisitor(ISimulationCallbackListener simulationListener,Map<String, String> parameters, String instancePath)
+	public SetParametersVisitor(IProjectManagerCallbackListener simulationListener,Map<String, String> parameters, String instancePath)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;

@@ -40,8 +40,8 @@ import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.values.ValuesFactory;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.SimulationVisitor;
@@ -52,7 +52,7 @@ class SimulationThread extends Thread
 
 	private static Log _logger = LogFactory.getLog(SimulationThread.class);
 	private SessionContext _sessionContext = null;
-	private ISimulationCallbackListener _simulationCallback;
+	private IProjectManagerCallbackListener _simulationCallback;
 	private int _updateCycles = 0;
 	private long _timeElapsed;
 	private boolean _simulationStarted = false;
@@ -64,7 +64,7 @@ class SimulationThread extends Thread
 	 * @param context
 	 * @param simulationListener 
 	 */
-	public SimulationThread(SessionContext context, ISimulationCallbackListener simulationListener, 
+	public SimulationThread(SessionContext context, IProjectManagerCallbackListener simulationListener, 
 			String requestID, int cycle)
 	{
 		this._sessionContext = context;
@@ -127,7 +127,8 @@ class SimulationThread extends Thread
 			String scene = updateClientVisitor.getSerializedTree();
 			if(scene!=null){
 				if(!this._simulationStarted){
-					_simulationCallback.updateReady(SimulationEvents.START_SIMULATION, _requestID,scene);
+					//TODO MAtteo check this, it was START_SIMULATION previously
+					_simulationCallback.updateReady(SimulationEvents.RUN_EXPERIMENT, _requestID,scene);
 					_logger.info("First step of simulation sent to Simulation Callback Listener");
 					this._simulationStarted = true;
 				}else{

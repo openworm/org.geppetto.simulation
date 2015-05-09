@@ -55,7 +55,7 @@ import org.geppetto.core.model.simulation.VisualObjectReference;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.model.values.FloatValue;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 import org.geppetto.core.visualisation.model.Point;
 
 /**
@@ -70,11 +70,11 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 	// private SessionContext _sessionContext;
 	private Map<String, IModelInterpreter> _modelInterpreters;
 	private Map<String, IModel> _model;
-	private ISimulationCallbackListener _simulationCallback;
+	private IProjectManagerCallbackListener _simulationCallback;
 	// Head node that holds the entities
 	private RuntimeTreeRoot _runtimeTreeRoot;
 
-	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot, ISimulationCallbackListener simulationCallback)
+	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot, IProjectManagerCallbackListener simulationCallback)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		// this._sessionContext = sessionContext;

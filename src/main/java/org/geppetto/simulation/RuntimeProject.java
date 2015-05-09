@@ -43,7 +43,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.simulation.GeppettoModel;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 
@@ -63,14 +63,14 @@ public class RuntimeProject
 
 	private GeppettoModel geppettoModel;
 
-	private ISimulationCallbackListener listener;
+	private IProjectManagerCallbackListener listener;
 
 	public GeppettoModel getGeppettoModel()
 	{
 		return geppettoModel;
 	}
 
-	public RuntimeProject(IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeProject(IGeppettoProject project, IProjectManagerCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
 	{
 		this.listener = listener;
 		IPersistedData geppettoModelData = project.getGeppettoModel();

@@ -38,14 +38,15 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.manager.IProjectManager;
 import org.geppetto.core.simulation.IExperimentRunManager;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ProjectManager implements IProjectManager
 {
 
@@ -54,7 +55,7 @@ public class ProjectManager implements IProjectManager
 	@Autowired
 	private IExperimentRunManager experimentRunManager;
 
-	public void loadProject(String requestId, IUser user, IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException,
+	public void loadProject(String requestId, IUser user, IGeppettoProject project, IProjectManagerCallbackListener listener) throws MalformedURLException, GeppettoInitializationException,
 			GeppettoExecutionException
 	{
 		// RuntimeProject is created and populated when loadProject is called
@@ -111,7 +112,7 @@ public class ProjectManager implements IProjectManager
 //	}
 
 	@Override
-	public void loadProject(String requestId, IGeppettoProject project, ISimulationCallbackListener listener) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException
+	public void loadProject(String requestId, IGeppettoProject project, IProjectManagerCallbackListener listener) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException
 	{
 		// TODO Auto-generated method stub
 		

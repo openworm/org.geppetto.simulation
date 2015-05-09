@@ -48,7 +48,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.simulation.IExperimentRunManager;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -63,7 +63,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	
 	private volatile int reqId = 0;
 
-	private IProjectManagerCallbackListener simulationCallbackListener;
+	private IGeppettoManagerCallbackListener simulationCallbackListener;
 	
 	public ExperimentRunManager()
 	{

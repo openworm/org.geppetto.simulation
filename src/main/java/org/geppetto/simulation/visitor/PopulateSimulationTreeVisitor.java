@@ -48,7 +48,7 @@ import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
  * Visitor used for retrieving simulator from aspect node's and sending call to simulator
@@ -59,14 +59,14 @@ import org.geppetto.core.simulation.IProjectManagerCallbackListener;
  */
 public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 	
-	private IProjectManagerCallbackListener _simulationCallBack;
+	private IGeppettoManagerCallbackListener _simulationCallBack;
 	//The id of aspect we will be populating
 	private String _instancePath;
 	
 	//This is not being used at the moment
 	private HashMap<String, AspectSubTreeNode> _populateSimulationTree;
 
-	public PopulateSimulationTreeVisitor(IProjectManagerCallbackListener simulationListener, String instancePath)
+	public PopulateSimulationTreeVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;

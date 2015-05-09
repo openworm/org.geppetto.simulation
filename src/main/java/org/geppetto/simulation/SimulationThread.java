@@ -40,8 +40,8 @@ import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.values.ValuesFactory;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener.SimulationEvents;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.SimulationVisitor;
@@ -52,7 +52,7 @@ class SimulationThread extends Thread
 
 	private static Log _logger = LogFactory.getLog(SimulationThread.class);
 	private SessionContext _sessionContext = null;
-	private IProjectManagerCallbackListener _simulationCallback;
+	private IGeppettoManagerCallbackListener _simulationCallback;
 	private int _updateCycles = 0;
 	private long _timeElapsed;
 	private boolean _simulationStarted = false;
@@ -64,7 +64,7 @@ class SimulationThread extends Thread
 	 * @param context
 	 * @param simulationListener 
 	 */
-	public SimulationThread(SessionContext context, IProjectManagerCallbackListener simulationListener, 
+	public SimulationThread(SessionContext context, IGeppettoManagerCallbackListener simulationListener, 
 			String requestID, int cycle)
 	{
 		this._sessionContext = context;
@@ -128,11 +128,11 @@ class SimulationThread extends Thread
 			if(scene!=null){
 				if(!this._simulationStarted){
 					//TODO MAtteo check this, it was START_SIMULATION previously
-					_simulationCallback.updateReady(SimulationEvents.RUN_EXPERIMENT, _requestID,scene);
+					_simulationCallback.updateReady(GeppettoEvents.RUN_EXPERIMENT, _requestID,scene);
 					_logger.info("First step of simulation sent to Simulation Callback Listener");
 					this._simulationStarted = true;
 				}else{
-					_simulationCallback.updateReady(SimulationEvents.SCENE_UPDATE, _requestID, scene);
+					_simulationCallback.updateReady(GeppettoEvents.SCENE_UPDATE, _requestID, scene);
 					_logger.info("Update sent to Simulation Callback Listener");
 				}
 			}

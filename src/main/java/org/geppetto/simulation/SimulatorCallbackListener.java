@@ -36,7 +36,7 @@ package org.geppetto.simulation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.springframework.stereotype.Service;
 
@@ -47,13 +47,13 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 //	private Simulator _simulatorModel;
 	private SimulatorRuntime _simulatorRuntime;
 	private SessionContext _sessionContext;
-	private IProjectManagerCallbackListener _simulationCallback;
+	private IGeppettoManagerCallbackListener _simulationCallback;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
 	// SIM TODO
 	public SimulatorCallbackListener(//Simulator simulatorModel, 
-			SessionContext context, IProjectManagerCallbackListener simulationCallback)
+			SessionContext context, IGeppettoManagerCallbackListener simulationCallback)
 	{
 		// SIM TODO
 //		_simulatorModel = simulatorModel;

@@ -39,7 +39,7 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.simulation.ServiceCreator;
 
 /**
@@ -53,9 +53,9 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 {
 
 	private Map<String, IModelInterpreter> _model;
-	private IProjectManagerCallbackListener _simulationCallBack;
+	private IGeppettoManagerCallbackListener _simulationCallBack;
 
-	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> model, IProjectManagerCallbackListener simulationCallBack)
+	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> model, IGeppettoManagerCallbackListener simulationCallBack)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		_model = model;

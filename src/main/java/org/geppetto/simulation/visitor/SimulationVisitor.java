@@ -42,8 +42,8 @@ import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener.SimulationEvents;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
 import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.simulation.SessionContext;
@@ -60,13 +60,13 @@ import org.geppetto.simulation.SimulatorRuntimeStatus;
  */
 public class SimulationVisitor extends DefaultStateVisitor
 {
-	private IProjectManagerCallbackListener _simulationCallBack;
+	private IGeppettoManagerCallbackListener _simulationCallBack;
 	private SessionContext _sessionContext;
 	private String _requestID;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
-	public SimulationVisitor(SessionContext _sessionContext, IProjectManagerCallbackListener simulationListener, String _requestID)
+	public SimulationVisitor(SessionContext _sessionContext, IGeppettoManagerCallbackListener simulationListener, String _requestID)
 	{
 		this._simulationCallBack = simulationListener;
 		this._sessionContext = _sessionContext;
@@ -98,7 +98,7 @@ public class SimulationVisitor extends DefaultStateVisitor
 			SimulatorRuntime simulatorRuntime = this._sessionContext.getSimulatorRuntime(simulator.getId());
 
 			if(simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
-				_simulationCallBack.updateReady(SimulationEvents.EXPERIMENT_OVER, _requestID, null);
+				_simulationCallBack.updateReady(GeppettoEvents.EXPERIMENT_OVER, _requestID, null);
 				simulatorRuntime.setStatus(SimulatorRuntimeStatus.IDLE);
 			}
 			

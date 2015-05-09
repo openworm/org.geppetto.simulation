@@ -39,7 +39,7 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
  * Visitor used for setting modified flag on subtree to flase after sending
@@ -53,9 +53,9 @@ public class ExitVisitor extends DefaultStateVisitor {
 	private static Log _logger = LogFactory.getLog(ExitVisitor.class);
 
 	// Listener used to send back errors
-	private IProjectManagerCallbackListener _simulationCallBack;
+	private IGeppettoManagerCallbackListener _simulationCallBack;
 
-	public ExitVisitor(IProjectManagerCallbackListener simulationListener) {
+	public ExitVisitor(IGeppettoManagerCallbackListener simulationListener) {
 		this._simulationCallBack = simulationListener;
 	}
 

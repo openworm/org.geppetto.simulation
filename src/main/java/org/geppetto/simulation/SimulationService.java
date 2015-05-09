@@ -49,8 +49,8 @@ import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.ISimulation;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener;
-import org.geppetto.core.simulation.IProjectManagerCallbackListener.SimulationEvents;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
@@ -76,7 +76,7 @@ public class SimulationService implements ISimulation
 	private static Log _logger = LogFactory.getLog(SimulationService.class);
 	private final SessionContext _sessionContext = new SessionContext();
 	private SimulationThread _simulationThread;
-	private IProjectManagerCallbackListener _simulationListener;
+	private IGeppettoManagerCallbackListener _simulationListener;
 	private List<URL> _scripts = new ArrayList<URL>();
 
 	/**
@@ -93,7 +93,7 @@ public class SimulationService implements ISimulation
 	 * @see org.geppetto.core.simulation.ISimulation#init(java.net.URL, org.geppetto.core.simulation.ISimulationCallbackListener)
 	 */
 	@Override
-	public void init(URL simConfigURL, String requestID, IProjectManagerCallbackListener simulationListener) throws GeppettoInitializationException
+	public void init(URL simConfigURL, String requestID, IGeppettoManagerCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		long start = System.currentTimeMillis();
 		long end = System.currentTimeMillis();
@@ -124,7 +124,7 @@ public class SimulationService implements ISimulation
 	 * @throws ModelInterpreterException
 	 */
 	@Override
-	public void init(String simulationConfig, String requestID, IProjectManagerCallbackListener simulationListener) throws GeppettoInitializationException
+	public void init(String simulationConfig, String requestID, IGeppettoManagerCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		long start = System.currentTimeMillis();
 		long end = System.currentTimeMillis();
@@ -286,7 +286,7 @@ public class SimulationService implements ISimulation
 		return simulationConfig;
 	}
 
-	public IProjectManagerCallbackListener getSimulationCallbackListener()
+	public IGeppettoManagerCallbackListener getSimulationCallbackListener()
 	{
 		return this._simulationListener;
 	}

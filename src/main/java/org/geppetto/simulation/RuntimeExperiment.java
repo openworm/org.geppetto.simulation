@@ -47,8 +47,8 @@ import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulation.ISimulationCallbackListener.SimulationEvents;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener.SimulationEvents;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
@@ -67,12 +67,12 @@ public class RuntimeExperiment
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
-	public RuntimeExperiment(String requestId, RuntimeProject runtimeProject, ISimulationCallbackListener listener)
+	public RuntimeExperiment(String requestId, RuntimeProject runtimeProject, IProjectManagerCallbackListener listener)
 	{
 		init(requestId, runtimeProject.getGeppettoModel(), listener);
 	}
 
-	private void init(String requestId, GeppettoModel geppettoModel, ISimulationCallbackListener listener)
+	private void init(String requestId, GeppettoModel geppettoModel, IProjectManagerCallbackListener listener)
 	{
 		// clear watch lists
 		this.clearWatchLists();
@@ -157,7 +157,7 @@ public class RuntimeExperiment
 	 * @throws ModelInterpreterException
 	 * 
 	 */
-	private void notifyExperimentLoaded(String requestID, ISimulationCallbackListener simulationListener)
+	private void notifyExperimentLoaded(String requestID, IProjectManagerCallbackListener simulationListener)
 	{
 
 		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
@@ -170,7 +170,7 @@ public class RuntimeExperiment
 
 		if(scene != null)
 		{
-			simulationListener.updateReady(SimulationEvents.LOAD_MODEL, requestID, scene);
+			simulationListener.updateReady(SimulationEvents.LOAD_PROJECT, requestID, scene);
 			logger.info("Simulation sent to callback listener");
 		}
 	}

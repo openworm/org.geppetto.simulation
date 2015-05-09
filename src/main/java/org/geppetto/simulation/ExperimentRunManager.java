@@ -48,9 +48,11 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.simulation.IExperimentRunManager;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ExperimentRunManager implements IExperimentRunManager, IExperimentListener
 {
 	private Map<IUser, List<IExperiment>> queue = new LinkedHashMap<>();
@@ -61,8 +63,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	
 	private volatile int reqId = 0;
 
-	@Autowired
-	private ISimulationCallbackListener simulationCallbackListener;
+	private IProjectManagerCallbackListener simulationCallbackListener;
 	
 	public ExperimentRunManager()
 	{

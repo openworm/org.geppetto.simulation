@@ -44,7 +44,7 @@ import org.geppetto.core.data.IGeppettoDataManager;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 
@@ -64,9 +64,9 @@ public class ExperimentRun implements ISimulatorCallbackListener
 	// This map contains the simulator runtime for each one of the simulators
 	private Map<String, SimulatorRuntime> simulatorRuntimes = new ConcurrentHashMap<String, SimulatorRuntime>();
 
-	private ISimulationCallbackListener simulationCallbackListener;
+	private IProjectManagerCallbackListener simulationCallbackListener;
 
-	public ExperimentRun(IGeppettoDataManager dataManager, IExperiment experiment, ISimulationCallbackListener simulationCallbackListener)
+	public ExperimentRun(IGeppettoDataManager dataManager, IExperiment experiment, IProjectManagerCallbackListener simulationCallbackListener)
 	{
 		this.dataManager = dataManager;
 		this.experiment = experiment;

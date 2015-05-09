@@ -48,7 +48,7 @@ import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 import org.geppetto.core.services.IModelFormat;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
+import org.geppetto.core.simulation.IProjectManagerCallbackListener;
 
 /**
  * This visitor loads a simulation
@@ -62,10 +62,10 @@ public class LoadSimulationVisitor extends TraversingVisitor
 //	private SessionContext _sessionContext;
 	private Map<String, IModelInterpreter> _modelInterpreters;
 	private Map<String, IModel> _model;
-	private ISimulationCallbackListener _simulationCallback;
+	private IProjectManagerCallbackListener _simulationCallback;
 	private static Log _logger = LogFactory.getLog(LoadSimulationVisitor.class);
 
-	public LoadSimulationVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, ISimulationCallbackListener simulationListener)
+	public LoadSimulationVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, IProjectManagerCallbackListener simulationListener)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 //		_sessionContext = sessionContext;

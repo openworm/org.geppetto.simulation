@@ -32,41 +32,33 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
- * Visitor used for setting modified flag on subtree to flase after sending
- * update
+ * Visitor used for setting modified flag on subtree to flase after sending update
  * 
  * @author Jesus R. Martinez (jesus@metacell.us)
  * 
  */
-public class ExitVisitor extends DefaultStateVisitor {
+public class ExitVisitor extends DefaultStateVisitor
+{
 
-	private static Log _logger = LogFactory.getLog(ExitVisitor.class);
-
-	// Listener used to send back errors
-	private IGeppettoManagerCallbackListener _simulationCallBack;
-
-	public ExitVisitor(IGeppettoManagerCallbackListener simulationListener) {
-		this._simulationCallBack = simulationListener;
+	public ExitVisitor()
+	{
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#
-	 * inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor# inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
-	public boolean outAspectSubTreeNode(AspectSubTreeNode node) {
+	public boolean outAspectSubTreeNode(AspectSubTreeNode node)
+	{
 		node.setModified(false);
 		return super.inAspectSubTreeNode(node);
 	}
@@ -74,11 +66,11 @@ public class ExitVisitor extends DefaultStateVisitor {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#
-	 * inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor# inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
-	public boolean outEntityNode(EntityNode node) {
+	public boolean outEntityNode(EntityNode node)
+	{
 		node.setModified(false);
 		return super.inEntityNode(node);
 	}
@@ -86,22 +78,23 @@ public class ExitVisitor extends DefaultStateVisitor {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#
-	 * inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor# inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
-	public boolean outAspectNode(AspectNode node) {
+	public boolean outAspectNode(AspectNode node)
+	{
 		node.setModified(false);
 		return super.inAspectNode(node);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#
 	 */
 	@Override
-	public boolean outConnectionNode(ConnectionNode node) {
+	public boolean outConnectionNode(ConnectionNode node)
+	{
 		node.setModified(false);
 		return super.inConnectionNode(node);
 	}

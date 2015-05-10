@@ -62,13 +62,12 @@ class SimulationThread extends Thread
 
 	/**
 	 * @param context
-	 * @param simulationListener 
+	 * @param simulationListener
 	 */
-	public SimulationThread(SessionContext context, IGeppettoManagerCallbackListener simulationListener, 
-			String requestID, int cycle)
+	public SimulationThread(SessionContext context, IGeppettoManagerCallbackListener simulationListener, String requestID, int cycle)
 	{
 		this._sessionContext = context;
-		_simulationCallback=simulationListener;
+		_simulationCallback = simulationListener;
 		_updateCycles = cycle;
 		_requestID = requestID;
 		_timeElapsed = System.currentTimeMillis();
@@ -82,56 +81,61 @@ class SimulationThread extends Thread
 		return _sessionContext;
 	}
 
-
 	public void run()
 	{
-		SimulationVisitor simulationVisitor=new SimulationVisitor(_sessionContext,_simulationCallback,_requestID);
-		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING) )
+		SimulationVisitor simulationVisitor = new SimulationVisitor(_sessionContext, _simulationCallback, _requestID);
+		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 		{
-				long calculateTime =System.currentTimeMillis() - _timeElapsed;
-				
-				//update only if time elapsed since last client update doesn't exceed
-				//the update cycle of application.
-				if( calculateTime >= _updateCycles){
-					_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
-					updateRuntimeTreeClient();
+			long calculateTime = System.currentTimeMillis() - _timeElapsed;
 
-					_timeElapsed = System.currentTimeMillis();
-					_logger.info("Updating after " + calculateTime + " ms");
-				}
+			// update only if time elapsed since last client update doesn't exceed
+			// the update cycle of application.
+			if(calculateTime >= _updateCycles)
+			{
+				_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
+				updateRuntimeTreeClient();
+
+				_timeElapsed = System.currentTimeMillis();
+				_logger.info("Updating after " + calculateTime + " ms");
+			}
 		}
 	}
-	
+
 	/**
 	 * Send update to client with new run time tree
 	 */
-	public void updateRuntimeTreeClient(){
+	public void updateRuntimeTreeClient()
+	{
 		CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor(_sessionContext);
 		_sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
 
 		if(checkSteppedSimulatorsVisitor.allStepped() && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 		{
-			//Visit simulators to extract time from them
+			// Visit simulators to extract time from them
 			TimeVisitor timeVisitor = new TimeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(timeVisitor);
 			_timeStepUnit = timeVisitor.getTimeStepUnit();
-			//set global time
+			// set global time
 			this.setGlobalTime(timeVisitor.getTime(), _sessionContext.getRuntimeTreeRoot());
-			
+
 			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
-			
-			ExitVisitor exitVisitor = new ExitVisitor(_simulationCallback);
+
+			ExitVisitor exitVisitor = new ExitVisitor();
 			_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
-			
+
 			String scene = updateClientVisitor.getSerializedTree();
-			if(scene!=null){
-				if(!this._simulationStarted){
-					//TODO MAtteo check this, it was START_SIMULATION previously
-					_simulationCallback.updateReady(GeppettoEvents.RUN_EXPERIMENT, _requestID,scene);
+			if(scene != null)
+			{
+				if(!this._simulationStarted)
+				{
+					// TODO MAtteo check this, it was START_SIMULATION previously
+					_simulationCallback.updateReady(GeppettoEvents.RUN_EXPERIMENT, _requestID, scene);
 					_logger.info("First step of simulation sent to Simulation Callback Listener");
 					this._simulationStarted = true;
-				}else{
+				}
+				else
+				{
 					_simulationCallback.updateReady(GeppettoEvents.SCENE_UPDATE, _requestID, scene);
 					_logger.info("Update sent to Simulation Callback Listener");
 				}
@@ -142,10 +146,13 @@ class SimulationThread extends Thread
 	/**
 	 * Updates the time node in the run time tree root node
 	 * 
-	 * @param newTimeValue - New time
-	 * @param tree -Tree root node
+	 * @param newTimeValue
+	 *            - New time
+	 * @param tree
+	 *            -Tree root node
 	 */
-	private void setGlobalTime(double newTimeValue, RuntimeTreeRoot tree){
+	private void setGlobalTime(double newTimeValue, RuntimeTreeRoot tree)
+	{
 		_runtime += newTimeValue;
 		VariableNode time = new VariableNode("time");
 		PhysicalQuantity t = new PhysicalQuantity();

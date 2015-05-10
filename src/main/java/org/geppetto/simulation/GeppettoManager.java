@@ -54,13 +54,26 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulation.ResultsFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * GeppettoManager is the implementation of IGeppettoManager which represents the Java API
+ * entry point for Geppetto.
+ * This class is instantiated with a session scope, which means there is one GeppettoManager
+ * per each session/connection therefore only one user is associated with a GeppettoManager.
+ * A GeppettoManager is also instantiated by the ExperimentRunManager to handle the queued
+ * activities in the database.
+ * 
+ * @author dandromereschi
+ * @author matteocantarelli
+ *
+ */
 public class GeppettoManager implements IGeppettoManager
 {
 
 	private static Log logger = LogFactory.getLog(GeppettoManager.class);
-	
+
+	//these are the runtime projects for a 
 	private Map<IGeppettoProject, RuntimeProject> projects = new LinkedHashMap<>();
-	
+
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	@Autowired
@@ -68,19 +81,25 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IUser user;
 
-	public void loadProject(String requestId, IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException,
-			GeppettoExecutionException
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IProjectManager#loadProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	public void loadProject(String requestId, IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException
 	{
 		// RuntimeProject is created and populated when loadProject is called
 		RuntimeProject runtimeProject = new RuntimeProject(project, geppettoManagerCallbackListener);
 		projects.put(project, runtimeProject);
 		// load the active experiment if there is one
+		// TODO active experiment needs to be added to IGeppettoProject?
 		if(project.getExperiments().size() > 0)
 		{
-			//loadExperiment(requestId, user, project.getExperiments().get(0));
+			// loadExperiment(requestId, user, project.getExperiments().get(0));
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IProjectManager#closeProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	public void closeProject(String requestId, IGeppettoProject project) throws GeppettoExecutionException
 	{
 		if(!projects.containsKey(project) && projects.get(project) == null)
@@ -95,59 +114,81 @@ public class GeppettoManager implements IGeppettoManager
 		projects.remove(project);
 	}
 
-	public RuntimeProject getRuntimeProject(IGeppettoProject project)
+	/**
+	 * @param project
+	 * @return
+	 * @throws GeppettoExecutionException 
+	 */
+	public RuntimeProject getRuntimeProject(IGeppettoProject project) throws GeppettoExecutionException
 	{
+		if(!projects.containsKey(project))
+		{
+			throw new GeppettoExecutionException("The project with ID:"+project.getId()+" and Name:"+project.getName()+"is not loaded");
+		}
 		return projects.get(project);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IExperimentManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
 	public void loadExperiment(String requestId, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
-//		for(IGeppettoProject proj : projects.keySet())
-//		{
-//			if(proj.getExperiments().contains(experiment))
-//			{
-//				project = proj;
-//			}
-//		}
-//		if(!projects.containsKey(project) && projects.get(project) == null)
-//		{
-//			throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
-//		}
-//		experimentRunManager.queueExperiment(user, experiment);
+		
+		// for(IGeppettoProject proj : projects.keySet())
+		// {
+		// if(proj.getExperiments().contains(experiment))
+		// {
+		// project = proj;
+		// }
+		// }
+		// if(!projects.containsKey(project) && projects.get(project) == null)
+		// {
+		// throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
+		// }
+		// experimentRunManager.queueExperiment(user, experiment);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IExperimentManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
-	public void runExperiment(String requestId, IExperiment experiment, IGeppettoProject project) throws GeppettoInitializationException
+	public void runExperiment(String requestId, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
 		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
-		experimentRunManager.queueExperiment(user, experiment);
+			experimentRunManager.queueExperiment(user, experiment);
 		}
 		else
 		{
-			//TODO Send an error
-			//managerListener.error(error, classSource, errorMessage, e);
+			// TODO Send an error
+			// managerListener.error(error, classSource, errorMessage, e);
 		}
 	}
 
-
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IProjectManager#deleteProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
 	public void deleteProject(String requestId, IGeppettoProject project) throws GeppettoExecutionException
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IProjectManager#persistProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
 	public void persistProject(String requestId, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
-
-
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IExperimentManager#newExperiment(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
 	public IExperiment newExperiment(String requestId, IGeppettoProject project)
 	{
@@ -155,74 +196,107 @@ public class GeppettoManager implements IGeppettoManager
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IExperimentManager#deleteExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
 	public void deleteExperiment(String requestId, IExperiment experiment, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDropBoxManager#linkDropBoxAccount()
+	 */
 	@Override
 	public void linkDropBoxAccount()
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDropBoxManager#uploadModelToDropBox(java.lang.String, org.geppetto.core.services.IModelFormat)
+	 */
 	@Override
 	public void uploadModelToDropBox(String aspectID, IModelFormat format)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDropBoxManager#uploadResultsToDropBox(java.lang.String, org.geppetto.core.simulation.ResultsFormat)
+	 */
 	@Override
 	public void uploadResultsToDropBox(String aspectID, ResultsFormat format)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IRuntimeTreeManager#getModelTree(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
-	public Map<String, AspectSubTreeNode> getModelTree(String aspectInstancePath)
+	public Map<String, AspectSubTreeNode> getModelTree(String aspectInstancePath, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
+		return getRuntimeProject(project).getRuntimeExperiment(experiment).getModelTree(aspectInstancePath);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IRuntimeTreeManager#getSimulationTree(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public Map<String, AspectSubTreeNode> getSimulationTree(String aspectInstancePath, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
+	{
+		return getRuntimeProject(project).getRuntimeExperiment(experiment).getSimulationTree(aspectInstancePath);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IRuntimeTreeManager#setModelParameters(java.lang.String, java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public Map<String, String> setModelParameters(String aspectInstancePath, Map<String, String> parameters, IExperiment experiment, IGeppettoProject project)
+	{
+		// TODO Auto-generated method stub
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IRuntimeTreeManager#setSimulatorConfiguration(java.lang.String, java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
-	public Map<String, AspectSubTreeNode> getSimulationTree(String aspectInstancePath)
-	{
-		return null;
-	}
-
-	@Override
-	public Map<String, String> setModelParameters(String aspectInstancePath, Map<String, String> parameters)
+	public Map<String, String> setSimulatorConfiguration(String aspectInstancePath, Map<String, String> parameters, IExperiment experiment, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IRuntimeTreeManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
-	public Map<String, String> setSimulatorConfiguration(String aspectInstancePath, Map<String, String> parameters)
+	public void setWatchedVariables(List<String> watchedVariables, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
 		// TODO Auto-generated method stub
-		return null;
+
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IRuntimeTreeManager#clearWatchLists(org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
-	public void setWatchedVariables(List<String> watchedVariables) throws GeppettoExecutionException, GeppettoInitializationException
+	public void clearWatchLists(IExperiment experiment, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
-	@Override
-	public void clearWatchLists()
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDownloadManager#downloadModel(java.lang.String, org.geppetto.core.services.IModelFormat)
+	 */
 	@Override
 	public File downloadModel(String aspectID, IModelFormat format)
 	{
@@ -230,6 +304,9 @@ public class GeppettoManager implements IGeppettoManager
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDownloadManager#downloadResults(org.geppetto.core.simulation.ResultsFormat)
+	 */
 	@Override
 	public File downloadResults(ResultsFormat resultsFormat)
 	{
@@ -237,18 +314,29 @@ public class GeppettoManager implements IGeppettoManager
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IGeppettoManager#setUser(org.geppetto.core.data.model.IUser)
+	 */
 	@Override
-	public void setUser(IUser user)
+	public void setUser(IUser user) throws GeppettoExecutionException
 	{
-		this.user=user;
+		if(this.user!=null)
+		{
+			String message="A GeppettoManager is being reused, an user was already set and setUser is being called. Current user:"+this.user.getName()+", attempted new user:"+user.getName();
+			logger.error(message);
+			throw new GeppettoExecutionException(message);
+		}
+		this.user = user;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IGeppettoManager#setCallback(org.geppetto.core.simulation.IGeppettoManagerCallbackListener)
+	 */
 	@Override
 	public void setCallback(IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
-		this.geppettoManagerCallbackListener=geppettoManagerCallbackListener;
-	
-	}
+		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 
+	}
 
 }

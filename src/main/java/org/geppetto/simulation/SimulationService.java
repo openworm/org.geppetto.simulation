@@ -43,23 +43,8 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectSubTreeNode;
-import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
-import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
-import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
-import org.geppetto.core.simulation.ISimulation;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
-import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
-import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
-import org.geppetto.simulation.visitor.ExitVisitor;
-import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
-import org.geppetto.simulation.visitor.LoadSimulationVisitor;
-import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
-import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
-import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
-import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.geppetto.simulation.visitor.SetParametersVisitor;
 import org.geppetto.simulation.visitor.WriteModelVisitor;
 import org.osgi.framework.InvalidSyntaxException;
@@ -67,7 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SimulationService implements ISimulation
+public class SimulationService //implements ISimulation
 {
 
 	
@@ -79,20 +64,13 @@ public class SimulationService implements ISimulation
 	private IGeppettoManagerCallbackListener _simulationListener;
 	private List<URL> _scripts = new ArrayList<URL>();
 
-	/**
-	 * 
-	 */
-	public SimulationService()
-	{
-		_logger.info("New Simulation Service created");
-	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#init(java.net.URL, org.geppetto.core.simulation.ISimulationCallbackListener)
 	 */
-	@Override
+//	//@Override
 	public void init(URL simConfigURL, String requestID, IGeppettoManagerCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		long start = System.currentTimeMillis();
@@ -123,7 +101,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @throws ModelInterpreterException
 	 */
-	@Override
+	//@Override
 	public void init(String simulationConfig, String requestID, IGeppettoManagerCallbackListener simulationListener) throws GeppettoInitializationException
 	{
 		long start = System.currentTimeMillis();
@@ -199,7 +177,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#start()
 	 */
-	@Override
+	//@Override
 	public void start(String requestId)
 	{
 		_logger.info("Starting simulation");
@@ -214,7 +192,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#stop()
 	 */
-	@Override
+	//@Override
 	public void pause()
 	{
 		_logger.info("Pausing simulation");
@@ -227,7 +205,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#stop()
 	 */
-	@Override
+	//@Override
 	public void stop() throws GeppettoExecutionException
 	{
 
@@ -268,7 +246,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#isRunning()
 	 */
-	@Override
+	//@Override
 	public boolean isRunning()
 	{
 		return _sessionContext.getStatus().equals(SimulationRuntimeStatus.RUNNING);
@@ -279,7 +257,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getSimulationConfig(java.net.URL)
 	 */
-	@Override
+	//@Override
 	public String getSimulationConfig(URL simURL) throws GeppettoInitializationException
 	{
 		String simulationConfig = SimulationConfigReader.writeSimulationConfig(simURL);
@@ -291,7 +269,7 @@ public class SimulationService implements ISimulation
 		return this._simulationListener;
 	}
 
-	@Override
+	//@Override
 	public void setWatchedVariables(List<String> watchedVariables) throws GeppettoExecutionException, GeppettoInitializationException
 	{
 		_logger.info("Setting watched variables in simulation tree");
@@ -321,7 +299,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#clearWatchLists()
 	 */
-	@Override
+	//@Override
 	public void clearWatchLists()
 	{
 		_logger.info("Clearing watched variables in simulation tree");
@@ -352,7 +330,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getScripts()
 	 */
-	@Override
+	//@Override
 	public List<URL> getScripts()
 	{
 		return _scripts;
@@ -415,7 +393,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getSimulatorName()
 	 */
-	@Override
+	//@Override
 	public String getSimulatorName()
 	{
 		String simulatorName = "Simulation";
@@ -427,7 +405,7 @@ public class SimulationService implements ISimulation
 	 * 
 	 * @see org.geppetto.core.simulation.ISimulation#getSimulationCapacity()
 	 */
-	@Override
+	//@Override
 	public int getSimulationCapacity()
 	{
 
@@ -435,32 +413,6 @@ public class SimulationService implements ISimulation
 		return capacity;
 	}
 
-	/**
-	 * Takes the id of aspect, and uses that to populate it's corresponding aspect node with nodes for the model tree.
-	 * 
-	 * @param aspectID
-	 * @return
-	 */
-	@Override
-	public String getModelTree(String instancePath)
-	{
-		_logger.info("Populating Model Tree");
-		
-		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(_simulationListener, instancePath);
-		this._sessionContext.getRuntimeTreeRoot().apply(populateModelVisitor);
-
-		String modelTree = "[";
-		for(Map.Entry<String, AspectSubTreeNode> entry : populateModelVisitor.getPopulatedModelTree().entrySet())
-		{
-			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-			entry.getValue().apply(updateClientVisitor);
-			modelTree += "{\"aspectInstancePath\":" + '"' + entry.getKey() + '"' + ",\"modelTree\":{" + updateClientVisitor.getSerializedTree() + "} },";
-		}
-		modelTree = modelTree.substring(0, modelTree.length() - 1);
-		modelTree += "]";
-
-		return modelTree;
-	}
 
 	/**
 	 * Takes the id of aspect and the file format and write the model to this format
@@ -469,7 +421,7 @@ public class SimulationService implements ISimulation
 	 * @param format
 	 * @return
 	 */
-	@Override
+	//@Override
 	public String writeModel(String instancePath, String format)
 	{
 		WriteModelVisitor writeModelVisitor = new WriteModelVisitor(_simulationListener, instancePath, format);
@@ -480,7 +432,7 @@ public class SimulationService implements ISimulation
 		return "";
 	}
 
-	@Override
+	//@Override
 	public boolean setParameters(String model, Map<String, String> parameters) {
 		//TODO: Take code in visitor and put here instead once AspectConfiguration 
 		//in in place. We will be able to get modelinterpreter from there instead
@@ -490,23 +442,5 @@ public class SimulationService implements ISimulation
 		return _sessionContext.getRuntimeTreeRoot().apply(parameterVisitor);
 	}	
 
-	public String getSimulationTree(String instancePath)
-	{
-		_logger.info("Populating Simulation Tree");
-		
-		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationListener, instancePath);
-		this._sessionContext.getRuntimeTreeRoot().apply(populateSimulationVisitor);
 
-		String simulationTree = "[";
-		for(Map.Entry<String, AspectSubTreeNode> entry : populateSimulationVisitor.getPopulatedSimulationTree().entrySet())
-		{
-			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-			entry.getValue().apply(updateClientVisitor);
-			simulationTree += "{\"aspectInstancePath\":" + '"' + entry.getKey() + '"' + ",\"simulationTree\":{" + updateClientVisitor.getSerializedTree() + "} },";
-		}
-		simulationTree = simulationTree.substring(0, simulationTree.length() - 1);
-		simulationTree += "]";
-
-		return simulationTree;
-	}
 }

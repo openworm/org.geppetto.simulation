@@ -32,7 +32,6 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,33 +47,42 @@ import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
- * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter
- * for populating the model tree
+ * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter for populating the model tree
  * 
- * @author  Jesus R. Martinez (jesus@metacell.us)
+ * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class PopulateModelTreeVisitor extends DefaultStateVisitor{
+public class PopulateModelTreeVisitor extends DefaultStateVisitor
+{
 
-	//Listener used to send back errors 
+	// Listener used to send back errors
 	private IGeppettoManagerCallbackListener _simulationCallBack;
-	//The id of aspect we will be populating
+	
+	// The id of aspect we will be populating
 	private String _instancePath;
+	
 	private HashMap<String, AspectSubTreeNode> _populateModelTree;
 
-	public PopulateModelTreeVisitor(IGeppettoManagerCallbackListener simulationListener,String instancePath)
+	/**
+	 * @param simulationListener
+	 * @param instancePath
+	 */
+	public PopulateModelTreeVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		if(this._instancePath.equals(node.getInstancePath())){
+		if(this._instancePath.equals(node.getInstancePath()))
+		{
 			IModelInterpreter modelInterpreter = node.getModelInterpreter();
 			try
 			{
@@ -82,31 +90,39 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor{
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-			}		
-			
+				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+			}
+
 			this._populateModelTree = new HashMap<String, AspectSubTreeNode>();
-			this._populateModelTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.MODEL_TREE)));
-			
+			this._populateModelTree.put(node.getInstancePath(), ((AspectSubTreeNode) node.getSubTree(AspectTreeType.MODEL_TREE)));
+
 			Map<String, EntityNode> mapping = (Map<String, EntityNode>) ((ModelWrapper) node.getModel()).getModel("entitiesMapping");
 			EntityNode entityNode = mapping.get(node.getParent().getId());
-			if (entityNode == null){
-				for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
-		 		    String key = entry.getKey();
-		 		    
-		 		   for (AspectNode aspectNode : entry.getValue().getAspects()){
-						if (aspectNode.getId() == node.getId()){
-							this._populateModelTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.MODEL_TREE));
+			if(entityNode == null)
+			{
+				for(Map.Entry<String, EntityNode> entry : mapping.entrySet())
+				{
+					String key = entry.getKey();
+
+					for(AspectNode aspectNode : entry.getValue().getAspects())
+					{
+						if(aspectNode.getId() == node.getId())
+						{
+							this._populateModelTree.put(aspectNode.getInstancePath(), (AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.MODEL_TREE));
 						}
-		 		   }	
+					}
 				}
 			}
 		}
 
 		return super.inAspectNode(node);
 	}
-	
-	public HashMap<String, AspectSubTreeNode> getPopulatedModelTree(){
+
+	/**
+	 * @return
+	 */
+	public HashMap<String, AspectSubTreeNode> getPopulatedModelTree()
+	{
 		return this._populateModelTree;
 	}
 }

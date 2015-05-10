@@ -63,16 +63,16 @@ public class RuntimeProject
 
 	private GeppettoModel geppettoModel;
 
-	private IGeppettoManagerCallbackListener listener;
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	public GeppettoModel getGeppettoModel()
 	{
 		return geppettoModel;
 	}
 
-	public RuntimeProject(IGeppettoProject project, IGeppettoManagerCallbackListener listener) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeProject(IGeppettoProject project, IGeppettoManagerCallbackListener geppettoManagerCallbackListener) throws MalformedURLException, GeppettoInitializationException
 	{
-		this.listener = listener;
+		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 		URL url = new URL(geppettoModelData.getUrl());
 		geppettoModel = SimulationConfigReader.readConfig(url);
@@ -106,7 +106,7 @@ public class RuntimeProject
 	public void openExperiment(String requestId, IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
-		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(requestId, this, listener);
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this, geppettoManagerCallbackListener);
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 

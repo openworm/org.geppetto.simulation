@@ -42,17 +42,17 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
-import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
+import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
+import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 
 public class RuntimeExperiment
@@ -61,42 +61,57 @@ public class RuntimeExperiment
 	private Map<String, IModelInterpreter> modelInterpreters = new HashMap<String, IModelInterpreter>();
 
 	private Map<String, IModel> instancePathToIModelMap = new HashMap<>();
+	
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	// Head node that holds the entities
 	private RuntimeTreeRoot runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
-	public RuntimeExperiment(String requestId, RuntimeProject runtimeProject, IGeppettoManagerCallbackListener listener)
+	public RuntimeExperiment(RuntimeProject runtimeProject, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
-		init(requestId, runtimeProject.getGeppettoModel(), listener);
+		this.geppettoManagerCallbackListener=geppettoManagerCallbackListener;
+		init(runtimeProject.getGeppettoModel());
 	}
 
-	private void init(String requestId, GeppettoModel geppettoModel, IGeppettoManagerCallbackListener listener)
+	private void init(GeppettoModel geppettoModel)
 	{
 		// clear watch lists
 		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
-		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, listener);
+		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoManagerCallbackListener);
 		geppettoModel.accept(createServicesVisitor);
 
-		// // populateScripts(simulation);
-		//
-		// // _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
+		// populateScripts(simulation);
+		// _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
 
-		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, instancePathToIModelMap, listener);
+		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, instancePathToIModelMap, geppettoManagerCallbackListener);
 		geppettoModel.accept(loadSimulationVisitor);
 
-		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, instancePathToIModelMap, runtimeTreeRoot, listener);
+		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, instancePathToIModelMap, runtimeTreeRoot, geppettoManagerCallbackListener);
 		geppettoModel.accept(runtimeTreeVisitor);
 
 		runtimeTreeRoot = runtimeTreeVisitor.getRuntimeModel();
 
-		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(listener);
+		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(geppettoManagerCallbackListener);
 		runtimeTreeRoot.apply(populateVisualVisitor);
 
-		notifyExperimentLoaded(requestId, listener);
+		ExitVisitor exitVisitor = new ExitVisitor();
+		runtimeTreeRoot.apply(exitVisitor);
+
+		//TODO The bit below needs probably to happen elsewhere, a project was just open this is not responding to any particular message
+		// SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+		// runtimeTreeRoot.apply(updateClientVisitor);
+		//
+		// String scene = updateClientVisitor.getSerializedTree();
+		//
+		// if(scene != null)
+		// {
+		// geppettoManagerCallbackListener.updateReady(GeppettoEvents.LOAD_PROJECT, requestID, scene);
+		// logger.info("Simulation sent to callback listener");
+		// }
 	}
 
 	/*
@@ -112,8 +127,7 @@ public class RuntimeExperiment
 		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
 		runtimeTreeRoot.apply(clearWatchedVariablesVisitor);
 
-		// SIM TODO
-		// instruct aspects to clear watch variables
+		// SIM TODO instruct aspects to clear watch variables
 		// for(ISimulator simulator : _sessionContext.getSimulators().values())
 		// {
 		// if(simulator != null)
@@ -149,35 +163,34 @@ public class RuntimeExperiment
 		// }
 	}
 
-	/**
-	 * Method that takes the oldest model in the buffer and send it to the client
-	 * 
-	 * @param event
-	 * @throws GeppettoExecutionException
-	 * @throws ModelInterpreterException
-	 * 
-	 */
-	private void notifyExperimentLoaded(String requestID, IGeppettoManagerCallbackListener simulationListener)
-	{
-
-		SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-		runtimeTreeRoot.apply(updateClientVisitor);
-
-		ExitVisitor exitVisitor = new ExitVisitor(simulationListener);
-		runtimeTreeRoot.apply(exitVisitor);
-
-		String scene = updateClientVisitor.getSerializedTree();
-
-		if(scene != null)
-		{
-			simulationListener.updateReady(GeppettoEvents.LOAD_PROJECT, requestID, scene);
-			logger.info("Simulation sent to callback listener");
-		}
-	}
 
 	public void release()
 	{
 		// TODO: release the instantiated services
+	}
+
+	/**
+	 * @param aspectInstancePath
+	 * @return
+	 */
+	public Map<String, AspectSubTreeNode> getModelTree(String aspectInstancePath)
+	{
+		logger.info("Populating Model Tree for "+aspectInstancePath );
+		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
+		runtimeTreeRoot.apply(populateModelVisitor);
+		return populateModelVisitor.getPopulatedModelTree();
+	}
+
+	/**
+	 * @param aspectInstancePath
+	 * @return
+	 */
+	public Map<String, AspectSubTreeNode> getSimulationTree(String aspectInstancePath)
+	{
+		logger.info("Populating Simulation Tree for "+aspectInstancePath );
+		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
+		runtimeTreeRoot.apply(populateSimulationVisitor);
+		return populateSimulationVisitor.getPopulatedSimulationTree();
 	}
 
 }

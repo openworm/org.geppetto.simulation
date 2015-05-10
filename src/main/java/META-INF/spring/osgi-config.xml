@@ -26,12 +26,6 @@
 	<bean id="recordingModelInterpreter" scope="thread" class="org.geppetto.simulation.recording.RecordingsModelInterpreter">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
-	
-	<!-- Exports the service implementation to other bundles by its service interface -->
-	<osgi:service id="SimulationExporter" ref="simulationService" interface="org.geppetto.core.simulation.ISimulation"/>
-	<bean id="simulationService" scope="session" class="org.geppetto.simulation.SimulationService">
-	<aop:scoped-proxy proxy-target-class="false"/>
-	</bean>
 
  	<osgi:service id="GeppettoManager" ref="geppettoManagerService" interface="org.geppetto.core.manager.IGeppettoManager">
 	</osgi:service>

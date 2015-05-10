@@ -82,6 +82,25 @@ public class RuntimeProject
 		geppettoModel.accept(instancePathdecoratorVisitor);
 		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
 		geppettoModel.accept(parentDecoratorVisitor);
+		
+		//TODO If scripts are associated to Geppetto project something equivalent to the following
+		// JsonObject scriptsJSON = new JsonObject();
+		//
+		// JsonArray scriptsArray = new JsonArray();
+		// for(URL scriptURL : messageInbound.getSimulationService().getScripts())
+		// {
+		// JsonObject script = new JsonObject();
+		// script.addProperty("script", scriptURL.toString());
+		//
+		// scriptsArray.add(script);
+		// }
+		// scriptsJSON.add("scripts", scriptsArray);
+		//
+		// // notify client if there are scripts
+		// if(messageInbound.getSimulationService().getScripts().size() > 0)
+		// {
+		// messageClient(requestID, OutboundMessages.FIRE_SIM_SCRIPTS, scriptsJSON.toString());
+		// }
 	}
 
 	public void openExperiment(String requestId, IExperiment experiment) throws MalformedURLException, GeppettoInitializationException

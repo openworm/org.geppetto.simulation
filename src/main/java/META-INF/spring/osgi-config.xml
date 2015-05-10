@@ -33,9 +33,10 @@
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
 
- 	<osgi:service id="ProjectManager" ref="projectManagerService" interface="org.geppetto.core.manager.IProjectManager">
+ 	<osgi:service id="GeppettoManager" ref="geppettoManagerService" interface="org.geppetto.core.manager.IGeppettoManager">
 	</osgi:service>
-	<bean id="projectManagerService" scope="thread" class="org.geppetto.simulation.ProjectManager">
+	
+	<bean id="geppettoManagerService" scope="session" class="org.geppetto.simulation.GeppettoManager">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
 

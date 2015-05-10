@@ -49,7 +49,6 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.simulation.IExperimentRunManager;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -59,12 +58,13 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 
 	private List<ExperimentRun> experimentRuns = new ArrayList<>();
 
-	private ProjectManager projectManager = new ProjectManager();
-	
+	private GeppettoManager projectManager = new GeppettoManager();
+
 	private volatile int reqId = 0;
 
+	//TODO How do we send a message to the client if it is connected to say for instance that an experiment was completed?
 	private IGeppettoManagerCallbackListener simulationCallbackListener;
-	
+
 	public ExperimentRunManager()
 	{
 		try
@@ -115,7 +115,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 			for(IGeppettoProject project : projects)
 			{
 				// This could be either when the user decides to open a project or when the ExperimentsRunManager queues an Experiment
-				projectManager.loadProject("ERM" + getReqId(), user, project, simulationCallbackListener);
+				projectManager.loadProject("ERM" + getReqId(), project);
 				List<? extends IExperiment> experiments = dataManager.getExperimentsForProject(project.getId());
 				addExperimentsToQueue(user, experiments, ExperimentStatus.RUNNING);
 				addExperimentsToQueue(user, experiments, ExperimentStatus.QUEUED);
@@ -194,7 +194,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 					if(closeProject)
 					{
 						// close the project when all the user experiments are completed and none of the experiments is active
-						projectManager.closeProject("ERM" + getReqId(), user, project);
+						projectManager.closeProject("ERM" + getReqId(), project);
 					}
 				}
 			}
@@ -204,8 +204,9 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 			e.printStackTrace();
 		}
 	}
-	
-	private synchronized int getReqId() {
+
+	private synchronized int getReqId()
+	{
 		return ++reqId;
 	}
 

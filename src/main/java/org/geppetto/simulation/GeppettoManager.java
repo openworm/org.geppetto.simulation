@@ -202,8 +202,7 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public IExperiment newExperiment(String requestId, IGeppettoProject project)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return DataManagerHelper.getDataManager().newExperiment("experiment " + (project.getExperiments().size() + 1), "");
 	}
 
 	/*

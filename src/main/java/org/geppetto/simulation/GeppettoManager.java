@@ -214,8 +214,8 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public void deleteExperiment(String requestId, IExperiment experiment, IGeppettoProject project)
 	{
-		// TODO Auto-generated method stub
-
+		project.getExperiments().remove(experiment);
+		DataManagerHelper.getDataManager().deleteExperiment(experiment);
 	}
 
 	/*

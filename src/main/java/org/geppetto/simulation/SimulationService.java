@@ -59,7 +59,7 @@ public class SimulationService //implements ISimulation
 	@Autowired
 	public AppConfig appConfig;
 	private static Log _logger = LogFactory.getLog(SimulationService.class);
-	private final SessionContext _sessionContext = new SessionContext();
+//	private final SessionContext _sessionContext = new SessionContext();
 	private SimulationThread _simulationThread;
 	private IGeppettoManagerCallbackListener _simulationListener;
 	private List<URL> _scripts = new ArrayList<URL>();
@@ -136,7 +136,7 @@ public class SimulationService //implements ISimulation
 	{
 
 		// refresh simulation context
-		_sessionContext.reset();
+//		_sessionContext.reset();
 
 		// TODO: moved this to RuntimeProject
 		// decorate Simulation model
@@ -182,9 +182,10 @@ public class SimulationService //implements ISimulation
 	{
 		_logger.info("Starting simulation");
 
-		_simulationThread = new SimulationThread(_sessionContext, _simulationListener, requestId, appConfig.getUpdateCycle());
+		_simulationThread = new SimulationThread(_simulationListener, requestId, appConfig.getUpdateCycle());
 		_simulationThread.start();
-		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
+		// SIM TODO
+		//		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.RUNNING);
 	}
 
 	/*
@@ -197,7 +198,8 @@ public class SimulationService //implements ISimulation
 	{
 		_logger.info("Pausing simulation");
 		// tell the thread to pause the simulation, but don't stop it
-		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.PAUSED);
+		// SIM TODO
+//		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.PAUSED);
 	}
 
 	/*
@@ -209,7 +211,8 @@ public class SimulationService //implements ISimulation
 	public void stop() throws GeppettoExecutionException
 	{
 
-		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
+		// SIM TODO
+//		_sessionContext.setSimulationStatus(SimulationRuntimeStatus.STOPPED);
 
 		// join threads prior to stopping to avoid concurentmodification exceptions of watchtree
 		try
@@ -228,7 +231,8 @@ public class SimulationService //implements ISimulation
 		// tell the thread to stop running the simulation
 
 		// revert simulation to initial conditions
-		_sessionContext.revertToInitialConditions();
+		// SIM TODO
+//		_sessionContext.revertToInitialConditions();
 
 		// iterate through aspects and instruct them to stop
 		// SIM TODO
@@ -249,7 +253,9 @@ public class SimulationService //implements ISimulation
 	//@Override
 	public boolean isRunning()
 	{
-		return _sessionContext.getStatus().equals(SimulationRuntimeStatus.RUNNING);
+		return false;
+		// SIM TODO
+//		return _sessionContext.getStatus().equals(SimulationRuntimeStatus.RUNNING);
 	}
 
 	/*
@@ -425,7 +431,8 @@ public class SimulationService //implements ISimulation
 	public String writeModel(String instancePath, String format)
 	{
 		WriteModelVisitor writeModelVisitor = new WriteModelVisitor(_simulationListener, instancePath, format);
-		this._sessionContext.getRuntimeTreeRoot().apply(writeModelVisitor);
+		// SIM TODO
+//		this._sessionContext.getRuntimeTreeRoot().apply(writeModelVisitor);
 
 		// Read returned value
 
@@ -438,8 +445,9 @@ public class SimulationService //implements ISimulation
 		//in in place. We will be able to get modelinterpreter from there instead
 		//of having to use visitor to call setParameter of model services.
 		SetParametersVisitor parameterVisitor = new SetParametersVisitor(_simulationListener,parameters, model);
-
-		return _sessionContext.getRuntimeTreeRoot().apply(parameterVisitor);
+		return false;
+		// SIM TODO
+//		return _sessionContext.getRuntimeTreeRoot().apply(parameterVisitor);
 	}	
 
 

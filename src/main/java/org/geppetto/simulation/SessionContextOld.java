@@ -58,7 +58,7 @@ import org.geppetto.core.model.simulation.Model;
  * @author matteocantarelli
  * 
  */
-public class SessionContext
+public class SessionContextOld
 {
 
 	// The maximum number of steps that can be stored.
@@ -88,19 +88,19 @@ public class SessionContext
 	private GeppettoModel _simulation;
 
 	// The logger
-	private static Log _logger = LogFactory.getLog(SessionContext.class);
+	private static Log _logger = LogFactory.getLog(SessionContextOld.class);
 
 	// The status of the current simulation
 	private SimulationRuntimeStatus _status = SimulationRuntimeStatus.IDLE;
 
 	// TODO: comment this out
 	// Head node that holds the entities
-	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
-
-	public RuntimeTreeRoot getRuntimeTreeRoot()
-	{
-		return _runtimeTreeRoot;
-	}
+//	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
+//
+//	public RuntimeTreeRoot getRuntimeTreeRoot()
+//	{
+//		return _runtimeTreeRoot;
+//	}
 
 	/**
 	 * @return

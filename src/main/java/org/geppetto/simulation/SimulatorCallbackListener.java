@@ -38,42 +38,43 @@ import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
-import org.springframework.stereotype.Service;
 
 public class SimulatorCallbackListener implements ISimulatorCallbackListener
 {
 
 	// SIM TODO
-//	private Simulator _simulatorModel;
+	// private Simulator _simulatorModel;
 	private SimulatorRuntime _simulatorRuntime;
-	private SessionContext _sessionContext;
+	// private SessionContext _sessionContext;
 	private IGeppettoManagerCallbackListener _simulationCallback;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
 	// SIM TODO
-	public SimulatorCallbackListener(//Simulator simulatorModel, 
-			SessionContext context, IGeppettoManagerCallbackListener simulationCallback)
+	public SimulatorCallbackListener(// Simulator simulatorModel,
+			IGeppettoManagerCallbackListener simulationCallback)
 	{
 		// SIM TODO
-//		_simulatorModel = simulatorModel;
-		_sessionContext = context;
+		// _simulatorModel = simulatorModel;
+		// _sessionContext = context;
 		// SIM TODO
-//		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
+		// _simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
 		_simulationCallback = simulationCallback;
 	}
 
 	@Override
 	public void stateTreeUpdated() throws GeppettoExecutionException
 	{
-		if(!_simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
+		if(!_simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER))
+		{
 			_simulatorRuntime.incrementProcessedSteps();
 			_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
 		}
 	}
 
 	@Override
-	public void endOfSteps(String message) {		
+	public void endOfSteps(String message)
+	{
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.OVER);
 		this._simulationCallback.message(message);
 	}

@@ -44,14 +44,13 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
 import org.geppetto.simulation.visitor.CheckSteppedSimulatorsVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
-import org.geppetto.simulation.visitor.SimulationVisitor;
 import org.geppetto.simulation.visitor.TimeVisitor;
 
 class SimulationThread extends Thread
 {
 
 	private static Log _logger = LogFactory.getLog(SimulationThread.class);
-	private SessionContext _sessionContext = null;
+	// private SessionContext _sessionContext = null;
 	private IGeppettoManagerCallbackListener _simulationCallback;
 	private int _updateCycles = 0;
 	private long _timeElapsed;
@@ -64,9 +63,9 @@ class SimulationThread extends Thread
 	 * @param context
 	 * @param simulationListener
 	 */
-	public SimulationThread(SessionContext context, IGeppettoManagerCallbackListener simulationListener, String requestID, int cycle)
+	public SimulationThread(IGeppettoManagerCallbackListener simulationListener, String requestID, int cycle)
 	{
-		this._sessionContext = context;
+		// this._sessionContext = context;
 		_simulationCallback = simulationListener;
 		_updateCycles = cycle;
 		_requestID = requestID;
@@ -76,29 +75,30 @@ class SimulationThread extends Thread
 	/**
 	 * @return
 	 */
-	private SessionContext getSessionContext()
-	{
-		return _sessionContext;
-	}
+	// private SessionContext getSessionContext()
+	// {
+	// return _sessionContext;
+	// }
 
 	public void run()
 	{
-		SimulationVisitor simulationVisitor = new SimulationVisitor(_sessionContext, _simulationCallback, _requestID);
-		while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
-		{
-			long calculateTime = System.currentTimeMillis() - _timeElapsed;
-
-			// update only if time elapsed since last client update doesn't exceed
-			// the update cycle of application.
-			if(calculateTime >= _updateCycles)
-			{
-				_sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
-				updateRuntimeTreeClient();
-
-				_timeElapsed = System.currentTimeMillis();
-				_logger.info("Updating after " + calculateTime + " ms");
-			}
-		}
+		// SIM TODO
+		// SimulationVisitor simulationVisitor = new SimulationVisitor(_simulationCallback, _requestID);
+		// while(getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
+		// {
+		// long calculateTime = System.currentTimeMillis() - _timeElapsed;
+		//
+		// // update only if time elapsed since last client update doesn't exceed
+		// // the update cycle of application.
+		// if(calculateTime >= _updateCycles)
+		// {
+		// _sessionContext.getRuntimeTreeRoot().apply(simulationVisitor);
+		// updateRuntimeTreeClient();
+		//
+		// _timeElapsed = System.currentTimeMillis();
+		// _logger.info("Updating after " + calculateTime + " ms");
+		// }
+		// }
 	}
 
 	/**
@@ -106,38 +106,42 @@ class SimulationThread extends Thread
 	 */
 	public void updateRuntimeTreeClient()
 	{
-		CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor(_sessionContext);
-		_sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
+		CheckSteppedSimulatorsVisitor checkSteppedSimulatorsVisitor = new CheckSteppedSimulatorsVisitor();
+		// SIM TODO
+		// _sessionContext.getSimulation().accept(checkSteppedSimulatorsVisitor);
 
-		if(checkSteppedSimulatorsVisitor.allStepped() && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
-		{
-			// Visit simulators to extract time from them
-			TimeVisitor timeVisitor = new TimeVisitor();
-			_sessionContext.getRuntimeTreeRoot().apply(timeVisitor);
-			_timeStepUnit = timeVisitor.getTimeStepUnit();
-			// set global time
-			this.setGlobalTime(timeVisitor.getTime(), _sessionContext.getRuntimeTreeRoot());
-
-			SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-			_sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
-
-			ExitVisitor exitVisitor = new ExitVisitor();
-			_sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
-
-			String scene = updateClientVisitor.getSerializedTree();
-			if(scene != null)
+		if(checkSteppedSimulatorsVisitor.allStepped())
+		{// && getSessionContext().getStatus().equals(SimulationRuntimeStatus.RUNNING))
 			{
-				if(!this._simulationStarted)
+				// Visit simulators to extract time from them
+				TimeVisitor timeVisitor = new TimeVisitor();
+				// SIM TODO
+				// _sessionContext.getRuntimeTreeRoot().apply(timeVisitor);
+				_timeStepUnit = timeVisitor.getTimeStepUnit();
+				// set global time
+				// this.setGlobalTime(timeVisitor.getTime(), _sessionContext.getRuntimeTreeRoot());
+
+				SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
+				// _sessionContext.getRuntimeTreeRoot().apply(updateClientVisitor);
+
+				ExitVisitor exitVisitor = new ExitVisitor();
+				// _sessionContext.getRuntimeTreeRoot().apply(exitVisitor);
+
+				String scene = updateClientVisitor.getSerializedTree();
+				if(scene != null)
 				{
-					// TODO MAtteo check this, it was START_SIMULATION previously
-					_simulationCallback.updateReady(GeppettoEvents.RUN_EXPERIMENT, _requestID, scene);
-					_logger.info("First step of simulation sent to Simulation Callback Listener");
-					this._simulationStarted = true;
-				}
-				else
-				{
-					_simulationCallback.updateReady(GeppettoEvents.SCENE_UPDATE, _requestID, scene);
-					_logger.info("Update sent to Simulation Callback Listener");
+					if(!this._simulationStarted)
+					{
+						// TODO MAtteo check this, it was START_SIMULATION previously
+						_simulationCallback.updateReady(GeppettoEvents.RUN_EXPERIMENT, _requestID, scene);
+						_logger.info("First step of simulation sent to Simulation Callback Listener");
+						this._simulationStarted = true;
+					}
+					else
+					{
+						_simulationCallback.updateReady(GeppettoEvents.SCENE_UPDATE, _requestID, scene);
+						_logger.info("Update sent to Simulation Callback Listener");
+					}
 				}
 			}
 		}

@@ -348,6 +348,11 @@ public class GeppettoManager implements IGeppettoManager
 		return null;
 	}
 
+	public IUser getUser()
+	{
+		return user;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 

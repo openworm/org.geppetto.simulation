@@ -31,7 +31,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
 
-package org.geppetto.simulation;
+package org.geppetto.simulation.toberemoved;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -45,6 +45,8 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.simulation.AppConfig;
+import org.geppetto.simulation.SimulationConfigReader;
 import org.geppetto.simulation.visitor.SetParametersVisitor;
 import org.geppetto.simulation.visitor.WriteModelVisitor;
 import org.osgi.framework.InvalidSyntaxException;

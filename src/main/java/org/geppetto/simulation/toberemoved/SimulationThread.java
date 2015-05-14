@@ -31,7 +31,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
 
-package org.geppetto.simulation;
+package org.geppetto.simulation.toberemoved;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

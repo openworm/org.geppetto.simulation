@@ -31,7 +31,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
 
-package org.geppetto.simulation;
+package org.geppetto.simulation.toberemoved;
 
 import java.util.List;
 import java.util.Map;
@@ -50,6 +50,8 @@ import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.simulation.Model;
+import org.geppetto.simulation.SimulationRuntimeStatus;
+import org.geppetto.simulation.SimulatorRuntime;
 
 /**
  * This class stores the context of a given session.

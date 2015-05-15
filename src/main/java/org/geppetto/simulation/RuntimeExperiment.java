@@ -61,7 +61,7 @@ public class RuntimeExperiment
 	private Map<String, IModelInterpreter> modelInterpreters = new HashMap<String, IModelInterpreter>();
 
 	private Map<String, IModel> instancePathToIModelMap = new HashMap<>();
-	
+
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	// Head node that holds the entities
@@ -71,7 +71,7 @@ public class RuntimeExperiment
 
 	public RuntimeExperiment(RuntimeProject runtimeProject, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
-		this.geppettoManagerCallbackListener=geppettoManagerCallbackListener;
+		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		init(runtimeProject.getGeppettoModel());
 	}
 
@@ -101,7 +101,7 @@ public class RuntimeExperiment
 		ExitVisitor exitVisitor = new ExitVisitor();
 		runtimeTreeRoot.apply(exitVisitor);
 
-		//TODO The bit below needs probably to happen elsewhere, a project was just open this is not responding to any particular message
+		// TODO The bit below needs probably to happen elsewhere, a project was just open this is not responding to any particular message
 		// SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
 		// runtimeTreeRoot.apply(updateClientVisitor);
 		//
@@ -163,10 +163,11 @@ public class RuntimeExperiment
 		// }
 	}
 
-
 	public void release()
 	{
-		// TODO: release the instantiated services
+		modelInterpreters.clear();
+		instancePathToIModelMap.clear();
+		runtimeTreeRoot = null;
 	}
 
 	/**
@@ -175,7 +176,7 @@ public class RuntimeExperiment
 	 */
 	public Map<String, AspectSubTreeNode> getModelTree(String aspectInstancePath)
 	{
-		logger.info("Populating Model Tree for "+aspectInstancePath );
+		logger.info("Populating Model Tree for " + aspectInstancePath);
 		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
 		runtimeTreeRoot.apply(populateModelVisitor);
 		return populateModelVisitor.getPopulatedModelTree();
@@ -187,7 +188,7 @@ public class RuntimeExperiment
 	 */
 	public Map<String, AspectSubTreeNode> getSimulationTree(String aspectInstancePath)
 	{
-		logger.info("Populating Simulation Tree for "+aspectInstancePath );
+		logger.info("Populating Simulation Tree for " + aspectInstancePath);
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
 		runtimeTreeRoot.apply(populateSimulationVisitor);
 		return populateSimulationVisitor.getPopulatedSimulationTree();

@@ -41,17 +41,22 @@ import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.data.IGeppettoDataManager;
+import org.geppetto.core.data.IGeppettoS3Manager;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ExperimentRun implements ISimulatorCallbackListener
 {
 
 	private IGeppettoDataManager dataManager;
+
+	@Autowired
+	private IGeppettoS3Manager s3Manager;
 
 	private IExperiment experiment;
 
@@ -133,11 +138,18 @@ public class ExperimentRun implements ISimulatorCallbackListener
 	private void storeResults()
 	{
 		// TODO: need to figure out the logic here
+		if(s3Manager != null)
+		{
+			// s3Manager.saveFileToS3(file, path);
+		}
 	}
 
 	public void release()
 	{
-		// TODO: release the simulators once they are done
+		simulatorServices.clear();
+		conversionServices.clear();
+		simulatorRuntimes.clear();
+		experimentListeners.clear();
 	}
 
 	@Override

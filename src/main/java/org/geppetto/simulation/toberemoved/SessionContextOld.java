@@ -31,7 +31,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
 
-package org.geppetto.simulation;
+package org.geppetto.simulation.toberemoved;
 
 import java.util.List;
 import java.util.Map;
@@ -50,6 +50,8 @@ import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.simulation.Model;
+import org.geppetto.simulation.SimulationRuntimeStatus;
+import org.geppetto.simulation.SimulatorRuntime;
 
 /**
  * This class stores the context of a given session.
@@ -58,7 +60,7 @@ import org.geppetto.core.model.simulation.Model;
  * @author matteocantarelli
  * 
  */
-public class SessionContext
+public class SessionContextOld
 {
 
 	// The maximum number of steps that can be stored.
@@ -88,19 +90,19 @@ public class SessionContext
 	private GeppettoModel _simulation;
 
 	// The logger
-	private static Log _logger = LogFactory.getLog(SessionContext.class);
+	private static Log _logger = LogFactory.getLog(SessionContextOld.class);
 
 	// The status of the current simulation
 	private SimulationRuntimeStatus _status = SimulationRuntimeStatus.IDLE;
 
 	// TODO: comment this out
 	// Head node that holds the entities
-	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
-
-	public RuntimeTreeRoot getRuntimeTreeRoot()
-	{
-		return _runtimeTreeRoot;
-	}
+//	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
+//
+//	public RuntimeTreeRoot getRuntimeTreeRoot()
+//	{
+//		return _runtimeTreeRoot;
+//	}
 
 	/**
 	 * @return

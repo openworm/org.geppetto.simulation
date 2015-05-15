@@ -34,8 +34,6 @@ package org.geppetto.simulation.visitor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.features.IVariableWatchFeature;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
@@ -44,9 +42,7 @@ import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
-import org.geppetto.core.simulation.TimeConfiguration;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.simulation.SessionContext;
 import org.geppetto.simulation.SimulatorCallbackListener;
 import org.geppetto.simulation.SimulatorRuntime;
 import org.geppetto.simulation.SimulatorRuntimeStatus;
@@ -61,15 +57,15 @@ import org.geppetto.simulation.SimulatorRuntimeStatus;
 public class SimulationVisitor extends DefaultStateVisitor
 {
 	private IGeppettoManagerCallbackListener _simulationCallBack;
-	private SessionContext _sessionContext;
+	// private SessionContext _sessionContext;
 	private String _requestID;
 
 	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
 
-	public SimulationVisitor(SessionContext _sessionContext, IGeppettoManagerCallbackListener simulationListener, String _requestID)
+	public SimulationVisitor(IGeppettoManagerCallbackListener simulationListener, String _requestID)
 	{
 		this._simulationCallBack = simulationListener;
-		this._sessionContext = _sessionContext;
+		// this._sessionContext = _sessionContext;
 		this._requestID = _requestID;
 	}
 
@@ -95,13 +91,15 @@ public class SimulationVisitor extends DefaultStateVisitor
 		ISimulator simulator = node.getSimulator();
 		if(simulator != null)
 		{
-			SimulatorRuntime simulatorRuntime = this._sessionContext.getSimulatorRuntime(simulator.getId());
+			// SIM TODO
+			SimulatorRuntime simulatorRuntime = null;// this._sessionContext.getSimulatorRuntime(simulator.getId());
 
-			if(simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
+			if(simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER))
+			{
 				_simulationCallBack.updateReady(GeppettoEvents.EXPERIMENT_OVER, _requestID, null);
 				simulatorRuntime.setStatus(SimulatorRuntimeStatus.IDLE);
 			}
-			
+
 			// we proceed only if the simulator is not already stepping
 			else if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 			{
@@ -109,42 +107,44 @@ public class SimulationVisitor extends DefaultStateVisitor
 				if(!simulator.isInitialized())
 				{
 					// TODO:
-//					LoadSimulationVisitor loadSimulationVisitor = 
-//							new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
-//					_sessionContext.getSimulation().accept(loadSimulationVisitor);
+					// LoadSimulationVisitor loadSimulationVisitor =
+					// new LoadSimulationVisitor(_sessionContext, _simulationCallBack);
+					// _sessionContext.getSimulation().accept(loadSimulationVisitor);
 
 					// populate visual tree
 					PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(_simulationCallBack);
 					node.apply(populateVisualVisitor);
-					
+
 					PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(_simulationCallBack, node.getInstancePath());
 					node.apply(populateSimulationVisitor);
-					
-					//restarting of simulation needs updating simulation tree 
+
+					// restarting of simulation needs updating simulation tree
 					IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
 					SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchFeature.getWatchedVariables());
-					_sessionContext.getRuntimeTreeRoot().apply(clearWatchedVariablesVisitor);
+					// SIM TODO
+					// _sessionContext.getRuntimeTreeRoot().apply(clearWatchedVariablesVisitor);
 				}
 
-				if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())
-				{
-					// we advance the simulation for this simulator only if we don't have already
-					// too many steps in the buffer
-					try
-					{
-						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
-						simulator.simulate(new TimeConfiguration(null, 1, 1), node);
-						simulatorRuntime.incrementStepsConsumed();
-					}
-					catch(GeppettoExecutionException e)
-					{
-						_logger.error("Error: ", e);
-						_simulationCallBack.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(), "Error while stepping " + simulator.getName(), e);
-					}
-				}
+				// SIM TODO
+				// if(simulatorRuntime.getNonConsumedSteps() < _sessionContext.getMaxBufferSize())
+				// {
+				// // we advance the simulation for this simulator only if we don't have already
+				// // too many steps in the buffer
+				// try
+				// {
+				// simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
+				// simulator.simulate(new TimeConfiguration(null, 1, 1), node);
+				// simulatorRuntime.incrementStepsConsumed();
+				// }
+				// catch(GeppettoExecutionException e)
+				// {
+				// _logger.error("Error: ", e);
+				// _simulationCallBack.error(GeppettoErrorCodes.SIMULATOR, this.getClass().getName(), "Error while stepping " + simulator.getName(), e);
+				// }
+				// }
 			}
 		}
-		
+
 		return super.outAspectNode(node);
 	}
 

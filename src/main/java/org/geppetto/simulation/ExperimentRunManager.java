@@ -51,6 +51,14 @@ import org.geppetto.core.simulation.IExperimentRunManager;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.springframework.stereotype.Service;
 
+/**
+ * The ExperimentRunManager is a singleton responsible for managing a queue per each user to
+ * run the experiments.
+ * 
+ * @author dandromereschi
+ * @author matteocantarelli
+ *
+ */
 @Service
 public class ExperimentRunManager implements IExperimentRunManager, IExperimentListener
 {
@@ -89,6 +97,9 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.simulation.IExperimentRunManager#runExperiment(org.geppetto.core.data.model.IExperiment)
+	 */
 	public void runExperiment(IExperiment experiment) throws GeppettoInitializationException
 	{
 		ExperimentRun experimentRun = new ExperimentRun(DataManagerHelper.getDataManager(), experiment, simulationCallbackListener);
@@ -105,6 +116,11 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 	}
 
+	/**
+	 * @throws GeppettoInitializationException
+	 * @throws MalformedURLException
+	 * @throws GeppettoExecutionException
+	 */
 	private void loadExperiments() throws GeppettoInitializationException, MalformedURLException, GeppettoExecutionException
 	{
 		IGeppettoDataManager dataManager = DataManagerHelper.getDataManager();
@@ -123,6 +139,11 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 	}
 
+	/**
+	 * @param experiment
+	 * @return
+	 * @throws GeppettoInitializationException
+	 */
 	private synchronized IUser getUserForExperiment(IExperiment experiment) throws GeppettoInitializationException
 	{
 		for(Map.Entry<IUser, List<IExperiment>> experimentEntry : queue.entrySet())
@@ -135,6 +156,11 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		return null;
 	}
 
+	/**
+	 * @param user
+	 * @param experiments
+	 * @param status
+	 */
 	private synchronized void addExperimentsToQueue(IUser user, List<? extends IExperiment> experiments, ExperimentStatus status)
 	{
 		List<IExperiment> userExperiments = queue.get(user);
@@ -153,6 +179,11 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 	}
 
+	/**
+	 * @param user
+	 * @param experiment
+	 * @return
+	 */
 	private IGeppettoProject getProjectForExperiment(IUser user, IExperiment experiment)
 	{
 		List<? extends IGeppettoProject> projects = user.getGeppettoProjects();
@@ -166,6 +197,9 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.simulation.IExperimentListener#experimentRunDone(org.geppetto.simulation.ExperimentRun, org.geppetto.core.data.model.IExperiment)
+	 */
 	@Override
 	public void experimentRunDone(ExperimentRun experimentRun, IExperiment experiment) throws GeppettoExecutionException
 	{
@@ -205,6 +239,9 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 	}
 
+	/**
+	 * @return
+	 */
 	private synchronized int getReqId()
 	{
 		return ++reqId;

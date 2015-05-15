@@ -75,6 +75,7 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
+	//The experiment run manager is used to queue an experiment that needs to be executed
 	@Autowired
 	private IExperimentRunManager experimentRunManager;
 
@@ -171,8 +172,7 @@ public class GeppettoManager implements IGeppettoManager
 		}
 		else
 		{
-			// TODO Send an error
-			// managerListener.error(error, classSource, errorMessage, e);
+			throw new GeppettoExecutionException("Cannot run an experiment whose status is not design");
 		}
 	}
 

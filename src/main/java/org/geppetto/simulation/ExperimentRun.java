@@ -140,7 +140,7 @@ public class ExperimentRun implements ISimulatorCallbackListener
 		// TODO: need to figure out the logic here
 		if(s3Manager != null)
 		{
-			// s3Manager.saveFileToS3(file, path);
+			// s3Manager.saveTextToS3("text to be stored", "path/inside/the/bucket");
 		}
 	}
 

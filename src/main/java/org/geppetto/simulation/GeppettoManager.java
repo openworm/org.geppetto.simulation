@@ -220,7 +220,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IDropBoxManager#uploadModelToDropBox(java.lang.String, org.geppetto.core.services.IModelFormat)
 	 */
 	@Override
-	public void uploadModelToDropBox(String aspectID, IModelFormat format)
+	public void uploadModelToDropBox(String aspectID, IExperiment experiment, IGeppettoProject project, IModelFormat format)
 	{
 		// TODO Auto-generated method stub
 
@@ -230,7 +230,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IDropBoxManager#uploadResultsToDropBox(java.lang.String, org.geppetto.core.simulation.ResultsFormat)
 	 */
 	@Override
-	public void uploadResultsToDropBox(String aspectID, ResultsFormat format)
+	public void uploadResultsToDropBox(String aspectID, IExperiment experiment, IGeppettoProject project, ResultsFormat format)
 	{
 		// TODO Auto-generated method stub
 
@@ -298,7 +298,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IDownloadManager#downloadModel(java.lang.String, org.geppetto.core.services.IModelFormat)
 	 */
 	@Override
-	public File downloadModel(String aspectID, IModelFormat format)
+	public File downloadModel(String aspectID, IModelFormat format, IExperiment experiment, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
 		return null;
@@ -308,7 +308,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IDownloadManager#downloadResults(org.geppetto.core.simulation.ResultsFormat)
 	 */
 	@Override
-	public File downloadResults(ResultsFormat resultsFormat)
+	public File downloadResults(ResultsFormat resultsFormat, IExperiment experiment, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
 		return null;
@@ -338,5 +338,13 @@ public class GeppettoManager implements IGeppettoManager
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 
 	}
+
+	@Override
+	public void cancelExperimentRun(String requestId, IExperiment experiment, IGeppettoProject project)
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }

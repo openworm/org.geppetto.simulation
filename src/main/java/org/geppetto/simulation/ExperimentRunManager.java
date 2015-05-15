@@ -81,10 +81,14 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 		catch(GeppettoInitializationException | GeppettoExecutionException | MalformedURLException e)
 		{
+			//TODO Handle
 			e.printStackTrace();
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.simulation.IExperimentRunManager#queueExperiment(org.geppetto.core.data.model.IUser, org.geppetto.core.data.model.IExperiment)
+	 */
 	public void queueExperiment(IUser user, IExperiment experiment)
 	{
 		experiment.setStatus(ExperimentStatus.QUEUED);
@@ -235,6 +239,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 		catch(GeppettoInitializationException e)
 		{
+			//TODO Handle
 			e.printStackTrace();
 		}
 	}

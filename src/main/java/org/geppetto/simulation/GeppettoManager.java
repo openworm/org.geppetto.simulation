@@ -49,6 +49,7 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.simulation.IExperimentRunManager;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
@@ -136,7 +137,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IExperimentManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public void loadExperiment(String requestId, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
+	public RuntimeTreeRoot loadExperiment(String requestId, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
 
 		// for(IGeppettoProject proj : projects.keySet())
@@ -151,6 +152,9 @@ public class GeppettoManager implements IGeppettoManager
 		// throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
 		// }
 		// experimentRunManager.queueExperiment(user, experiment);
+		
+		return getRuntimeProject(project).getRuntimeExperiment(experiment).getRuntimeTree();
+		
 	}
 
 	/*
@@ -261,7 +265,7 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public Map<String, AspectSubTreeNode> getModelTree(String aspectInstancePath, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
-		return getRuntimeProject(project).getRuntimeExperiment(experiment).getModelTree(aspectInstancePath);
+		return getRuntimeProject(project).getRuntimeExperiment(experiment).populateModelTree(aspectInstancePath);
 	}
 
 	/*
@@ -272,7 +276,7 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public Map<String, AspectSubTreeNode> getSimulationTree(String aspectInstancePath, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
-		return getRuntimeProject(project).getRuntimeExperiment(experiment).getSimulationTree(aspectInstancePath);
+		return getRuntimeProject(project).getRuntimeExperiment(experiment).populateSimulationTree(aspectInstancePath);
 	}
 
 	/*

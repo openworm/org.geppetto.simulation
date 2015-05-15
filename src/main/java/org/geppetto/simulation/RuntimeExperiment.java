@@ -100,18 +100,6 @@ public class RuntimeExperiment
 
 		ExitVisitor exitVisitor = new ExitVisitor();
 		runtimeTreeRoot.apply(exitVisitor);
-
-		// TODO The bit below needs probably to happen elsewhere, a project was just open this is not responding to any particular message
-		// SerializeTreeVisitor updateClientVisitor = new SerializeTreeVisitor();
-		// runtimeTreeRoot.apply(updateClientVisitor);
-		//
-		// String scene = updateClientVisitor.getSerializedTree();
-		//
-		// if(scene != null)
-		// {
-		// geppettoManagerCallbackListener.updateReady(GeppettoEvents.LOAD_PROJECT, requestID, scene);
-		// logger.info("Simulation sent to callback listener");
-		// }
 	}
 
 	/*
@@ -174,7 +162,7 @@ public class RuntimeExperiment
 	 * @param aspectInstancePath
 	 * @return
 	 */
-	public Map<String, AspectSubTreeNode> getModelTree(String aspectInstancePath)
+	public Map<String, AspectSubTreeNode> populateModelTree(String aspectInstancePath)
 	{
 		logger.info("Populating Model Tree for " + aspectInstancePath);
 		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
@@ -186,12 +174,20 @@ public class RuntimeExperiment
 	 * @param aspectInstancePath
 	 * @return
 	 */
-	public Map<String, AspectSubTreeNode> getSimulationTree(String aspectInstancePath)
+	public Map<String, AspectSubTreeNode> populateSimulationTree(String aspectInstancePath)
 	{
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
 		runtimeTreeRoot.apply(populateSimulationVisitor);
 		return populateSimulationVisitor.getPopulatedSimulationTree();
+	}
+
+	/**
+	 * @return
+	 */
+	public RuntimeTreeRoot getRuntimeTree()
+	{
+		return runtimeTreeRoot;
 	}
 
 }

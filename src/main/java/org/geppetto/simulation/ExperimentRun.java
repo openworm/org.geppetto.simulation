@@ -50,6 +50,10 @@ import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * @author matteocantarelli
+ *
+ */
 public class ExperimentRun implements ISimulatorCallbackListener
 {
 
@@ -71,6 +75,11 @@ public class ExperimentRun implements ISimulatorCallbackListener
 
 	private IGeppettoManagerCallbackListener simulationCallbackListener;
 
+	/**
+	 * @param dataManager
+	 * @param experiment
+	 * @param simulationCallbackListener
+	 */
 	public ExperimentRun(IGeppettoDataManager dataManager, IExperiment experiment, IGeppettoManagerCallbackListener simulationCallbackListener)
 	{
 		this.dataManager = dataManager;

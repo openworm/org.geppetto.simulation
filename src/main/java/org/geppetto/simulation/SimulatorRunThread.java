@@ -32,16 +32,48 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.data.model.IAspectConfiguration;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.simulator.ISimulator;
+
 /**
+ * This class helps incapsulating the execution of a simulator in a separate thread
+ * 
  * @author matteocantarelli
  *
  */
-@Deprecated
-public enum SimulationRuntimeStatus
+public class SimulatorRunThread extends Thread
 {
-	
-	IDLE,
-	RUNNING,
-	PAUSED,
-	STOPPED
+
+	private ISimulator simulator;
+	private IAspectConfiguration aspectConfiguration;
+	private AspectNode aspectNode;
+
+	public SimulatorRunThread(ISimulator simulator, IAspectConfiguration aspectConfiguration, AspectNode aspectNode)
+	{
+		this.simulator = simulator;
+		this.aspectNode=aspectNode;
+		this.aspectConfiguration=aspectConfiguration;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run()
+	{
+		try
+		{
+			simulator.simulate(aspectConfiguration, aspectNode);
+		}
+		catch(GeppettoExecutionException e)
+		{
+			throw new RuntimeException(e);
+		}
+
+	}
+
 }

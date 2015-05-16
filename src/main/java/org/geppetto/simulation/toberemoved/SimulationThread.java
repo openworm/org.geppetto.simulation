@@ -133,13 +133,13 @@ class SimulationThread extends Thread
 					if(!this._simulationStarted)
 					{
 						// TODO MAtteo check this, it was START_SIMULATION previously
-						_simulationCallback.updateReady(GeppettoEvents.RUN_EXPERIMENT, _requestID, scene);
+						_simulationCallback.updateReady(GeppettoEvents.EXPERIMENT_RUNNING, _requestID, scene);
 						_logger.info("First step of simulation sent to Simulation Callback Listener");
 						this._simulationStarted = true;
 					}
 					else
 					{
-						_simulationCallback.updateReady(GeppettoEvents.SCENE_UPDATE, _requestID, scene);
+						_simulationCallback.updateReady(GeppettoEvents.EXPERIMENT_UPDATE, _requestID, scene);
 						_logger.info("Update sent to Simulation Callback Listener");
 					}
 				}

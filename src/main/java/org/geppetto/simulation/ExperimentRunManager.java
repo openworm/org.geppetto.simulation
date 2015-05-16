@@ -63,7 +63,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 {
 	private Map<IUser, List<IExperiment>> queue = new LinkedHashMap<>();
 
-	private List<ExperimentRun> experimentRuns = new ArrayList<>();
+	private List<ExperimentRunThread> experimentRuns = new ArrayList<>();
 
 	private GeppettoManager projectManager = new GeppettoManager();
 
@@ -90,13 +90,18 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	 * 
 	 * @see org.geppetto.core.simulation.IExperimentRunManager#queueExperiment(org.geppetto.core.data.model.IUser, org.geppetto.core.data.model.IExperiment)
 	 */
-	public void queueExperiment(IUser user, IExperiment experiment)
+	@Override
+	public void queueExperiment(IUser user, IExperiment experiment, IGeppettoProject project)
 	{
 		experiment.setStatus(ExperimentStatus.QUEUED);
 		addExperimentsToQueue(user, Arrays.asList(new IExperiment[] { experiment }), ExperimentStatus.QUEUED);
 	}
 
-	public boolean checkExperiment(IExperiment experiment)
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.simulation.IExperimentRunManager#checkExperiment(org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public boolean checkExperiment(IExperiment experiment, IGeppettoProject project)
 	{
 		// TODO: needs to decide if an experiment should be running or not
 		return true;
@@ -107,11 +112,15 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	 * 
 	 * @see org.geppetto.core.simulation.IExperimentRunManager#runExperiment(org.geppetto.core.data.model.IExperiment)
 	 */
-	public void runExperiment(IExperiment experiment) throws GeppettoExecutionException
+	public void runExperiment(IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
-		ExperimentRun experimentRun = new ExperimentRun(DataManagerHelper.getDataManager(), experiment, simulationCallbackListener);
+
+		RuntimeProject runtimeProject = projectManager.getRuntimeProject(project);
+		RuntimeExperiment runtimeExperiment = runtimeProject.getRuntimeExperiment(experiment);
+
+		ExperimentRunThread experimentRun = new ExperimentRunThread(experiment, runtimeExperiment, project, simulationCallbackListener);
 		experimentRun.addExperimentListener(this);
-		experimentRun.run();
+		experimentRun.start();
 		experiment.setStatus(ExperimentStatus.RUNNING);
 
 		IUser user = getUserForExperiment(experiment);
@@ -189,31 +198,13 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		}
 	}
 
-	/**
-	 * @param user
-	 * @param experiment
-	 * @return
-	 */
-	private IGeppettoProject getProjectForExperiment(IUser user, IExperiment experiment)
-	{
-		List<? extends IGeppettoProject> projects = user.getGeppettoProjects();
-		for(IGeppettoProject project : projects)
-		{
-			if(project.getExperiments().contains(experiment))
-			{
-				return project;
-			}
-		}
-		return null;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.geppetto.simulation.IExperimentListener#experimentRunDone(org.geppetto.simulation.ExperimentRun, org.geppetto.core.data.model.IExperiment)
 	 */
 	@Override
-	public void experimentRunDone(ExperimentRun experimentRun, IExperiment experiment) throws GeppettoExecutionException
+	public void experimentRunDone(ExperimentRunThread experimentRun, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
 		experimentRun.removeExperimentListener(this);
 
@@ -221,27 +212,25 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		if(user != null)
 		{
 			queue.get(user).remove(experiment);
-			IGeppettoProject project = getProjectForExperiment(user, experiment);
-			if(project != null)
+
+			RuntimeProject runtimeProject = projectManager.getRuntimeProject(project);
+			// When an experiment run is done we close its experiment unless it happens to be also the active one
+			if(runtimeProject != null && !experiment.equals(runtimeProject.getActiveExperiment()))
 			{
-				RuntimeProject runtimeProject = projectManager.getRuntimeProject(project);
-				// When an experiment run is done we close its experiment unless it happens to be also the active one
-				if(runtimeProject != null && !experiment.equals(runtimeProject.getActiveExperiment()))
-				{
-					runtimeProject.closeExperiment(experiment);
-				}
-				List<? extends IExperiment> experiments = project.getExperiments();
-				boolean closeProject = runtimeProject.getActiveExperiment() == null;
-				for(int i = 0; i < experiments.size() && closeProject; i++)
-				{
-					closeProject = experiments.get(i).getStatus() == ExperimentStatus.COMPLETED;
-				}
-				if(closeProject)
-				{
-					// close the project when all the user experiments are completed and none of the experiments is active
-					projectManager.closeProject("ERM" + getReqId(), project);
-				}
+				runtimeProject.closeExperiment(experiment);
 			}
+			List<? extends IExperiment> experiments = project.getExperiments();
+			boolean closeProject = runtimeProject.getActiveExperiment() == null;
+			for(int i = 0; i < experiments.size() && closeProject; i++)
+			{
+				closeProject = experiments.get(i).getStatus() == ExperimentStatus.COMPLETED;
+			}
+			if(closeProject)
+			{
+				// close the project when all the user experiments are completed and none of the experiments is active
+				projectManager.closeProject("ERM" + getReqId(), project);
+			}
+
 		}
 	}
 
@@ -252,5 +241,6 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 	{
 		return ++reqId;
 	}
+
 
 }

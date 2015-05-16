@@ -30,18 +30,43 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.visitor;
+
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 
 /**
  * @author matteocantarelli
  *
  */
-@Deprecated
-public enum SimulationRuntimeStatus
+public class FindAspectNodeVisitor extends DefaultStateVisitor 
 {
+
+	private String instancePath;
 	
-	IDLE,
-	RUNNING,
-	PAUSED,
-	STOPPED
+	private AspectNode aspectNode=null;
+
+	public FindAspectNodeVisitor(String instancePath)
+	{
+		super();
+		this.instancePath = instancePath;
+	}
+
+	public AspectNode getAspectNode()
+	{
+		return aspectNode;
+	}
+
+	@Override
+	public boolean inAspectNode(AspectNode node)
+	{
+		if(node.getInstancePath().equals(instancePath))
+		{
+			aspectNode=node;
+			doStopVisiting();
+		}
+		return false;
+	}
+
+
 }

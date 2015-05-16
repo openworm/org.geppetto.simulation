@@ -168,7 +168,7 @@ public class GeppettoManager implements IGeppettoManager
 	{
 		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
-			experimentRunManager.queueExperiment(user, experiment);
+			experimentRunManager.queueExperiment(user, experiment, project);
 		}
 		else
 		{

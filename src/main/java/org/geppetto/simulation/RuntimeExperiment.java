@@ -40,6 +40,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.DataManagerHelper;
+import org.geppetto.core.data.model.ExperimentStatus;
+import org.geppetto.core.data.model.IAspectConfiguration;
+import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
@@ -67,10 +71,13 @@ public class RuntimeExperiment
 	// Head node that holds the entities
 	private RuntimeTreeRoot runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
+	private IExperiment experiment;
+
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
-	public RuntimeExperiment(RuntimeProject runtimeProject, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
+	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
+		this.experiment=experiment;
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		init(runtimeProject.getGeppettoModel());
 	}
@@ -78,6 +85,7 @@ public class RuntimeExperiment
 	private void init(GeppettoModel geppettoModel)
 	{
 		// clear watch lists
+		//TODO Why?
 		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
@@ -102,10 +110,9 @@ public class RuntimeExperiment
 		runtimeTreeRoot.apply(exitVisitor);
 	}
 
-	/*
-	 * (non-Javadoc)
+
+	/**
 	 * 
-	 * @see org.geppetto.core.simulation.ISimulation#clearWatchLists()
 	 */
 	public void clearWatchLists()
 	{
@@ -114,8 +121,25 @@ public class RuntimeExperiment
 		// Update the RunTimeTreeModel setting watched to false for every node
 		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
 		runtimeTreeRoot.apply(clearWatchedVariablesVisitor);
+		
+		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
+		{
+			//if we are still in design we ask the DataManager to change what we are watching
+			//TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we 
+			//only want to get a portion of them in the client
+			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
+			for(IAspectConfiguration aspectConfig : aspectConfigs)
+			{
+				DataManagerHelper.getDataManager().clearWatchedVariables(aspectConfig);
+			}
+		}
+		else
+		{
+			//TODO Exception or we change the "watched" and keep the "recorded"?
+		}
 
-		// SIM TODO instruct aspects to clear watch variables
+		// SIM TODO instruct aspects to clear watch variables, this allows to change what a dynamic simulator
+		// is recording while they are doing it, do we keep this?
 		// for(ISimulator simulator : _sessionContext.getSimulators().values())
 		// {
 		// if(simulator != null)
@@ -130,16 +154,39 @@ public class RuntimeExperiment
 
 	}
 
-	public void setWatchedVariables(List<String> watchedVariables) throws GeppettoExecutionException, GeppettoInitializationException
+	/**
+	 * @param watchedVariables
+	 * @throws GeppettoExecutionException
+	 * @throws GeppettoInitializationException
+	 */
+	public void setWatchedVariables(List<String> watchedVariables)
 	{
 		logger.info("Setting watched variables in simulation tree");
 
 		// Update the RunTimeTreeModel
 		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
 		runtimeTreeRoot.apply(setWatchedVariablesVisitor);
+		
+		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
+		{
+			//if we are still in design we ask the DataManager to change what we are watching
+			//TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we 
+			//only want to get a portion of them in the client
+			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
+			for(IAspectConfiguration aspectConfig : aspectConfigs)
+			{
+				//TODO When do we create the aspect config? How do we map them to the variables?
+				//DataManagerHelper.getDataManager().setWatchedVariables(aspectConfig, watchedVariables);
+			}
+		}
+		else
+		{
+			//TODO Exception or we change the "watched" and keep the "recorded"?
+		}
 
 		// SIM TODO
-		// Call the function for each simulator
+		// Call the function for each simulator, , this allows to change what a dynamic simulator
+		// is recording while they are doing it, do we keep this?
 		// for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
 		// {
 		// ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
@@ -151,6 +198,9 @@ public class RuntimeExperiment
 		// }
 	}
 
+	/**
+	 * 
+	 */
 	public void release()
 	{
 		modelInterpreters.clear();

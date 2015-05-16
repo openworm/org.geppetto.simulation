@@ -34,9 +34,7 @@ package org.geppetto.simulation;
 
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
@@ -64,16 +62,15 @@ public class ServiceCreator<M,S> implements Runnable
 	private Map<M,S> _map=null;
 	private String _discoveryId=null;
 	private String _type=null;
-	private IGeppettoManagerCallbackListener _simulationCallBack;
+
 	
-	public ServiceCreator(String discoveryId, String type, M model, Map<M,S> map, IGeppettoManagerCallbackListener simulationCallBack)
+	public ServiceCreator(String discoveryId, String type, M model, Map<M,S> map)
 	{
 		super();
 		this._discoveryId = discoveryId;
 		this._type = type;
 		this._map=map;
 		_model=model;
-		_simulationCallBack=simulationCallBack;
 	}
 
 
@@ -90,7 +87,7 @@ public class ServiceCreator<M,S> implements Runnable
 		}
 		catch(GeppettoInitializationException e)
 		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+			throw new RuntimeException(e);
 		}
 
 	}

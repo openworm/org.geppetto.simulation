@@ -96,7 +96,7 @@ public class SimulationVisitor extends DefaultStateVisitor
 
 			if(simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER))
 			{
-				_simulationCallBack.updateReady(GeppettoEvents.EXPERIMENT_OVER, _requestID, null);
+				_simulationCallBack.updateReady(GeppettoEvents.EXPERIMENT_COMPLETED, _requestID, null);
 				simulatorRuntime.setStatus(SimulatorRuntimeStatus.IDLE);
 			}
 

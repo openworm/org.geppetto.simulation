@@ -31,7 +31,7 @@
 	</osgi:service>
 	
 	<bean id="geppettoManagerService" scope="session" class="org.geppetto.simulation.GeppettoManager">
-	<aop:scoped-proxy proxy-target-class="false"/>
+		<aop:scoped-proxy proxy-target-class="true"/>
 	</bean>
 
 	<bean id="eventListenerBean" class="org.geppetto.simulation.ApplicationListenerBean" />

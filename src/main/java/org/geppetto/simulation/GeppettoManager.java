@@ -65,6 +65,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author matteocantarelli
  * 
  */
+// @Component
+// @Scope(value="session",proxyMode=ScopedProxyMode.TARGET_CLASS)
 public class GeppettoManager implements IGeppettoManager
 {
 
@@ -75,7 +77,7 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
-	//The experiment run manager is used to queue an experiment that needs to be executed
+	// The experiment run manager is used to queue an experiment that needs to be executed
 	@Autowired
 	private IExperimentRunManager experimentRunManager;
 
@@ -153,9 +155,9 @@ public class GeppettoManager implements IGeppettoManager
 		// throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
 		// }
 		// experimentRunManager.queueExperiment(user, experiment);
-		
+
 		return getRuntimeProject(project).getRuntimeExperiment(experiment).getRuntimeTree();
-		
+
 	}
 
 	/*
@@ -390,8 +392,7 @@ public class GeppettoManager implements IGeppettoManager
 	public void cancelExperimentRun(String requestId, IExperiment experiment, IGeppettoProject project)
 	{
 		// TODO Auto-generated method stub
-		
-	}
 
+	}
 
 }

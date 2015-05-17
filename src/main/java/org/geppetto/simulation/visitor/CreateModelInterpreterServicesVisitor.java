@@ -73,10 +73,8 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 		super.visit(model);
 		ServiceCreator<String, IModelInterpreter> sc = new ServiceCreator<String, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(), _model);
 
-		// ServiceCreator<Model, IModelInterpreter> sc = new ServiceCreator<Model, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model,
-		// _sessionContext.getModelInterpreters(),_simulationCallBack);
 		Thread t = new Thread(sc);
-		t.start();
+		t.start();		
 
 		try
 		{
@@ -87,43 +85,4 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
 		}
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
-	 */
-	// @Override
-	// SIM TODO
-	// public void visit(Simulator simulatorModel)
-	// {
-	// super.visit(simulatorModel);
-	//
-	// if (simulatorModel.getConversionServiceId() != null){
-	// ServiceCreator<Simulator, IConversion> scc = new ServiceCreator<Simulator, IConversion>(simulatorModel.getConversionServiceId(), IConversion.class.getName(), simulatorModel,
-	// _sessionContext.getConversions(),_simulationCallBack);
-	// scc.run();
-	// }
-	// //Do we need this for conversion?
-	// // if(simulatorModel.getSimulatorId()!=null){
-	// // _sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
-	// // }
-	//
-	// ServiceCreator<Simulator, ISimulator> scs = new ServiceCreator<Simulator, ISimulator>(simulatorModel.getSimulatorId(), ISimulator.class.getName(), simulatorModel,
-	// _sessionContext.getSimulators(),_simulationCallBack);
-	// Thread tscs = new Thread(scs);
-	// tscs.start();
-	// try
-	// {
-	// tscs.join();
-	// }
-	// catch(InterruptedException e)
-	// {
-	// _simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
-	// }
-	// if(simulatorModel.getSimulatorId()!=null){
-	// _sessionContext.addSimulatorRuntime(simulatorModel.getSimulatorId());
-	// }
-	// }
-
 }

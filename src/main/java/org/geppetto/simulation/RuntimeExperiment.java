@@ -92,9 +92,6 @@ public class RuntimeExperiment
 		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoManagerCallbackListener);
 		geppettoModel.accept(createServicesVisitor);
 
-		// populateScripts(simulation);
-		// _sessionContext.setMaxBufferSize(appConfig.getMaxBufferSize());
-
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, instancePathToIModelMap, geppettoManagerCallbackListener);
 		geppettoModel.accept(loadSimulationVisitor);
 
@@ -105,9 +102,6 @@ public class RuntimeExperiment
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(geppettoManagerCallbackListener);
 		runtimeTreeRoot.apply(populateVisualVisitor);
-
-		ExitVisitor exitVisitor = new ExitVisitor();
-		runtimeTreeRoot.apply(exitVisitor);
 	}
 
 

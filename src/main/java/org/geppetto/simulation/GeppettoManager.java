@@ -142,20 +142,24 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public RuntimeTreeRoot loadExperiment(String requestId, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException
 	{
-
-		// for(IGeppettoProject proj : projects.keySet())
-		// {
-		// if(proj.getExperiments().contains(experiment))
-		// {
-		// project = proj;
-		// }
-		// }
-		// if(!projects.containsKey(project) && projects.get(project) == null)
-		// {
-		// throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
-		// }
-		// experimentRunManager.queueExperiment(user, experiment);
-
+		 try {
+			 for(IGeppettoProject proj : projects.keySet())
+			 {
+			 if(proj.getExperiments().contains(experiment))
+			 {
+			 project = proj;
+			 }
+			 }
+			 if(!projects.containsKey(project) && projects.get(project) == null)
+			 {
+			 throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
+			 }
+			 experimentRunManager.queueExperiment(user, experiment, project);
+			 getRuntimeProject(project).openExperiment(requestId, experiment);
+		} catch (MalformedURLException | GeppettoInitializationException e) {
+			e.printStackTrace();
+		}
+		 	
 		return getRuntimeProject(project).getRuntimeExperiment(experiment).getRuntimeTree();
 
 	}

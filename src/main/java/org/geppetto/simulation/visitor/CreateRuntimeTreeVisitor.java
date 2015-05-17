@@ -72,7 +72,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 	private Map<String, IModel> _model;
 	private IGeppettoManagerCallbackListener _simulationCallback;
 	// Head node that holds the entities
-	private RuntimeTreeRoot _runtimeTreeRoot;
+	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
 	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot, IGeppettoManagerCallbackListener simulationCallback)
 	{

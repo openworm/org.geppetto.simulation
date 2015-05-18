@@ -104,7 +104,16 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					for(String recording : pModel.getRecordingURL())
 					{						
 						URL url = null;
-						url = this.getClass().getResource(recording);
+						if(recording.contains(SERVER_ROOT_TOKEN))
+						{
+							recording = recording.replace(SERVER_ROOT_TOKEN, "");
+							url = this.getLocalURL(recording);
+						}
+						else
+						{
+							url = this.getClass().getResource(recording);
+						}
+						
 						recordings.add(url);
 					}
 				}

@@ -8,7 +8,7 @@ import java.net.MalformedURLException;
 
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.simulation.GeppettoModel;
-import org.geppetto.simulation.SimulationConfigReader;
+import org.geppetto.simulation.GeppettoModelReader;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 import org.junit.Assert;
@@ -24,7 +24,7 @@ public class SimulationDecoratorVisitorTest
 //	@Test
 	public void testInstancePaths() throws MalformedURLException, GeppettoInitializationException
 	{
-		GeppettoModel sim=SimulationConfigReader.readConfig(new File("./src/test/resources/hierarchicalSimulationSample1.xml").toURI().toURL());
+		GeppettoModel sim=GeppettoModelReader.readGeppettoModel(new File("./src/test/resources/hierarchicalSimulationSample1.xml").toURI().toURL());
 		InstancePathDecoratorVisitor decoratorVisitor=new InstancePathDecoratorVisitor();
 		sim.accept(decoratorVisitor);
 		
@@ -62,7 +62,7 @@ public class SimulationDecoratorVisitorTest
 //	@Test
 	public void testParents() throws MalformedURLException, GeppettoInitializationException
 	{
-		GeppettoModel sim=SimulationConfigReader.readConfig(new File("./src/test/resources/hierarchicalSimulationSample1.xml").toURI().toURL());
+		GeppettoModel sim=GeppettoModelReader.readGeppettoModel(new File("./src/test/resources/hierarchicalSimulationSample1.xml").toURI().toURL());
 		ParentsDecoratorVisitor decoratorVisitor=new ParentsDecoratorVisitor();
 		sim.accept(decoratorVisitor);
 		

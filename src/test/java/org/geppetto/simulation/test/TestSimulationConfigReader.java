@@ -43,7 +43,7 @@ import javax.xml.bind.Marshaller;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.GeppettoModel;
-import org.geppetto.simulation.SimulationConfigReader;
+import org.geppetto.simulation.GeppettoModelReader;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -53,14 +53,14 @@ public class TestSimulationConfigReader {
 	// SIM TODO
 //	@Test
 	public void testReadSample1() throws MalformedURLException, GeppettoInitializationException {
-		GeppettoModel sim = SimulationConfigReader.readConfig(new File("./src/test/resources/sample1.xml").toURI().toURL());
+		GeppettoModel sim = GeppettoModelReader.readGeppettoModel(new File("./src/test/resources/sample1.xml").toURI().toURL());
 		Assert.assertTrue(sim != null);
 	}
 	
 	// SIM TODO
 //	@Test
 	public void testReadConfig() throws MalformedURLException, GeppettoInitializationException {
-		GeppettoModel sim = SimulationConfigReader.readConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());
+		GeppettoModel sim = GeppettoModelReader.readGeppettoModel(new File("./src/test/resources/sim-config.xml").toURI().toURL());
 		
 		Assert.assertTrue(sim != null);
 		Assert.assertTrue(sim.getEntities().size() == 1);
@@ -70,11 +70,11 @@ public class TestSimulationConfigReader {
 		Assert.assertTrue(sim.getEntities().get(0).getAspects().get(0).getModel().getModelURL().equals("someurl"));
 		Assert.assertTrue(sim.getEntities().get(0).getAspects().get(0).getId().equals("sph"));
 		
-		String xml = SimulationConfigReader.writeSimulationConfig(new File("./src/test/resources/sim-config.xml").toURI().toURL());
+		String xml = GeppettoModelReader.writeGeppettoModel(new File("./src/test/resources/sim-config.xml").toURI().toURL());
 				
 		Assert.assertNotNull(xml);
 								
-		GeppettoModel s = SimulationConfigReader.readSimulationConfig(xml);
+		GeppettoModel s = GeppettoModelReader.readGeppettoModel(xml);
 		
 		Assert.assertTrue(s != null);
 		Assert.assertTrue(sim.getEntities().size() == 1);
@@ -88,7 +88,7 @@ public class TestSimulationConfigReader {
 	// SIM TODO
 	//@Test
 	public void testReadHierarchicalSimulation() throws MalformedURLException, GeppettoInitializationException {
-		GeppettoModel sim = SimulationConfigReader.readConfig(new File("./src/test/resources/hierarchicalSimulationSample1.xml").toURI().toURL());
+		GeppettoModel sim = GeppettoModelReader.readGeppettoModel(new File("./src/test/resources/hierarchicalSimulationSample1.xml").toURI().toURL());
 		
 		Assert.assertTrue(sim != null);
 		Assert.assertTrue(sim.getEntities().size() == 1);

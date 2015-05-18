@@ -51,14 +51,17 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.xml.sax.SAXException;
 
-
-public class SimulationConfigReader
+/**
+ * @author jesus@metacell.us
+ *
+ */
+public class GeppettoModelReader
 {
 
-	//static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
+	// static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
 	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/datamanager/src/main/resources/schema/simulation/simulationSchema.xsd";
-	
-	public static GeppettoModel readConfig(URL url) throws GeppettoInitializationException
+
+	public static GeppettoModel readGeppettoModel(URL url) throws GeppettoInitializationException
 	{
 
 		GeppettoModel sim = null;
@@ -79,16 +82,16 @@ public class SimulationConfigReader
 	/**
 	 * Takes a JSON object with simulation information and creates a Simulation out of it.
 	 * 
-	 * @param simulationConfig
+	 * @param geppettoModel
 	 * @return
 	 * @throws GeppettoInitializationException
 	 */
-	public static GeppettoModel readSimulationConfig(String simulationConfig) throws GeppettoInitializationException
+	public static GeppettoModel readGeppettoModel(String geppettoModel) throws GeppettoInitializationException
 	{
 
 		GeppettoModel sim = null;
 
-		StringReader reader = new StringReader(simulationConfig);
+		StringReader reader = new StringReader(geppettoModel);
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(GeppettoModel.class).createUnmarshaller();
@@ -102,15 +105,22 @@ public class SimulationConfigReader
 
 		return sim;
 	}
-	
-	
-	public static Schema parseSchema(URL schema) throws GeppettoInitializationException {
+
+	/**
+	 * @param schema
+	 * @return
+	 * @throws GeppettoInitializationException
+	 */
+	public static Schema parseSchema(URL schema) throws GeppettoInitializationException
+	{
 		Schema parsedSchema = null;
-		SchemaFactory sf = SchemaFactory
-				.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-		try {
+		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+		try
+		{
 			parsedSchema = sf.newSchema(schema);
-		} catch (SAXException e) {
+		}
+		catch(SAXException e)
+		{
 			throw new GeppettoInitializationException("Unable to generate schema");
 		}
 		return parsedSchema;
@@ -123,7 +133,7 @@ public class SimulationConfigReader
 	 * @return
 	 * @throws GeppettoInitializationException
 	 */
-	public static String writeSimulationConfig(URL url) throws GeppettoInitializationException
+	public static String writeGeppettoModel(URL url) throws GeppettoInitializationException
 	{
 		String line = null;
 		StringBuilder sb = new StringBuilder();

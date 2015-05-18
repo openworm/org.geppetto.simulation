@@ -39,6 +39,8 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.DataManagerHelper;
+import org.geppetto.core.data.DefaultGeppettoDataManager;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
@@ -74,8 +76,21 @@ public class RuntimeProject
 	{
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
-		URL url = new URL(geppettoModelData.getUrl());
-		geppettoModel = SimulationConfigReader.readConfig(url);
+		String urlString=geppettoModelData.getUrl();
+		URL url = null;
+		if(urlString.startsWith("http://")||urlString.startsWith("file://"))
+		{
+			url = new URL(geppettoModelData.getUrl());	
+		}
+		else if(DataManagerHelper.getDataManager().isDefault())
+		{
+			url = DefaultGeppettoDataManager.class.getResource(urlString);
+		}
+		else
+		{
+			throw new GeppettoInitializationException("Can't find the Geppetto model at "+urlString);
+		}
+		geppettoModel = GeppettoModelReader.readGeppettoModel(url);
 
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();

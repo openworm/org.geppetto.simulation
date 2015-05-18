@@ -83,6 +83,11 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IUser user;
 
+	
+	public GeppettoManager(){
+		logger.info("New Geppetto Manager class");
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 

@@ -162,6 +162,17 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				SimulatorRuntime simRuntime = new SimulatorRuntime();
 				simulatorRuntimes.put(instancePath, simRuntime);
 			}
+			try
+			{
+				tscs.join();
+				ISimulator simulator = simulatorServices.get(instancePath);
+				//TODO:Where do we get the list of IModels needed to start simulator?
+				simulator.initialize(null, this);
+			}
+			catch(Exception e)
+			{
+				simulationCallbackListener.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+			}
 		}
 	}
 

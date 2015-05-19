@@ -187,7 +187,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 					ISimulator simulator = simulatorServices.get(instancePath);
 
-					if(simulatorRuntime.getNonConsumedSteps() < appConfig.getMaxBufferSize())
+					if(simulatorRuntime.getNonConsumedSteps() < 500)
 					{
 						// we advance the simulation for this simulator only if we don't have already
 						// too many steps in the buffer

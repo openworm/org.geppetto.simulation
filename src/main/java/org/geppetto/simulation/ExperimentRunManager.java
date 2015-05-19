@@ -124,6 +124,7 @@ public class ExperimentRunManager implements IExperimentRunManager, IExperimentL
 		try{
 			projectManager.loadProject(String.valueOf(this.getReqId()), project);
 			RuntimeProject runtimeProject = projectManager.getRuntimeProject(project);
+			runtimeProject.openExperiment(String.valueOf(this.getReqId()), experiment);
 			RuntimeExperiment runtimeExperiment = runtimeProject.getRuntimeExperiment(experiment);
 
 			ExperimentRunThread experimentRun = new ExperimentRunThread(experiment, runtimeExperiment, project, simulationCallbackListener);

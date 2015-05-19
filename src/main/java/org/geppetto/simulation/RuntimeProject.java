@@ -78,7 +78,7 @@ public class RuntimeProject
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 		String urlString=geppettoModelData.getUrl();
 		URL url = null;
-		if(urlString.startsWith("http://")||urlString.startsWith("file://"))
+		if(urlString.startsWith("https://")||urlString.startsWith("https://")||urlString.startsWith("file://"))
 		{
 			url = new URL(geppettoModelData.getUrl());	
 		}

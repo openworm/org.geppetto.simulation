@@ -119,7 +119,7 @@ public class RecordingsSimulatorTest
 			}
 
 			@Override
-			public void endOfSteps(String message) {
+			public void endOfSteps(String message, java.io.File recordingsFile) {
 				// TODO Auto-generated method stub
 				
 			}

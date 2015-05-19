@@ -357,10 +357,9 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#endOfSteps(java.lang.String)
 	 */
 	@Override
-	public void endOfSteps(String message)
+	public void endOfSteps(String message, File recordingsLocation)
 	{
-		// TODO Auto-generated method stub
-
+		this.s3Manager.saveFileToS3(recordingsLocation, recordingsLocation.getAbsolutePath());
 	}
 
 	/* (non-Javadoc)

@@ -118,6 +118,10 @@ public class ServiceCreator<M,S> implements Runnable
 		{
 			service = (S) _bc.getService(sr[0]);
 		}
+		else
+		{
+			throw new GeppettoInitializationException("Cannot create the service "+discoveryId);
+		}
 
 		return service;
 	}

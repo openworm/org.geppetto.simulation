@@ -71,13 +71,14 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 	public void visit(Model model)
 	{
 		super.visit(model);
-		ServiceCreator<String, IModelInterpreter> sc = new ServiceCreator<String, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(), _model);
-
-		Thread t = new Thread(sc);
-		t.start();		
-
 		try
 		{
+			ServiceCreator<String, IModelInterpreter> sc = new ServiceCreator<String, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(),
+					_model);
+
+			Thread t = new Thread(sc);
+			t.start();
+
 			t.join();
 		}
 		catch(InterruptedException e)

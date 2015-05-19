@@ -32,20 +32,19 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.data.DataManagerHelper;
-import org.geppetto.core.data.DefaultGeppettoDataManager;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
 
@@ -76,29 +75,23 @@ public class RuntimeProject
 	{
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
-		String urlString=geppettoModelData.getUrl();
-		URL url = null;
-		if(urlString.startsWith("http://")||urlString.startsWith("file://"))
+
+		try
 		{
-			url = new URL(geppettoModelData.getUrl());	
+			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
 		}
-		else if(DataManagerHelper.getDataManager().isDefault())
+		catch(IOException e)
 		{
-			url = DefaultGeppettoDataManager.class.getResource(urlString);
+			throw new GeppettoInitializationException(e);
 		}
-		else
-		{
-			throw new GeppettoInitializationException("Can't find the Geppetto model at "+urlString);
-		}
-		geppettoModel = GeppettoModelReader.readGeppettoModel(url);
 
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		geppettoModel.accept(instancePathdecoratorVisitor);
 		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
 		geppettoModel.accept(parentDecoratorVisitor);
-		
-		//TODO If scripts are associated to Geppetto project something equivalent to the following
+
+		// TODO If scripts are associated to Geppetto project something equivalent to the following
 		// JsonObject scriptsJSON = new JsonObject();
 		//
 		// JsonArray scriptsArray = new JsonArray();
@@ -121,7 +114,7 @@ public class RuntimeProject
 	public void openExperiment(String requestId, IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
-		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this,experiment, geppettoManagerCallbackListener);
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this, experiment, geppettoManagerCallbackListener);
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 

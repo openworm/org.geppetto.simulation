@@ -37,6 +37,7 @@ import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -159,7 +160,6 @@ public class GeppettoManager implements IGeppettoManager
 			 {
 			 throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
 			 }
-			 experimentRunManager.queueExperiment(user, experiment, project);
 			 getRuntimeProject(project).openExperiment(requestId, experiment);
 		} catch (MalformedURLException | GeppettoInitializationException e) {
 			e.printStackTrace();
@@ -180,6 +180,9 @@ public class GeppettoManager implements IGeppettoManager
 		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
 			experimentRunManager.queueExperiment(user, experiment, project);
+
+			Timer timer = new Timer();
+			timer.schedule(new ExperimentCheck(project, (ExperimentRunManager) experimentRunManager), 1000);
 		}
 		else
 		{

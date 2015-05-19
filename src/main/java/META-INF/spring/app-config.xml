@@ -9,7 +9,7 @@
 	<!-- Scans the impl package for module @Components to install and configure -->
 	<context:component-scan base-package="org.geppetto.simulation" />
 
-	<bean id="appconfig" class="org.geppetto.simulation.AppConfig">
+	<bean id="appConfig" class="org.geppetto.simulation.AppConfig">
 		<!-- how many neurons will be simulated in parallel -->
 		<property name="maxBufferSize" value="500" />
 		<property name="updateCycle" value="20" />

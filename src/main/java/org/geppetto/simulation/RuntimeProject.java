@@ -84,7 +84,7 @@ public class RuntimeProject
 		{
 			throw new GeppettoInitializationException(e);
 		}
-
+ 
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		geppettoModel.accept(instancePathdecoratorVisitor);

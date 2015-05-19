@@ -26,13 +26,6 @@
 	<bean id="recordingModelInterpreter" scope="thread" class="org.geppetto.simulation.recording.RecordingsModelInterpreter">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
-
- 	<osgi:service id="GeppettoManager" ref="geppettoManagerService" interface="org.geppetto.core.manager.IGeppettoManager">
-	</osgi:service>
 	
-	<bean id="geppettoManagerService" scope="session" class="org.geppetto.simulation.GeppettoManager">
-		<aop:scoped-proxy proxy-target-class="true"/>
-	</bean>
 
-	<bean id="eventListenerBean" class="org.geppetto.simulation.ApplicationListenerBean" />
 </beans>

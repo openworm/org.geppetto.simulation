@@ -121,12 +121,12 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		init(experiment);
 	}
 
-	protected void addExperimentListener(IExperimentListener listener)
+	public void addExperimentListener(IExperimentListener listener)
 	{
 		experimentListeners.add(listener);
 	}
 
-	protected void removeExperimentListener(IExperimentListener listener)
+	public void removeExperimentListener(IExperimentListener listener)
 	{
 		experimentListeners.remove(listener);
 	}

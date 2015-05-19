@@ -7,7 +7,7 @@
 							http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 	
 	<!-- Scans the impl package for module @Components to install and configure -->
-	<context:component-scan base-package="org.geppetto.simulation" />
+	<context:component-scan base-package="org.geppetto.simulation" scoped-proxy="targetClass"/>
 
 	<bean id="appconfig" class="org.geppetto.simulation.AppConfig">
 		<!-- how many neurons will be simulated in parallel -->

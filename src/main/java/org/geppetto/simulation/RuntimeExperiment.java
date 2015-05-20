@@ -109,6 +109,11 @@ public class RuntimeExperiment
 		return instancePathToIModelMap;
 	}
 	
+	
+	public Map<String, IModelInterpreter> getModelInterpreters() {
+		return modelInterpreters;
+	}
+	
 	/**
 	 * 
 	 */

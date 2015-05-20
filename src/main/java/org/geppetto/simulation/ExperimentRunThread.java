@@ -52,6 +52,7 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.model.IModel;
+import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.quantities.PhysicalQuantity;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
@@ -176,12 +177,14 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				List<IModel> models = new ArrayList<IModel>();
 				models.add(model);
 
+				ISimulator simulator = simulatorServices.get(instancePath);
 				//get conversion service
 				IConversion conversionService = this.conversionServices.get(simConfig.getConversionServiceId());
-
+				IModelInterpreter modelService = runtimeExperiment.getModelInterpreters().get(instancePath);
+				
 				//TODO: Extract formats from model interpreters from within here somehow
-				List<IModelFormat> inputFormats = null;
-				List<IModelFormat> outputFormats = null;
+				List<IModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);
+				List<IModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
 				List<IModel> iModelsConverted = new ArrayList<IModel>();
 
 				if(conversionService != null)
@@ -245,7 +248,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				}
 
 				//code to initialize simulator
-				ISimulator simulator = simulatorServices.get(instancePath);
 				if(simulator != null)
 				{
 

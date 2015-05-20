@@ -489,6 +489,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	@Override
 	public void endOfSteps(String message, File recordingsLocation)
 	{
+		this.experiment.setStatus(ExperimentStatus.COMPLETED);
 		this.s3Manager.saveFileToS3(recordingsLocation, recordingsLocation.getAbsolutePath());
 	}
 

@@ -288,7 +288,7 @@ class ExperimentCheck extends TimerTask {
 				}
 			}
 		} catch (GeppettoExecutionException e1) {
-			e1.printStackTrace();
+			//TODO: Handle exception;
 		}
 	}
   }

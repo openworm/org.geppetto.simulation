@@ -50,6 +50,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.quantities.PhysicalQuantity;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
@@ -166,8 +167,10 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			{
 				tscs.join();
 				ISimulator simulator = simulatorServices.get(instancePath);
-				//TODO:Where do we get the list of IModels needed to start simulator?
-				simulator.initialize(null, this);
+				IModel model = this.runtimeExperiment.getInstancePathToIModelMap().get(instancePath);
+				List<IModel> models = new ArrayList<IModel>();
+				models.add(model);
+				simulator.initialize(models,this);
 			}
 			catch(Exception e)
 			{

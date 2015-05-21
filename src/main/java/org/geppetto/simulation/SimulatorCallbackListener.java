@@ -33,6 +33,8 @@
 
 package org.geppetto.simulation;
 
+import java.io.File;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
@@ -73,7 +75,7 @@ public class SimulatorCallbackListener implements ISimulatorCallbackListener
 	}
 
 	@Override
-	public void endOfSteps(String message)
+	public void endOfSteps(String message,File recordingsFile)
 	{
 		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.OVER);
 		this._simulationCallback.message(message);

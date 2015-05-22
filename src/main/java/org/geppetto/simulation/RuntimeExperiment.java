@@ -263,6 +263,10 @@ public class RuntimeExperiment
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			String instancePath = result.getAspect().getInstancePath();
+
+			//We first need to populate the simulation tree for the given aspect
+			populateSimulationTree(instancePath);
+			
 			logger.info("Reading results for " + instancePath);
 			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
 			getRuntimeTree().apply(findAspectNodeVisitor);
@@ -293,7 +297,7 @@ public class RuntimeExperiment
 
 			recordingReader.readRecording(HDF5Reader.readHDF5File(url), watchedVariables, simulationTree, true);
 			loadedResults.put(instancePath, simulationTree);
-			logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + "with recordings");
+			logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + " with recordings");
 		}
 		return loadedResults;
 	}

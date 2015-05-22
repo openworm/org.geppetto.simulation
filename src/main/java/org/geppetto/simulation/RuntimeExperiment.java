@@ -53,7 +53,6 @@ import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
-import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;

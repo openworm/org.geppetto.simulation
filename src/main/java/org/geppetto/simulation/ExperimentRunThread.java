@@ -54,6 +54,7 @@ import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.quantities.PhysicalQuantity;
+import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.values.ValuesFactory;
@@ -98,7 +99,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	// This map contains the simulator runtime for each one of the simulators
 	private Map<String, SimulatorRuntime> simulatorRuntimes = new ConcurrentHashMap<String, SimulatorRuntime>();
 
-	private IGeppettoManagerCallbackListener simulationCallbackListener;
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	private int updateCycles = 0;
 
@@ -112,11 +113,12 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	private IGeppettoProject project;
 
+	private ISimulationResult simulationResult;
+
 	/**
-	 * @param dataManager
 	 * @param experiment
+	 * @param runtimeExperiment
 	 * @param project
-	 * @param runtimeExperiment2
 	 * @param simulationCallbackListener
 	 */
 	public ExperimentRunThread(IExperiment experiment, RuntimeExperiment runtimeExperiment, IGeppettoProject project, IGeppettoManagerCallbackListener simulationCallbackListener)
@@ -127,16 +129,25 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		init(experiment);
 	}
 
+	/**
+	 * @param listener
+	 */
 	public void addExperimentListener(IExperimentListener listener)
 	{
 		experimentListeners.add(listener);
 	}
 
+	/**
+	 * @param listener
+	 */
 	public void removeExperimentListener(IExperimentListener listener)
 	{
 		experimentListeners.remove(listener);
 	}
 
+	/**
+	 * @param experiment
+	 */
 	private void init(IExperiment experiment)
 	{
 		List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
@@ -161,7 +172,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			}
 			catch(InterruptedException e)
 			{
-				simulationCallbackListener.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+				geppettoManagerCallbackListener.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
 			}
 			if(simulatorId != null)
 			{
@@ -172,17 +183,17 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			{
 				tscs.join();
 
-				//retrieve models from runtime experiment
+				// retrieve models from runtime experiment
 				IModel model = this.runtimeExperiment.getInstancePathToIModelMap().get(instancePath);
 				List<IModel> models = new ArrayList<IModel>();
 				models.add(model);
 
 				ISimulator simulator = simulatorServices.get(instancePath);
-				//get conversion service
+				// get conversion service
 				IConversion conversionService = this.conversionServices.get(simConfig.getConversionServiceId());
 				IModelInterpreter modelService = runtimeExperiment.getModelInterpreters().get(instancePath);
-				
-				//TODO: Extract formats from model interpreters from within here somehow
+
+				// TODO: Extract formats from model interpreters from within here somehow
 				List<IModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);
 				List<IModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
 				List<IModel> iModelsConverted = new ArrayList<IModel>();
@@ -213,7 +224,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 								catch(ConversionException e)
 								{
 									logger.error("Error: ", e);
-									simulationCallbackListener.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+									geppettoManagerCallbackListener.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
 								}
 							}
 						}
@@ -223,7 +234,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				{
 					// Check format returned by the model interpreter matches with the one accepted by the simulator
 					List<IModelFormat> matchFormats = retainCommonModelFormats(inputFormats, outputFormats);
-					if(matchFormats.size() == 0 && inputFormats!=null && outputFormats!=null)
+					if(matchFormats.size() == 0 && inputFormats != null && outputFormats != null)
 					{
 						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionService(inputFormats, outputFormats);
 
@@ -247,7 +258,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					}
 				}
 
-				//code to initialize simulator
+				// code to initialize simulator
 				if(simulator != null)
 				{
 
@@ -266,13 +277,13 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				}
 				else
 				{
-					simulationCallbackListener.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + instancePath
+					geppettoManagerCallbackListener.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "A simulator for " + instancePath
 							+ " already exists, something did not get cleared", null);
 				}
 			}
 			catch(Exception e)
 			{
-				simulationCallbackListener.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+				geppettoManagerCallbackListener.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
 			}
 		}
 	}
@@ -286,49 +297,42 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		while(experiment.getStatus().equals(ExperimentStatus.RUNNING))
 		{
-			long calculateTime = System.currentTimeMillis() - timeElapsed;
 			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 
-			// update only if time elapsed since last client update doesn't exceed
-			// the update cycle of application.
-			if(calculateTime >= updateCycles)
+			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
-				for(IAspectConfiguration aspectConfig : aspectConfigs)
-				{
-					String instancePath = aspectConfig.getAspect().getInstancePath();
-					SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-					ISimulator simulator = simulatorServices.get(instancePath);
+				String instancePath = aspectConfig.getAspect().getInstancePath();
+				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+				ISimulator simulator = simulatorServices.get(instancePath);
 
-					if(simulatorRuntime.getNonConsumedSteps() < 500)
-					{
-						// we advance the simulation for this simulator only if we don't have already
-						// too many steps in the buffer
-						try
-						{
-							simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
-							FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
-							runtimeExperiment.getRuntimeTree().apply(findAspectNodeVisitor);
-							SimulatorRunThread simulatorRunThread = new SimulatorRunThread(simulator, aspectConfig, findAspectNodeVisitor.getAspectNode());
-							simulatorRunThread.start();
-							simulator.simulate(aspectConfig, findAspectNodeVisitor.getAspectNode());
-							simulatorRuntime.incrementStepsConsumed(); // TODO Remove?
-						}
-						catch(GeppettoExecutionException e)
-						{
-							throw new RuntimeException("Error while stepping " + simulator.getName(), e);
-						}
-					}
-				}
-				
-				if(simulationCallbackListener != null)
+				// if it's still stepping we don't step again
+				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
 				{
-					//if it is null the client is disconnected
-					sendSimulationCallback();
+					// we advance the simulation for this simulator only if we are not already stepping
+					// note that some simulators might perform more than one step at the time (i.e. NEURON
+					// so the status will be STEPPING until they are all completed)
+
+					FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
+					runtimeExperiment.getRuntimeTree().apply(findAspectNodeVisitor);
+					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, findAspectNodeVisitor.getAspectNode());
+					simulatorRunThread.start();
+					simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
 				}
 
-				timeElapsed = System.currentTimeMillis();
-				logger.info("Updating after " + calculateTime + " ms");
 			}
+
+			if(checkAllSimulatorsAreDone())
+			{
+				experiment.setStatus(ExperimentStatus.COMPLETED);
+				logger.info("All simulators are done, experiment " + experiment.getId() + " was completed.");
+			}
+
+		}
+
+		if(geppettoManagerCallbackListener != null)
+		{
+			// if it is null the client is not connected
+			sendSimulationCallback();
 		}
 
 		// and when done, notify about it
@@ -337,7 +341,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			try
 			{
 				listener.experimentRunDone(this, experiment, project);
-				storeResults(experiment);
 			}
 			catch(GeppettoExecutionException e)
 			{
@@ -347,56 +350,42 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	}
 
-	private boolean checkAllStepped()
+	/**
+	 * @return true if all the simulators associated with this experiment have completed their execution
+	 */
+	private boolean checkAllSimulatorsAreDone()
 	{
-		boolean allStepped = true;
-		boolean noneEverStepped = true;
 		List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 		for(IAspectConfiguration aspectConfig : aspectConfigs)
 		{
 			String instancePath = aspectConfig.getAspect().getInstancePath();
-			if(allStepped || noneEverStepped)
+			SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
 			{
-				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-
-				if(simulatorRuntime.getNonConsumedSteps() < 0)
-				{
-					// this simulator has no steps to consume
-					allStepped = false;
-				}
-
-				if(simulatorRuntime.getProcessedSteps() != 0)
-				{
-					// this simulator has steps to consume
-					noneEverStepped = false;
-				}
+				return false;
 			}
 		}
-
-		return allStepped;
+		return true;
 	}
 
 	/**
 	 * Send update to client with new run time tree
 	 */
-	public void sendSimulationCallback()
+	private void sendSimulationCallback()
 	{
-		if(checkAllStepped() && experiment.getStatus().equals(ExperimentStatus.RUNNING))
-		{
-			// Visit simulators to extract time from them
-			TimeVisitor timeVisitor = new TimeVisitor();
 
-			runtimeExperiment.getRuntimeTree().apply(timeVisitor);
-			String timeStepUnit = timeVisitor.getTimeStepUnit();
-			// set global time
-			this.setGlobalTime(timeVisitor.getTime(), runtimeExperiment.getRuntimeTree());
+		// Visit simulators to extract time from them
+		TimeVisitor timeVisitor = new TimeVisitor();
 
-			ExitVisitor exitVisitor = new ExitVisitor();
-			runtimeExperiment.getRuntimeTree().apply(exitVisitor);
-			
-			simulationCallbackListener.updateReady(GeppettoEvents.EXPERIMENT_UPDATE,runtimeExperiment.getRuntimeTree());
-			
-		}
+		runtimeExperiment.getRuntimeTree().apply(timeVisitor);
+		String timeStepUnit = timeVisitor.getTimeStepUnit();
+		// set global time
+		this.setGlobalTime(timeVisitor.getTime(), runtimeExperiment.getRuntimeTree());
+
+		ExitVisitor exitVisitor = new ExitVisitor();
+		runtimeExperiment.getRuntimeTree().apply(exitVisitor);
+
+		geppettoManagerCallbackListener.updateReady(GeppettoEvents.EXPERIMENT_UPDATE, runtimeExperiment.getRuntimeTree());
 	}
 
 	/**
@@ -426,6 +415,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 
 		logger.info("Canceling ExperimentRun");
+		experiment.setStatus(ExperimentStatus.CANCELED);
 
 		// iterate through aspects and instruct them to stop
 		// TODO Check
@@ -439,21 +429,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	}
 
 	/**
-	 * @param experiment
-	 */
-	private void storeResults(IExperiment experiment)
-	{
-		if(s3Manager != null)
-		{
-			for(ISimulationResult result : experiment.getSimulationResults())
-			{
-				// TODO Check path
-				s3Manager.saveFileToS3(new File(result.getResult().getUrl()), "path");
-			}
-		}
-	}
-
-	/**
 	 * 
 	 */
 	public void release()
@@ -462,13 +437,52 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		conversionServices.clear();
 		simulatorRuntimes.clear();
 		experimentListeners.clear();
-		simulationCallbackListener=null;
+		geppettoManagerCallbackListener = null;
 	}
-	
-	public static List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#endOfSteps(java.lang.String)
+	 */
+	@Override
+	public void endOfSteps(String instancePath, File recordingsLocation)
+	{
+		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+		simulatorRuntime.setStatus(SimulatorRuntimeStatus.DONE);
+		//TODO We need to create simulation results 
+		//experiment.getSimulationResults().add(DataManagerHelper.getDataManager().newSimulationResults());
+		if(s3Manager != null)
+		{
+			s3Manager.saveFileToS3(recordingsLocation, recordingsLocation.getAbsolutePath());
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#stateTreeUpdated()
+	 */
+	@Override
+	public void stepped(AspectNode aspect) throws GeppettoExecutionException
+	{
+		String instancePath = aspect.getInstancePath();
+		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+		simulatorRuntime.incrementProcessedSteps();
+		simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
+		// TODO What else?
+	}
+
+	/**
+	 * @param formats
+	 * @param formats2
+	 * @return
+	 */
+	private List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
 	{
 		List<IModelFormat> result = new ArrayList<IModelFormat>();
-		if(formats!=null){
+		if(formats != null)
+		{
 			for(IModelFormat format : formats)
 			{
 				for(IModelFormat format2 : formats2)
@@ -482,25 +496,4 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		}
 		return result;
 	}
-
-	/* (non-Javadoc)
-	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#endOfSteps(java.lang.String)
-	 */
-	@Override
-	public void endOfSteps(String message, File recordingsLocation)
-	{
-		this.experiment.setStatus(ExperimentStatus.COMPLETED);
-		this.s3Manager.saveFileToS3(recordingsLocation, recordingsLocation.getAbsolutePath());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#stateTreeUpdated()
-	 */
-	@Override
-	public void stateTreeUpdated() throws GeppettoExecutionException
-	{
-		// TODO Auto-generated method stub
-
-	}
-
 }

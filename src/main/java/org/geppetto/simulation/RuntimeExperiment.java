@@ -32,6 +32,9 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,19 +43,27 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.core.data.model.IInstancePath;
+import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.simulator.RecordingReader;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
+import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
@@ -76,7 +87,7 @@ public class RuntimeExperiment
 
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
-		this.experiment=experiment;
+		this.experiment = experiment;
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		init(runtimeProject.getGeppettoModel());
 	}
@@ -84,7 +95,7 @@ public class RuntimeExperiment
 	private void init(GeppettoModel geppettoModel)
 	{
 		// clear watch lists
-		//TODO Why?
+		// TODO Why?
 		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
@@ -103,16 +114,16 @@ public class RuntimeExperiment
 		runtimeTreeRoot.apply(populateVisualVisitor);
 	}
 
-
-	public Map<String, IModel> getInstancePathToIModelMap() {
+	public Map<String, IModel> getInstancePathToIModelMap()
+	{
 		return instancePathToIModelMap;
 	}
-	
-	
-	public Map<String, IModelInterpreter> getModelInterpreters() {
+
+	public Map<String, IModelInterpreter> getModelInterpreters()
+	{
 		return modelInterpreters;
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -123,12 +134,12 @@ public class RuntimeExperiment
 		// Update the RunTimeTreeModel setting watched to false for every node
 		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
 		runtimeTreeRoot.apply(clearWatchedVariablesVisitor);
-		
+
 		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
-			//if we are still in design we ask the DataManager to change what we are watching
-			//TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we 
-			//only want to get a portion of them in the client
+			// if we are still in design we ask the DataManager to change what we are watching
+			// TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we
+			// only want to get a portion of them in the client
 			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
@@ -137,7 +148,7 @@ public class RuntimeExperiment
 		}
 		else
 		{
-			//TODO Exception or we change the "watched" and keep the "recorded"?
+			// TODO Exception or we change the "watched" and keep the "recorded"?
 		}
 
 		// SIM TODO instruct aspects to clear watch variables, this allows to change what a dynamic simulator
@@ -168,22 +179,22 @@ public class RuntimeExperiment
 		// Update the RunTimeTreeModel
 		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
 		runtimeTreeRoot.apply(setWatchedVariablesVisitor);
-		
+
 		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
-			//if we are still in design we ask the DataManager to change what we are watching
-			//TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we 
-			//only want to get a portion of them in the client
+			// if we are still in design we ask the DataManager to change what we are watching
+			// TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we
+			// only want to get a portion of them in the client
 			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
-				//TODO When do we create the aspect config? How do we map them to the variables?
-				//DataManagerHelper.getDataManager().setWatchedVariables(aspectConfig, watchedVariables);
+				// TODO When do we create the aspect config? How do we map them to the variables?
+				// DataManagerHelper.getDataManager().setWatchedVariables(aspectConfig, watchedVariables);
 			}
 		}
 		else
 		{
-			//TODO Exception or we change the "watched" and keep the "recorded"?
+			// TODO Exception or we change the "watched" and keep the "recorded"?
 		}
 
 		// SIM TODO
@@ -240,6 +251,68 @@ public class RuntimeExperiment
 	public RuntimeTreeRoot getRuntimeTree()
 	{
 		return runtimeTreeRoot;
+	}
+
+	/**
+	 * @return
+	 * @throws GeppettoExecutionException 
+	 */
+	public Map<String, AspectSubTreeNode> updateSimulationTreeWithResults() throws GeppettoExecutionException
+	{
+		Map<String, AspectSubTreeNode> loadedResults=new HashMap<String, AspectSubTreeNode>();
+		for(ISimulationResult result : experiment.getSimulationResults())
+		{
+			String instancePath = result.getAspect().getInstancePath();
+			logger.info("Reading results for " + instancePath);
+			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
+			getRuntimeTree().apply(findAspectNodeVisitor);
+			AspectNode aspect = findAspectNodeVisitor.getAspectNode();
+			AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
+			simulationTree.setModified(true);
+			aspect.setModified(true);
+			aspect.getParentEntity().setModified(true);
+
+			URL url;
+			try
+			{
+				url = URLReader.getURL(result.getResult().getUrl());
+			}
+			catch(IOException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
+			
+			RecordingReader recordingReader = new RecordingReader();
+			IAspectConfiguration aspectConfig = getAspectConfiguration(experiment, instancePath);
+			
+			List<String> watchedVariables = new ArrayList<String>();
+			for(IInstancePath ip : aspectConfig.getWatchedVariables())
+			{
+				watchedVariables.add(ip.getInstancePath());
+			}
+
+			recordingReader.readRecording(HDF5Reader.readHDF5File(url), watchedVariables, simulationTree, true);
+			loadedResults.put(instancePath, simulationTree);
+			logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + "with recordings");
+		}
+		return loadedResults;
+	}
+
+	/**
+	 * @param experiment
+	 * @param instancePath
+	 * @return
+	 */
+	private IAspectConfiguration getAspectConfiguration(IExperiment experiment, String instancePath)
+	{
+		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
+		{
+			if(aspectConfig.getAspect().getInstancePath().equals(instancePath))
+			{
+				return aspectConfig;
+			}
+		}
+		return null;
 	}
 
 }

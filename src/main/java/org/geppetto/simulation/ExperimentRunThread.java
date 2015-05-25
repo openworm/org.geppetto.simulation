@@ -44,6 +44,7 @@ import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.conversion.ConversionException;
 import org.geppetto.core.conversion.IConversion;
+import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.IGeppettoS3Manager;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
@@ -75,7 +76,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * 
  * @author dandromereschi
  * @author matteocantarelli
- *
+ * 
  */
 public class ExperimentRunThread extends Thread implements ISimulatorCallbackListener
 {
@@ -450,8 +451,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 		simulatorRuntime.setStatus(SimulatorRuntimeStatus.DONE);
-		//TODO We need to create simulation results 
-		//experiment.getSimulationResults().add(DataManagerHelper.getDataManager().newSimulationResults());
+		experiment.addSimulationResult(DataManagerHelper.getDataManager().newSimulationResult());
 		if(s3Manager != null)
 		{
 			s3Manager.saveFileToS3(recordingsLocation, recordingsLocation.getAbsolutePath());

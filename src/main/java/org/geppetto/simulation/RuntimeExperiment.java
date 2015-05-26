@@ -71,6 +71,7 @@ import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
+import org.geppetto.simulation.visitor.SupportedOutputsVisitor;
 
 public class RuntimeExperiment
 {
@@ -266,6 +267,18 @@ public class RuntimeExperiment
 		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format);
 		runtimeTreeRoot.apply(downloadModelVistor);
 		return downloadModelVistor.getModelFile();
+	}
+	
+	/**
+	 * @param aspectInstancePath
+	 * @return
+	 */
+	public List<IModelFormat> supportedOuputs(String aspectInstancePath)
+	{
+		logger.info("Getting supported outputs for " + aspectInstancePath);
+		SupportedOutputsVisitor supportedOutputsModelVisitor = new SupportedOutputsVisitor(geppettoManagerCallbackListener, aspectInstancePath);
+		runtimeTreeRoot.apply(supportedOutputsModelVisitor);
+		return supportedOutputsModelVisitor.getSupportedOutputs();
 	}
 
 	/**

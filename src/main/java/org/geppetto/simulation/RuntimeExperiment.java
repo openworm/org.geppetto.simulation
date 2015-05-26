@@ -66,7 +66,6 @@ import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.DownloadModelVisitor;
-import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;

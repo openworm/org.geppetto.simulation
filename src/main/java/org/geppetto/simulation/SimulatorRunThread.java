@@ -33,7 +33,9 @@
 package org.geppetto.simulation;
 
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
+import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.simulator.ISimulator;
 
@@ -49,9 +51,11 @@ public class SimulatorRunThread extends Thread
 	private ISimulator simulator;
 	private IAspectConfiguration aspectConfiguration;
 	private AspectNode aspectNode;
+	private IExperiment experiment;
 
-	public SimulatorRunThread(ISimulator simulator, IAspectConfiguration aspectConfiguration, AspectNode aspectNode)
+	public SimulatorRunThread(IExperiment experiment, ISimulator simulator, IAspectConfiguration aspectConfiguration, AspectNode aspectNode)
 	{
+		this.experiment = experiment;
 		this.simulator = simulator;
 		this.aspectNode=aspectNode;
 		this.aspectConfiguration=aspectConfiguration;
@@ -71,6 +75,7 @@ public class SimulatorRunThread extends Thread
 		}
 		catch(GeppettoExecutionException e)
 		{
+			experiment.setStatus(ExperimentStatus.ERROR);
 			throw new RuntimeException(e);
 		}
 

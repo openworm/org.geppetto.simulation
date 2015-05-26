@@ -33,6 +33,9 @@
 package org.geppetto.simulation;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,22 +44,30 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.core.data.model.IInstancePath;
+import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.simulator.RecordingReader;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
+import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
@@ -239,6 +250,14 @@ public class RuntimeExperiment
 	}
 
 	/**
+	 * @return
+	 */
+	public RuntimeTreeRoot getRuntimeTree()
+	{
+		return runtimeTreeRoot;
+	}
+
+	/**
 	 * @param aspectInstancePath
 	 * @return
 	 */
@@ -252,10 +271,68 @@ public class RuntimeExperiment
 
 	/**
 	 * @return
+	 * @throws GeppettoExecutionException 
 	 */
-	public RuntimeTreeRoot getRuntimeTree()
+	public Map<String, AspectSubTreeNode> updateSimulationTreeWithResults() throws GeppettoExecutionException
 	{
-		return runtimeTreeRoot;
+		Map<String, AspectSubTreeNode> loadedResults=new HashMap<String, AspectSubTreeNode>();
+		for(ISimulationResult result : experiment.getSimulationResults())
+		{
+			String instancePath = result.getAspect().getInstancePath();
+
+			//We first need to populate the simulation tree for the given aspect
+			populateSimulationTree(instancePath);
+			
+			logger.info("Reading results for " + instancePath);
+			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
+			getRuntimeTree().apply(findAspectNodeVisitor);
+			AspectNode aspect = findAspectNodeVisitor.getAspectNode();
+			AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
+			simulationTree.setModified(true);
+			aspect.setModified(true);
+			aspect.getParentEntity().setModified(true);
+
+			URL url;
+			try
+			{
+				url = URLReader.getURL(result.getResult().getUrl());
+			}
+			catch(IOException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
+			
+			RecordingReader recordingReader = new RecordingReader();
+			IAspectConfiguration aspectConfig = getAspectConfiguration(experiment, instancePath);
+			
+			List<String> watchedVariables = new ArrayList<String>();
+			for(IInstancePath ip : aspectConfig.getWatchedVariables())
+			{
+				watchedVariables.add(ip.getInstancePath());
+			}
+
+			recordingReader.readRecording(HDF5Reader.readHDF5File(url), watchedVariables, simulationTree, true);
+			loadedResults.put(instancePath, simulationTree);
+			logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + " with recordings");
+		}
+		return loadedResults;
+	}
+
+	/**
+	 * @param experiment
+	 * @param instancePath
+	 * @return
+	 */
+	private IAspectConfiguration getAspectConfiguration(IExperiment experiment, String instancePath)
+	{
+		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
+		{
+			if(aspectConfig.getAspect().getInstancePath().equals(instancePath))
+			{
+				return aspectConfig;
+			}
+		}
+		return null;
 	}
 
 }

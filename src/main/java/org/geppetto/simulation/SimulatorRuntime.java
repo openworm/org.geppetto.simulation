@@ -33,7 +33,6 @@
 
 package org.geppetto.simulation;
 
-import org.geppetto.core.model.runtime.AspectNode;
 
 /**
  * @author matteocantarelli

@@ -41,6 +41,6 @@ public enum SimulatorRuntimeStatus
 	IDLE,
 	STEPPING,
 	STEPPED,
-	OVER,
+	DONE,
 	CONVERSION,
 }

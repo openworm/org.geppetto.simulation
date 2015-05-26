@@ -99,7 +99,7 @@ public class RecordingsSimulatorTest
 			final double[] expectedTime={0, 0.4, 0.5, 0.51, 0.52, 0.6, 0.7};
 			
 			@Override
-			public void stateTreeUpdated() throws GeppettoExecutionException
+			public void stepped(AspectNode aspect) throws GeppettoExecutionException
 			{
 				ACompositeNode wtree = (ACompositeNode) aspectNode.getChildren().get(0);
 				VariableNode time = (VariableNode) wtree.getChildren().get(0);

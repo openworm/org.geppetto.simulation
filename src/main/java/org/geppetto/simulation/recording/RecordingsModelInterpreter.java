@@ -32,6 +32,7 @@
  *******************************************************************************/
 package org.geppetto.simulation.recording;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,7 @@ import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.springframework.stereotype.Service;
+
 /**
  * @author matteocantarelli
  * 
@@ -60,35 +62,37 @@ import org.springframework.stereotype.Service;
 @Service
 public class RecordingsModelInterpreter implements IModelInterpreter
 {
-	
+
 	private static Log _logger = LogFactory.getLog(RecordingsModelInterpreter.class);
 
+	private static final String ID = "RECORDING_";
 
-	private static final String ID="RECORDING_";
-	
-	public RecordingsModelInterpreter() {
+	public RecordingsModelInterpreter()
+	{
 		_logger.info("New recordings model service created");
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.IModelInterpreter#readModel(java.net.URL, java.util.List)
 	 */
 	@Override
 	public IModel readModel(URL url, List<URL> recordings, String instancePath) throws ModelInterpreterException
 	{
-		//the model URL is ignored in a recordings model interpreter
+		// the model URL is ignored in a recordings model interpreter
 		ModelWrapper recordingsModel = new ModelWrapper(null);
 		try
 		{
 			if(recordings != null)
 			{
-				int i=1;
+				int i = 1;
 				for(URL recording : recordings)
 				{
 					H5File file = HDF5Reader.readHDF5File(recording);
 					RecordingModel recordingModel = new RecordingModel(file);
 					recordingModel.setInstancePath(instancePath);
-					recordingsModel.wrapModel(ID+i++, recordingModel);
+					recordingsModel.wrapModel(ID + i++, recordingModel);
 				}
 			}
 		}
@@ -100,13 +104,15 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	}
 
 	@Override
-	public boolean populateModelTree(AspectNode aspectNode) {
+	public boolean populateModelTree(AspectNode aspectNode)
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean populateRuntimeTree(AspectNode aspectNode) {
+	public boolean populateRuntimeTree(AspectNode aspectNode)
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -118,11 +124,12 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	}
 
 	@Override
-	public void registerGeppettoService() {
+	public void registerGeppettoService()
+	{
 		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
 		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
 		ServicesRegistry.registerModelInterpreterService(this, modelFormatList);
-		
+
 	}
 
 	@Override
@@ -143,7 +150,14 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	public void addFeature(IFeature feature)
 	{
 		// TODO Auto-generated method stub
-		
+
+	}
+
+	@Override
+	public File downloadModel(AspectNode aspectNode, IModelFormat format) throws ModelInterpreterException
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

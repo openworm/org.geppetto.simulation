@@ -32,6 +32,7 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,9 +51,11 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
+import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
+import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
@@ -77,7 +80,7 @@ public class RuntimeExperiment
 
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
-		this.experiment=experiment;
+		this.experiment = experiment;
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		init(runtimeProject.getGeppettoModel());
 	}
@@ -85,7 +88,7 @@ public class RuntimeExperiment
 	private void init(GeppettoModel geppettoModel)
 	{
 		// clear watch lists
-		//TODO Why?
+		// TODO Why?
 		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
@@ -104,16 +107,16 @@ public class RuntimeExperiment
 		runtimeTreeRoot.apply(populateVisualVisitor);
 	}
 
-
-	public Map<String, IModel> getInstancePathToIModelMap() {
+	public Map<String, IModel> getInstancePathToIModelMap()
+	{
 		return instancePathToIModelMap;
 	}
-	
-	
-	public Map<String, IModelInterpreter> getModelInterpreters() {
+
+	public Map<String, IModelInterpreter> getModelInterpreters()
+	{
 		return modelInterpreters;
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -124,12 +127,12 @@ public class RuntimeExperiment
 		// Update the RunTimeTreeModel setting watched to false for every node
 		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
 		runtimeTreeRoot.apply(clearWatchedVariablesVisitor);
-		
+
 		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
-			//if we are still in design we ask the DataManager to change what we are watching
-			//TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we 
-			//only want to get a portion of them in the client
+			// if we are still in design we ask the DataManager to change what we are watching
+			// TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we
+			// only want to get a portion of them in the client
 			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
@@ -138,7 +141,7 @@ public class RuntimeExperiment
 		}
 		else
 		{
-			//TODO Exception or we change the "watched" and keep the "recorded"?
+			// TODO Exception or we change the "watched" and keep the "recorded"?
 		}
 
 		// SIM TODO instruct aspects to clear watch variables, this allows to change what a dynamic simulator
@@ -169,22 +172,22 @@ public class RuntimeExperiment
 		// Update the RunTimeTreeModel
 		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
 		runtimeTreeRoot.apply(setWatchedVariablesVisitor);
-		
+
 		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
-			//if we are still in design we ask the DataManager to change what we are watching
-			//TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we 
-			//only want to get a portion of them in the client
+			// if we are still in design we ask the DataManager to change what we are watching
+			// TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we
+			// only want to get a portion of them in the client
 			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
-				//TODO When do we create the aspect config? How do we map them to the variables?
-				//DataManagerHelper.getDataManager().setWatchedVariables(aspectConfig, watchedVariables);
+				// TODO When do we create the aspect config? How do we map them to the variables?
+				// DataManagerHelper.getDataManager().setWatchedVariables(aspectConfig, watchedVariables);
 			}
 		}
 		else
 		{
-			//TODO Exception or we change the "watched" and keep the "recorded"?
+			// TODO Exception or we change the "watched" and keep the "recorded"?
 		}
 
 		// SIM TODO
@@ -233,6 +236,18 @@ public class RuntimeExperiment
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
 		runtimeTreeRoot.apply(populateSimulationVisitor);
 		return populateSimulationVisitor.getPopulatedSimulationTree();
+	}
+
+	/**
+	 * @param aspectInstancePath
+	 * @return
+	 */
+	public File downloadModel(String aspectInstancePath, IModelFormat format)
+	{
+		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
+		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format);
+		runtimeTreeRoot.apply(downloadModelVistor);
+		return downloadModelVistor.getModelFile();
 	}
 
 	/**

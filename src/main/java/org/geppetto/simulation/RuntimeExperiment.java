@@ -64,7 +64,7 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
-import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
@@ -124,9 +124,11 @@ public class RuntimeExperiment
 		for(IAspectConfiguration a : experiment.getAspectConfigurations()){
 			List<String> variables = new ArrayList<String>();
 			List<? extends IInstancePath> vars = a.getWatchedVariables();
-			for(IInstancePath i : vars){
-				String var =i.getInstancePath();
-				variables.add(var);
+			if (vars != null){
+				for(IInstancePath i : vars){
+					String var =i.getInstancePath();
+					variables.add(var);
+				}
 			}
 			String aspect = a.getAspect().getInstancePath();
 			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
@@ -282,7 +284,7 @@ public class RuntimeExperiment
 	 * @param aspectInstancePath
 	 * @return
 	 */
-	public File downloadModel(String aspectInstancePath, IModelFormat format)
+	public File downloadModel(String aspectInstancePath, ModelFormat format)
 	{
 		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
 		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format);
@@ -294,7 +296,7 @@ public class RuntimeExperiment
 	 * @param aspectInstancePath
 	 * @return
 	 */
-	public List<IModelFormat> supportedOuputs(String aspectInstancePath)
+	public List<ModelFormat> supportedOuputs(String aspectInstancePath)
 	{
 		logger.info("Getting supported outputs for " + aspectInstancePath);
 		SupportedOutputsVisitor supportedOutputsModelVisitor = new SupportedOutputsVisitor(geppettoManagerCallbackListener, aspectInstancePath);

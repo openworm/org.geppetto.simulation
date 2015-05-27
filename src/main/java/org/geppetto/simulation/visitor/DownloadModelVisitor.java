@@ -39,7 +39,7 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
@@ -56,7 +56,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 
 	// The id of aspect we will be populating
 	private String _instancePath;
-	private IModelFormat _modelFormat;
+	private ModelFormat _modelFormat;
 
 	private File _modelFile;
 
@@ -64,7 +64,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 	 * @param simulationListener
 	 * @param instancePath
 	 */
-	public DownloadModelVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, IModelFormat format)
+	public DownloadModelVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, ModelFormat format)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;

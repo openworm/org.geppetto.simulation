@@ -47,7 +47,6 @@ import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
-import org.geppetto.core.services.IModelFormat;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 
@@ -128,27 +127,6 @@ public class LoadSimulationVisitor extends TraversingVisitor
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 		}
 
-	}
-
-	
-	public static List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
-	{
-		List<IModelFormat> result = new ArrayList<IModelFormat>();
-		if(formats!=null){
-			for(IModelFormat format : formats)
-			{
-				if(formats2 != null){
-					for(IModelFormat format2 : formats2)
-					{
-						if(format.toString().equals(format2.toString()))
-						{
-							result.add(format);
-						}
-					}
-				}
-			}
-		}
-		return result;
 	}
 
 }

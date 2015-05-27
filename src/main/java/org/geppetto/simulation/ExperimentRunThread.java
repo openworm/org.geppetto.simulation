@@ -34,6 +34,7 @@ package org.geppetto.simulation;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +60,7 @@ import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.values.ValuesFactory;
-import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
@@ -195,27 +196,27 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				IModelInterpreter modelService = runtimeExperiment.getModelInterpreters().get(instancePath);
 
 				// TODO: Extract formats from model interpreters from within here somehow
-				List<IModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);
-				List<IModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
+				List<ModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);
+				List<ModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
 				List<IModel> iModelsConverted = new ArrayList<IModel>();
 
 				if(conversionService != null)
 				{
 					// Read conversion supported model formats
-					List<IModelFormat> supportedInputFormats = conversionService.getSupportedInputs();
+					List<ModelFormat> supportedInputFormats = conversionService.getSupportedInputs();
 					// FIXME: We can pass the model and the input format so it brings back a filtered list of outputs format
-					List<IModelFormat> supportedOutputFormats = conversionService.getSupportedOutputs();
+					List<ModelFormat> supportedOutputFormats = conversionService.getSupportedOutputs();
 
 					// Check if real model formats and conversion supported model formats match
-					List<IModelFormat> matchInputFormats = retainCommonModelFormats(supportedInputFormats, inputFormats);
-					List<IModelFormat> matchOutputFormats = retainCommonModelFormats(supportedOutputFormats, outputFormats);
-
+					supportedInputFormats.retainAll(inputFormats);
+					supportedOutputFormats.retainAll(outputFormats);
+					
 					// Try to convert until a input-output format combination works
-					for(IModelFormat inputFormat : matchInputFormats)
+					for(ModelFormat inputFormat : supportedInputFormats)
 					{
 						if(iModelsConverted.size() == 0)
 						{
-							for(IModelFormat outputFormat : matchOutputFormats)
+							for(ModelFormat outputFormat : supportedOutputFormats)
 							{
 								try
 								{
@@ -234,8 +235,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				else
 				{
 					// Check format returned by the model interpreter matches with the one accepted by the simulator
-					List<IModelFormat> matchFormats = retainCommonModelFormats(inputFormats, outputFormats);
-					if(matchFormats.size() == 0 && inputFormats != null && outputFormats != null)
+					if(!Collections.disjoint(inputFormats, outputFormats) && inputFormats != null && outputFormats != null)
 					{
 						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionService(inputFormats, outputFormats);
 
@@ -245,7 +245,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 							{
 								// FIXME: Assuming we will only have one conversion service
 								ConversionServiceKey conversionServiceKey = entry.getKey();
-								for(IModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(models.get(0), conversionServiceKey.getInputModelFormat()))
+								for(ModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(models.get(0), conversionServiceKey.getInputModelFormat()))
 								{
 									// Verify supported outputs for this model
 									if(supportedModelFormat.toString() == conversionServiceKey.getOutputModelFormat().toString())
@@ -472,28 +472,5 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
 		// TODO What else?
 	}
-
-	/**
-	 * @param formats
-	 * @param formats2
-	 * @return
-	 */
-	private List<IModelFormat> retainCommonModelFormats(List<IModelFormat> formats, List<IModelFormat> formats2)
-	{
-		List<IModelFormat> result = new ArrayList<IModelFormat>();
-		if(formats != null)
-		{
-			for(IModelFormat format : formats)
-			{
-				for(IModelFormat format2 : formats2)
-				{
-					if(format.toString().equals(format2.toString()))
-					{
-						result.add(format);
-					}
-				}
-			}
-		}
-		return result;
-	}
+	
 }

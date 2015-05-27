@@ -39,7 +39,7 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
@@ -57,7 +57,7 @@ public class SupportedOutputsVisitor extends DefaultStateVisitor
 	// The id of aspect we will be populating
 	private String _instancePath;
 
-	private List<IModelFormat> _supportedOutputs;
+	private List<ModelFormat> _supportedOutputs;
 
 	/**
 	 * @param simulationListener
@@ -96,7 +96,7 @@ public class SupportedOutputsVisitor extends DefaultStateVisitor
 	/**
 	 * @return
 	 */
-	public List<IModelFormat> getSupportedOutputs()
+	public List<ModelFormat> getSupportedOutputs()
 	{
 		return this._supportedOutputs;
 	}

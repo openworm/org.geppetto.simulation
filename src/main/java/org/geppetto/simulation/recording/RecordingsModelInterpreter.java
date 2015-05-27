@@ -35,6 +35,7 @@ package org.geppetto.simulation.recording;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ncsa.hdf.object.h5.H5File;
@@ -51,7 +52,7 @@ import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.springframework.stereotype.Service;
 
@@ -126,9 +127,8 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	@Override
 	public void registerGeppettoService()
 	{
-		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
-		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
-		ServicesRegistry.registerModelInterpreterService(this, modelFormatList);
+		List<ModelFormat> modelFormats = new ArrayList<ModelFormat>(Arrays.asList(ServicesRegistry.registerModelFormat("GEPPETTO_RECORDING_SIMULATOR")));
+		ServicesRegistry.registerModelInterpreterService(this, modelFormats);
 
 	}
 
@@ -154,14 +154,14 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	}
 
 	@Override
-	public File downloadModel(AspectNode aspectNode, IModelFormat format) throws ModelInterpreterException
+	public File downloadModel(AspectNode aspectNode, ModelFormat format) throws ModelInterpreterException
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<IModelFormat> getSupportedOutputs(AspectNode aspectNode) throws ModelInterpreterException
+	public List<ModelFormat> getSupportedOutputs(AspectNode aspectNode) throws ModelInterpreterException
 	{
 		// TODO Auto-generated method stub
 		return null;

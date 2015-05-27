@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,8 +54,12 @@ import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.runtime.ACompositeNode;
+import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.CompositeNode;
+import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
@@ -98,8 +103,6 @@ public class RuntimeExperiment
 
 	private void init(GeppettoModel geppettoModel)
 	{
-		// clear watch lists
-		// TODO Why?
 		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
@@ -116,6 +119,23 @@ public class RuntimeExperiment
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(geppettoManagerCallbackListener);
 		runtimeTreeRoot.apply(populateVisualVisitor);
+		
+		//create variables for each aspect node's simulation tree
+		for(IAspectConfiguration a : experiment.getAspectConfigurations()){
+			List<String> variables = new ArrayList<String>();
+			List<? extends IInstancePath> vars = a.getWatchedVariables();
+			for(IInstancePath i : vars){
+				String var =i.getInstancePath();
+				variables.add(var);
+			}
+			String aspect = a.getAspect().getInstancePath();
+			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
+			runtimeTreeRoot.apply(findAspectNodeVisitor);
+			AspectNode node = findAspectNodeVisitor.getAspectNode();
+			this.createVariables(variables, node.getSubTree(AspectTreeType.SIMULATION_TREE));
+		}
+
+
 	}
 
 	public Map<String, IModel> getInstancePathToIModelMap()
@@ -246,6 +266,7 @@ public class RuntimeExperiment
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
 		runtimeTreeRoot.apply(populateSimulationVisitor);
+		
 		return populateSimulationVisitor.getPopulatedSimulationTree();
 	}
 
@@ -347,4 +368,65 @@ public class RuntimeExperiment
 		return null;
 	}
 
+	/**
+	 * Creates variables to store in simulation tree
+	 * 
+	 * @param variables
+	 * @param simulationTree
+	 */
+	public void createVariables(List<String> variables, AspectSubTreeNode simulationTree){
+		for(String watchedVariable : variables)
+		{
+			String path = "/" + watchedVariable.replace(simulationTree.getInstancePath() + ".", "");
+			path = path.replace(".", "/");
+
+			path = path.replaceFirst("/", "");
+			StringTokenizer tokenizer = new StringTokenizer(path, "/");
+			ACompositeNode node = simulationTree;
+			VariableNode newVariableNode = null;
+			while(tokenizer.hasMoreElements())
+			{
+				String current = tokenizer.nextToken();
+				boolean found = false;
+				for(ANode child : node.getChildren())
+				{
+					if(child.getId().equals(current))
+					{
+						if(child instanceof ACompositeNode)
+						{
+							node = (ACompositeNode) child;
+						}
+						if(child instanceof VariableNode)
+						{
+							newVariableNode = (VariableNode) child;
+						}
+						found = true;
+						break;
+					}
+				}
+				if(found)
+				{
+					continue;
+				}
+				else
+				{
+					if(tokenizer.hasMoreElements())
+					{
+						// not a leaf, create a composite state node
+						ACompositeNode newNode = new CompositeNode(current);
+						node.addChild(newNode);
+						node = newNode;
+					}
+					else
+					{
+						// it's a leaf node
+						VariableNode newNode = new VariableNode(current);
+						newVariableNode = newNode;
+						node.addChild(newNode);
+
+					}
+				}
+			}
+		}
+	}
 }

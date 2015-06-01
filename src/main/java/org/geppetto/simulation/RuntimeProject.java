@@ -71,6 +71,12 @@ public class RuntimeProject
 		return geppettoModel;
 	}
 
+	/**
+	 * @param project
+	 * @param geppettoManagerCallbackListener
+	 * @throws MalformedURLException
+	 * @throws GeppettoInitializationException
+	 */
 	public RuntimeProject(IGeppettoProject project, IGeppettoManagerCallbackListener geppettoManagerCallbackListener) throws MalformedURLException, GeppettoInitializationException
 	{
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
@@ -111,6 +117,12 @@ public class RuntimeProject
 		// }
 	}
 
+	/**
+	 * @param requestId
+	 * @param experiment
+	 * @throws MalformedURLException
+	 * @throws GeppettoInitializationException
+	 */
 	public void openExperiment(String requestId, IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
@@ -118,6 +130,10 @@ public class RuntimeProject
 		experimentRuntime.put(experiment, runtimeExperiment);
 	}
 
+	/**
+	 * @param experiment
+	 * @throws GeppettoExecutionException
+	 */
 	public void closeExperiment(IExperiment experiment) throws GeppettoExecutionException
 	{
 		// When an experiment is closed we release it (all the services are cleared and destroyed) and we remove it from the map
@@ -132,16 +148,27 @@ public class RuntimeProject
 		}
 	}
 
+	/**
+	 * @param experiment
+	 * @return
+	 */
 	public RuntimeExperiment getRuntimeExperiment(IExperiment experiment)
 	{
 		return experimentRuntime.get(experiment);
 	}
 
+	/**
+	 * @return
+	 */
 	public IExperiment getActiveExperiment()
 	{
 		return activeExperiment;
 	}
 
+	/**
+	 * @param experiment
+	 * @throws GeppettoExecutionException
+	 */
 	public void setActiveExperiment(IExperiment experiment) throws GeppettoExecutionException
 	{
 		if(activeExperiment != null)
@@ -151,5 +178,6 @@ public class RuntimeProject
 		}
 		activeExperiment = experiment;
 	}
+
 
 }

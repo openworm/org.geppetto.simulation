@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.features.ISetParameterFeature;
+import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
@@ -78,12 +79,13 @@ public class SetParametersVisitor extends DefaultStateVisitor{
 	{
 		if(this._instancePath.equals(node.getModel().getInstancePath())){
 			IModelInterpreter modelInterpreter = node.getModelInterpreter();
+			IModel model = node.getModel();
 			if(!modelInterpreter.isSupported(GeppettoFeature.SET_PARAMETERS_FEATURE)){
 				return false;
 			}
 			try
 			{
-				((ISetParameterFeature)modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(_parameters );
+				((ISetParameterFeature)modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(_parameters,model);
 			}
 			catch(ModelInterpreterException e)
 			{

@@ -85,7 +85,7 @@ public class SetParametersVisitor extends DefaultStateVisitor{
 			}
 			try
 			{
-				((ISetParameterFeature)modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(_parameters,model);
+				((ISetParameterFeature)modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(_parameters);
 			}
 			catch(ModelInterpreterException e)
 			{

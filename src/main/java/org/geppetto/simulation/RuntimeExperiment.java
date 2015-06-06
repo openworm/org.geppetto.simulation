@@ -76,6 +76,7 @@ import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
+import org.geppetto.simulation.visitor.SetParametersVisitor;
 import org.geppetto.simulation.visitor.SupportedOutputsVisitor;
 
 public class RuntimeExperiment
@@ -430,5 +431,10 @@ public class RuntimeExperiment
 				}
 			}
 		}
+	}
+
+	public boolean setModelParameters(String modelAspectPath, Map<String, String> parameters) {
+		SetParametersVisitor parameterVisitor = new SetParametersVisitor(geppettoManagerCallbackListener,parameters, modelAspectPath);
+		return runtimeTreeRoot.apply(parameterVisitor);
 	}
 }

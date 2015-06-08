@@ -435,6 +435,9 @@ public class RuntimeExperiment
 
 	public boolean setModelParameters(String modelAspectPath, Map<String, String> parameters) {
 		SetParametersVisitor parameterVisitor = new SetParametersVisitor(geppettoManagerCallbackListener,parameters, modelAspectPath);
+		IAspectConfiguration config = this.getAspectConfiguration(experiment, modelAspectPath);
+		//TODO ; Add method in data manager to store new parameters in aspect configuration
+		//DataManagerHelper.getDataManager().setModelParameters(parameters, config);
 		return runtimeTreeRoot.apply(parameterVisitor);
 	}
 }

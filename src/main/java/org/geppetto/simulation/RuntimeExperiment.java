@@ -59,6 +59,7 @@ import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.CompositeNode;
+import org.geppetto.core.model.runtime.ParameterSpecificationNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
@@ -72,6 +73,7 @@ import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
+import org.geppetto.simulation.visitor.FindParameterSpecificationNodeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
@@ -120,14 +122,17 @@ public class RuntimeExperiment
 
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(geppettoManagerCallbackListener);
 		runtimeTreeRoot.apply(populateVisualVisitor);
-		
-		//create variables for each aspect node's simulation tree
-		for(IAspectConfiguration a : experiment.getAspectConfigurations()){
+
+		// create variables for each aspect node's simulation tree
+		for(IAspectConfiguration a : experiment.getAspectConfigurations())
+		{
 			List<String> variables = new ArrayList<String>();
 			List<? extends IInstancePath> vars = a.getWatchedVariables();
-			if (vars != null){
-				for(IInstancePath i : vars){
-					String var =i.getInstancePath();
+			if(vars != null)
+			{
+				for(IInstancePath i : vars)
+				{
+					String var = i.getInstancePath();
 					variables.add(var);
 				}
 			}
@@ -137,7 +142,6 @@ public class RuntimeExperiment
 			AspectNode node = findAspectNodeVisitor.getAspectNode();
 			this.createVariables(variables, node.getSubTree(AspectTreeType.SIMULATION_TREE));
 		}
-
 
 	}
 
@@ -269,7 +273,7 @@ public class RuntimeExperiment
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
 		runtimeTreeRoot.apply(populateSimulationVisitor);
-		
+
 		return populateSimulationVisitor.getPopulatedSimulationTree();
 	}
 
@@ -292,7 +296,7 @@ public class RuntimeExperiment
 		runtimeTreeRoot.apply(downloadModelVistor);
 		return downloadModelVistor.getModelFile();
 	}
-	
+
 	/**
 	 * @param aspectInstancePath
 	 * @return
@@ -307,18 +311,18 @@ public class RuntimeExperiment
 
 	/**
 	 * @return
-	 * @throws GeppettoExecutionException 
+	 * @throws GeppettoExecutionException
 	 */
 	public Map<String, AspectSubTreeNode> updateSimulationTreeWithResults() throws GeppettoExecutionException
 	{
-		Map<String, AspectSubTreeNode> loadedResults=new HashMap<String, AspectSubTreeNode>();
+		Map<String, AspectSubTreeNode> loadedResults = new HashMap<String, AspectSubTreeNode>();
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			String instancePath = result.getAspect().getInstancePath();
 
-			//We first need to populate the simulation tree for the given aspect
+			// We first need to populate the simulation tree for the given aspect
 			populateSimulationTree(instancePath);
-			
+
 			logger.info("Reading results for " + instancePath);
 			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
 			getRuntimeTree().apply(findAspectNodeVisitor);
@@ -337,10 +341,10 @@ public class RuntimeExperiment
 			{
 				throw new GeppettoExecutionException(e);
 			}
-			
+
 			RecordingReader recordingReader = new RecordingReader();
 			IAspectConfiguration aspectConfig = getAspectConfiguration(experiment, instancePath);
-			
+
 			List<String> watchedVariables = new ArrayList<String>();
 			for(IInstancePath ip : aspectConfig.getWatchedVariables())
 			{
@@ -377,7 +381,8 @@ public class RuntimeExperiment
 	 * @param variables
 	 * @param simulationTree
 	 */
-	public void createVariables(List<String> variables, AspectSubTreeNode simulationTree){
+	public void createVariables(List<String> variables, AspectSubTreeNode simulationTree)
+	{
 		for(String watchedVariable : variables)
 		{
 			String path = "/" + watchedVariable.replace(simulationTree.getInstancePath() + ".", "");
@@ -433,11 +438,31 @@ public class RuntimeExperiment
 		}
 	}
 
-	public boolean setModelParameters(String modelAspectPath, Map<String, String> parameters) {
-		SetParametersVisitor parameterVisitor = new SetParametersVisitor(geppettoManagerCallbackListener,parameters, modelAspectPath);
+	/**
+	 * @param modelAspectPath
+	 * @param parameters
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	public boolean setModelParameters(String modelAspectPath, Map<String, String> parameters) throws GeppettoExecutionException
+	{
+		SetParametersVisitor parameterVisitor = new SetParametersVisitor(geppettoManagerCallbackListener, parameters, modelAspectPath);
 		IAspectConfiguration config = this.getAspectConfiguration(experiment, modelAspectPath);
-		//TODO ; Add method in data manager to store new parameters in aspect configuration
-		//DataManagerHelper.getDataManager().setModelParameters(parameters, config);
+		for(String path : parameters.keySet())
+		{
+			FindParameterSpecificationNodeVisitor findParameterVisitor = new FindParameterSpecificationNodeVisitor(path);
+			runtimeTreeRoot.apply(findParameterVisitor);
+			ParameterSpecificationNode p = findParameterVisitor.getParameterNode();
+			if(p != null)
+			{
+				IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(p.getEntityInstancePath(), p.getAspectInstancePath(), p.getLocalInstancePath());
+				config.addModelParameter(DataManagerHelper.getDataManager().newParameter(instancePath, parameters.get(path)));
+			}
+			else
+			{
+				throw new GeppettoExecutionException("Cannot find parameter " + path + "in the runtime tree.");
+			}
+		}
 		return runtimeTreeRoot.apply(parameterVisitor);
 	}
 }

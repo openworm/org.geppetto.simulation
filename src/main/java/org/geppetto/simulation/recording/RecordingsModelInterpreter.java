@@ -44,6 +44,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
+import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
@@ -154,7 +155,7 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	}
 
 	@Override
-	public File downloadModel(AspectNode aspectNode, ModelFormat format) throws ModelInterpreterException
+	public File downloadModel(AspectNode aspectNode, ModelFormat format, List<? extends IAspectConfiguration> aspectConfigurations) throws ModelInterpreterException
 	{
 		// TODO Auto-generated method stub
 		return null;

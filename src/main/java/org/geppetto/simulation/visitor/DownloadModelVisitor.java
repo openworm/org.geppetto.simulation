@@ -33,8 +33,10 @@
 package org.geppetto.simulation.visitor;
 
 import java.io.File;
+import java.util.List;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
@@ -57,6 +59,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 	// The id of aspect we will be populating
 	private String _instancePath;
 	private ModelFormat _modelFormat;
+	private List<? extends IAspectConfiguration> _aspectConfigurations;
 
 	private File _modelFile;
 
@@ -64,11 +67,12 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 	 * @param simulationListener
 	 * @param instancePath
 	 */
-	public DownloadModelVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, ModelFormat format)
+	public DownloadModelVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, ModelFormat format, List<? extends IAspectConfiguration> aspectConfigurations)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 		this._modelFormat = format;
+		this._aspectConfigurations = aspectConfigurations;
 	}
 
 	/*
@@ -84,7 +88,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 			IModelInterpreter modelInterpreter = node.getModelInterpreter();
 			try
 			{
-				this._modelFile = modelInterpreter.downloadModel(node, this._modelFormat);
+				this._modelFile = modelInterpreter.downloadModel(node, this._modelFormat, this._aspectConfigurations);
 			}
 			catch(ModelInterpreterException e)
 			{

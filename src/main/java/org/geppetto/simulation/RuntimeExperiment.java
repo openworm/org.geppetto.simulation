@@ -296,7 +296,8 @@ public class RuntimeExperiment
 	public File downloadModel(String aspectInstancePath, ModelFormat format)
 	{
 		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
-		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format);
+		
+		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format, this.experiment.getAspectConfigurations());
 		runtimeTreeRoot.apply(downloadModelVistor);
 		return downloadModelVistor.getModelFile();
 	}

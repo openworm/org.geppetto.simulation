@@ -65,8 +65,10 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
+import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.simulation.ResultsFormat;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
@@ -80,6 +82,8 @@ import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.geppetto.simulation.visitor.SetParametersVisitor;
 import org.geppetto.simulation.visitor.SupportedOutputsVisitor;
+
+import com.dropbox.core.DbxException;
 
 public class RuntimeExperiment
 {
@@ -96,7 +100,7 @@ public class RuntimeExperiment
 	private IExperiment experiment;
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
-
+	
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
 		this.experiment = experiment;
@@ -464,5 +468,24 @@ public class RuntimeExperiment
 			}
 		}
 		return runtimeTreeRoot.apply(parameterVisitor);
+	}
+
+	public void uploadResults(String aspectID, ResultsFormat format,  DropboxUploadService dropboxService) throws GeppettoExecutionException {
+		for(ISimulationResult result : experiment.getSimulationResults())
+		{
+			if(result.getAspect().getInstancePath().equals(aspectID)){
+				URL url;
+				try
+				{
+					url = URLReader.getURL(result.getResult().getUrl());
+					File resultsFile = new File(url.toURI());
+					dropboxService.upload(resultsFile);
+				}
+				catch (Exception e) {
+					throw new GeppettoExecutionException(e);
+				}
+
+			}
+		}
 	}
 }

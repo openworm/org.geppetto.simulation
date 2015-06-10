@@ -474,7 +474,7 @@ public class RuntimeExperiment
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getAspect().getInstancePath().equals(aspectID)){
-				if(result.getResult().getType().equals(format.toString())){
+				if(result.getResult().getType().toString().equals(format.toString())){
 					URL url;
 					try
 					{

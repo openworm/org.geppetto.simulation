@@ -220,7 +220,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 							{
 								try
 								{
-									iModelsConverted.add(conversionService.convert(models.get(0), inputFormat, outputFormat));
+									iModelsConverted.add(conversionService.convert(models.get(0), inputFormat, outputFormat, aspectConfig));
 									break;
 								}
 								catch(ConversionException e)
@@ -235,7 +235,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				else
 				{
 					// Check format returned by the model interpreter matches with the one accepted by the simulator
-					if(!Collections.disjoint(inputFormats, outputFormats) && inputFormats != null && outputFormats != null)
+					if(Collections.disjoint(inputFormats, outputFormats) && inputFormats != null && outputFormats != null)
 					{
 						Map<ConversionServiceKey, List<IConversion>> conversionServices = ServicesRegistry.getConversionService(inputFormats, outputFormats);
 
@@ -248,9 +248,9 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 								for(ModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(models.get(0), conversionServiceKey.getInputModelFormat()))
 								{
 									// Verify supported outputs for this model
-									if(supportedModelFormat.toString() == conversionServiceKey.getOutputModelFormat().toString())
+									if(supportedModelFormat.equals(conversionServiceKey.getOutputModelFormat()))
 									{
-										iModelsConverted.add(entry.getValue().get(0).convert(models.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat()));
+										iModelsConverted.add(entry.getValue().get(0).convert(models.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig));
 										break;
 									}
 								}

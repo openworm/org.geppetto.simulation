@@ -489,4 +489,26 @@ public class RuntimeExperiment
 			}
 		}
 	}
+
+	public File downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException {
+		logger.info("Downloading results for " + aspectPath + " in format " + resultsFormat.toString());
+		File resultsFile = null;
+		for(ISimulationResult result : experiment.getSimulationResults())
+		{
+			if(result.getAspect().getInstancePath().equals(aspectPath)){
+				if(result.getResult().getType().toString().equals(resultsFormat.toString())){
+					URL url;
+					try
+					{
+						url = URLReader.getURL(result.getResult().getUrl());
+						resultsFile = new File(url.toURI());
+					}
+					catch (Exception e) {
+						throw new GeppettoExecutionException(e);
+					}
+				}
+			}
+		}
+		return resultsFile;
+	}
 }

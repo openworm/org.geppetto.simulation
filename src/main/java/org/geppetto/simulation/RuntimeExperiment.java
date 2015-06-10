@@ -474,17 +474,18 @@ public class RuntimeExperiment
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getAspect().getInstancePath().equals(aspectID)){
-				URL url;
-				try
-				{
-					url = URLReader.getURL(result.getResult().getUrl());
-					File resultsFile = new File(url.toURI());
-					dropboxService.upload(resultsFile);
+				if(result.getResult().getType().equals(format.toString())){
+					URL url;
+					try
+					{
+						url = URLReader.getURL(result.getResult().getUrl());
+						File resultsFile = new File(url.toURI());
+						dropboxService.upload(resultsFile);
+					}
+					catch (Exception e) {
+						throw new GeppettoExecutionException(e);
+					}
 				}
-				catch (Exception e) {
-					throw new GeppettoExecutionException(e);
-				}
-
 			}
 		}
 	}

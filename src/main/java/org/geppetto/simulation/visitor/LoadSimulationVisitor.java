@@ -104,6 +104,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					for(String recording : pModel.getRecordingURL())
 					{						
 						URL url = null;
+
 						if(recording.contains(SERVER_ROOT_TOKEN))
 						{
 							recording = recording.replace(SERVER_ROOT_TOKEN, "");
@@ -314,11 +315,13 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		if(formats!=null & formats2!=null){
 			for(IModelFormat format : formats)
 			{
-				for(IModelFormat format2 : formats2)
-				{
-					if(format.toString().equals(format2.toString()))
+				if(formats2 != null){
+					for(IModelFormat format2 : formats2)
 					{
-						result.add(format);
+						if(format.toString().equals(format2.toString()))
+						{
+							result.add(format);
+						}
 					}
 				}
 			}

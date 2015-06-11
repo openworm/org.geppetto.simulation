@@ -56,6 +56,8 @@ import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.quantities.PhysicalQuantity;
+import org.geppetto.core.model.quantities.Quantity;
+import org.geppetto.core.model.quantities.Unit;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
@@ -401,10 +403,10 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		runtime += newTimeValue;
 		VariableNode time = new VariableNode("time");
-		PhysicalQuantity t = new PhysicalQuantity();
+		time.setUnit(new Unit(timeStepUnit));
+		Quantity t = new Quantity();
 		t.setValue(ValuesFactory.getDoubleValue(runtime));
-		t.setUnit(timeStepUnit);
-		time.addPhysicalQuantity(t);
+		time.addQuantity(t);
 		time.setParent(tree);
 		tree.setTime(time);
 	}

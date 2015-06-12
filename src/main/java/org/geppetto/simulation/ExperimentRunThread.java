@@ -55,7 +55,6 @@ import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.quantities.PhysicalQuantity;
 import org.geppetto.core.model.quantities.Quantity;
 import org.geppetto.core.model.quantities.Unit;
 import org.geppetto.core.model.runtime.AspectNode;

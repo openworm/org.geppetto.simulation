@@ -36,6 +36,8 @@ import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
+import org.geppetto.core.model.runtime.ParameterSpecificationNode;
+import org.geppetto.core.model.runtime.TextMetadataNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 
 /**
@@ -97,5 +99,17 @@ public class ExitVisitor extends DefaultStateVisitor
 	{
 		node.setModified(false);
 		return super.inConnectionNode(node);
+	}
+	
+	@Override
+	public boolean visitTextMetadataNode(TextMetadataNode node){
+		node.setModified(false);
+		return super.visitTextMetadataNode(node);
+	}
+	
+	@Override
+	public boolean visitParameterSpecificationNode(ParameterSpecificationNode node){
+		node.setModified(false);
+		return super.visitParameterSpecificationNode(node);
 	}
 }

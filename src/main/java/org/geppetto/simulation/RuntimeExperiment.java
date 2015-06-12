@@ -75,6 +75,7 @@ import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
+import org.geppetto.simulation.visitor.FindModelTreeVisitor;
 import org.geppetto.simulation.visitor.FindParameterSpecificationNodeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
 import org.geppetto.simulation.visitor.PopulateModelTreeVisitor;
@@ -449,7 +450,7 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public boolean setModelParameters(String modelAspectPath, Map<String, String> parameters) throws GeppettoExecutionException
+	public AspectSubTreeNode setModelParameters(String modelAspectPath, Map<String, String> parameters) throws GeppettoExecutionException
 	{
 		SetParametersVisitor parameterVisitor = new SetParametersVisitor(geppettoManagerCallbackListener, parameters, modelAspectPath);
 		IAspectConfiguration config = this.getAspectConfiguration(experiment, modelAspectPath);
@@ -468,7 +469,13 @@ public class RuntimeExperiment
 				throw new GeppettoExecutionException("Cannot find parameter " + path + "in the runtime tree.");
 			}
 		}
-		return runtimeTreeRoot.apply(parameterVisitor);
+		runtimeTreeRoot.apply(parameterVisitor);
+		
+		FindModelTreeVisitor findParameterVisitor = new FindModelTreeVisitor(modelAspectPath+".ModelTree");
+		runtimeTreeRoot.apply(findParameterVisitor);
+		
+		return findParameterVisitor.getModelTreeNode();
+
 	}
 
 	public void uploadResults(String aspectID, ResultsFormat format,  DropboxUploadService dropboxService) throws GeppettoExecutionException {

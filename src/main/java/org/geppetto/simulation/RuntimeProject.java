@@ -178,6 +178,15 @@ public class RuntimeProject
 		}
 		activeExperiment = experiment;
 	}
+	
+	/**
+	 * 
+	 */
+	public void release()
+	{
+		experimentRuntime.clear();
+		//TODO delete any tmp file that might have been created, i.e. HDF5 files that were streamed, see URLReader.createLocalCopy
+	}
 
 
 }

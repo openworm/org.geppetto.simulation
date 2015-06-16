@@ -32,7 +32,9 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +64,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 	private Map<String, IModelInterpreter> _modelInterpreters;
 	private Map<String, IModel> _model;
 	private IGeppettoManagerCallbackListener _simulationCallback;
+	private final String SERVER_ROOT_TOKEN = "%SERVER_ROOT%";
 	private static Log _logger = LogFactory.getLog(LoadSimulationVisitor.class);
 
 	public LoadSimulationVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, IGeppettoManagerCallbackListener simulationListener)
@@ -94,7 +97,17 @@ public class LoadSimulationVisitor extends TraversingVisitor
 					for(String recording : pModel.getRecordingURL())
 					{
 						URL url = null;
-						url = this.getClass().getResource(recording);
+
+						if(recording.contains(SERVER_ROOT_TOKEN))
+						{
+							recording = recording.replace(SERVER_ROOT_TOKEN, "");
+							url = this.getLocalURL(recording);
+						}
+						else
+						{
+							url = this.getClass().getResource(recording);
+						}
+
 						recordings.add(url);
 					}
 				}
@@ -102,31 +115,45 @@ public class LoadSimulationVisitor extends TraversingVisitor
 				long start = System.currentTimeMillis();
 
 				URL modelUrl = null;
-				if(pModel.getModelURL() != null)
+				String modelUrlStr = pModel.getModelURL();
+				if(modelUrlStr != null)
 				{
-					
-					modelUrl = URLReader.getURL(pModel.getModelURL());
+					if(modelUrlStr.contains(SERVER_ROOT_TOKEN))
+					{
+						modelUrlStr = modelUrlStr.replace(SERVER_ROOT_TOKEN, "");
+						modelUrl = this.getLocalURL(modelUrlStr);
+					}
+					else
+					{
+
+						modelUrl = URLReader.getURL(pModel.getModelURL());
+					}
+					model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
+					model.setInstancePath(pModel.getInstancePath());
+					_model.put(pModel.getInstancePath(), model);
+
+					long end = System.currentTimeMillis();
+					_logger.info("Finished reading model, took " + (end - start) + " ms ");
+
 				}
-				model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
-				model.setInstancePath(pModel.getInstancePath());
-				_model.put(pModel.getInstancePath(), model);
-
-				long end = System.currentTimeMillis();
-				_logger.info("Finished reading model, took " + (end - start) + " ms ");
-
+				else
+				{
+					// the model is already loaded, we are coming here after a stop simulation which doesn't delete the model, do nothing.
+				}
 			}
-			else
-			{
-				// the model is already loaded, we are coming here after a stop simulation which doesn't delete the model, do nothing.
-			}
-
 		}
-		catch(ModelInterpreterException  |IOException e )
+		catch(ModelInterpreterException | IOException e)
 		{
 			_logger.error("Malformed URL for model", e);
 			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
 		}
 
+	}
+
+	private URL getLocalURL(String localPath) throws MalformedURLException
+	{
+		File catalinaBase = new File(System.getProperty("catalina.home")).getAbsoluteFile();
+		return new File(catalinaBase, localPath).toURI().toURL();
 	}
 
 }

@@ -70,6 +70,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
+		this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +79,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		if(this._instancePath.equals(node.getInstancePath())){
+		//if(this._instancePath.equals(node.getInstancePath())){
 			IModelInterpreter model = node.getModelInterpreter();
 			try
 			{
@@ -92,27 +93,28 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			}
 			
 			//FIXME: It it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
-			this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
 			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.SIMULATION_TREE)));
 						
 			IModel imodel =  node.getModel();
 			if(imodel instanceof ModelWrapper){
 				ModelWrapper wrapper = (ModelWrapper)imodel;
 				Map<String, EntityNode> mapping = (Map<String, EntityNode>) wrapper.getModel("entitiesMapping");
-				EntityNode entityNode = mapping.get(node.getParent().getId());
-				if (entityNode == null){
-					for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
-						String key = entry.getKey();
+				if(mapping!=null){
+					EntityNode entityNode = mapping.get(node.getParent().getId());
+					if (entityNode == null){
+						for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
+							String key = entry.getKey();
 
-						for (AspectNode aspectNode : entry.getValue().getAspects()){
-							if (aspectNode.getId() == node.getId()){
-								this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
-							}
-						}	
+							for (AspectNode aspectNode : entry.getValue().getAspects()){
+								if (aspectNode.getId() == node.getId()){
+									this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
+								}
+							}	
+						}
 					}
 				}
 			}
-		}
+		//}
 		
 		
 		return super.inAspectNode(node);

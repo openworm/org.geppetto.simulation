@@ -54,15 +54,16 @@ import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;
 import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.CompositeNode;
 import org.geppetto.core.model.runtime.ParameterSpecificationNode;
-import org.geppetto.core.model.runtime.VariableNode;
-import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.DropboxUploadService;
@@ -83,8 +84,6 @@ import org.geppetto.simulation.visitor.PopulateSimulationTreeVisitor;
 import org.geppetto.simulation.visitor.PopulateVisualTreeVisitor;
 import org.geppetto.simulation.visitor.SetParametersVisitor;
 import org.geppetto.simulation.visitor.SupportedOutputsVisitor;
-
-import com.dropbox.core.DbxException;
 
 public class RuntimeExperiment
 {
@@ -348,7 +347,7 @@ public class RuntimeExperiment
 				throw new GeppettoExecutionException(e);
 			}
 
-			RecordingReader recordingReader = new RecordingReader();
+			RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)));
 			IAspectConfiguration aspectConfig = getAspectConfiguration(experiment, instancePath);
 
 			List<String> watchedVariables = new ArrayList<String>();
@@ -357,7 +356,7 @@ public class RuntimeExperiment
 				watchedVariables.add(ip.getInstancePath());
 			}
 
-			recordingReader.readRecording(HDF5Reader.readHDF5File(url), watchedVariables, simulationTree, true);
+			recordingReader.readRecording(watchedVariables, simulationTree, true);
 			loadedResults.put(instancePath, simulationTree);
 			logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + " with recordings");
 		}

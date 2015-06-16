@@ -51,7 +51,7 @@ import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.springframework.stereotype.Service;
 
-/**
+/** 
  * @author matteocantarelli
  * 
  */
@@ -87,7 +87,7 @@ public class RecordingsSimulator extends ASimulator
 	{
 		return "recordingsSimulator";
 	}
-
+ 
 	@Override
 	public void registerGeppettoService()
 	{

@@ -127,24 +127,27 @@ public class RuntimeExperiment
 		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(geppettoManagerCallbackListener);
 		runtimeTreeRoot.apply(populateVisualVisitor);
 
-		// create variables for each aspect node's simulation tree
-		for(IAspectConfiguration a : experiment.getAspectConfigurations())
-		{
-			List<String> variables = new ArrayList<String>();
-			List<? extends IInstancePath> vars = a.getWatchedVariables();
-			if(vars != null)
+		// If it is queued the whole simulation tree will be populated in order to have the units
+		if (!experiment.getStatus().equals(ExperimentStatus.QUEUED)){
+			// create variables for each aspect node's simulation tree
+			for(IAspectConfiguration a : experiment.getAspectConfigurations())
 			{
-				for(IInstancePath i : vars)
+				List<String> variables = new ArrayList<String>();
+				List<? extends IInstancePath> vars = a.getWatchedVariables();
+				if(vars != null)
 				{
-					String var = i.getInstancePath();
-					variables.add(var);
+					for(IInstancePath i : vars)
+					{
+						String var = i.getInstancePath();
+						variables.add(var);
+					}
 				}
+				String aspect = a.getAspect().getInstancePath();
+				FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
+				runtimeTreeRoot.apply(findAspectNodeVisitor);
+				AspectNode node = findAspectNodeVisitor.getAspectNode();
+				this.createVariables(variables, node.getSubTree(AspectTreeType.SIMULATION_TREE));
 			}
-			String aspect = a.getAspect().getInstancePath();
-			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
-			runtimeTreeRoot.apply(findAspectNodeVisitor);
-			AspectNode node = findAspectNodeVisitor.getAspectNode();
-			this.createVariables(variables, node.getSubTree(AspectTreeType.SIMULATION_TREE));
 		}
 
 	}
@@ -396,7 +399,6 @@ public class RuntimeExperiment
 			path = path.replaceFirst("/", "");
 			StringTokenizer tokenizer = new StringTokenizer(path, "/");
 			ACompositeNode node = simulationTree;
-			VariableNode newVariableNode = null;
 			while(tokenizer.hasMoreElements())
 			{
 				String current = tokenizer.nextToken();
@@ -409,10 +411,7 @@ public class RuntimeExperiment
 						{
 							node = (ACompositeNode) child;
 						}
-						if(child instanceof VariableNode)
-						{
-							newVariableNode = (VariableNode) child;
-						}
+						
 						found = true;
 						break;
 					}
@@ -434,9 +433,7 @@ public class RuntimeExperiment
 					{
 						// it's a leaf node
 						VariableNode newNode = new VariableNode(current);
-						newVariableNode = newNode;
 						node.addChild(newNode);
-
 					}
 				}
 			}

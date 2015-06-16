@@ -92,7 +92,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
 			}
 			
-			//FIXME: It it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
+			//FIXME: If it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
 			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.SIMULATION_TREE)));
 						
 			IModel imodel =  node.getModel();
@@ -103,7 +103,6 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 					EntityNode entityNode = mapping.get(node.getParent().getId());
 					if (entityNode == null){
 						for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
-							String key = entry.getKey();
 
 							for (AspectNode aspectNode : entry.getValue().getAspects()){
 								if (aspectNode.getId() == node.getId()){

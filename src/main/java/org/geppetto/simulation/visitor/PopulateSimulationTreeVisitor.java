@@ -79,7 +79,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		//if(this._instancePath.equals(node.getInstancePath())){
+		if(this._instancePath.equals(node.getInstancePath())){
 			IModelInterpreter model = node.getModelInterpreter();
 			try
 			{
@@ -113,7 +113,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 					}
 				}
 			}
-		//}
+		}
 		
 		
 		return super.inAspectNode(node);

@@ -42,6 +42,7 @@ import ncsa.hdf.object.h5.H5File;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.model.IAspectConfiguration;
@@ -176,6 +177,13 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	public List<URL> getDependentModels()
 	{
 		return dependentModels;
+	}
+
+	@Override
+	public PathConfiguration getPathConfiguration()
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -69,6 +69,8 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 
 	private static final String ID = "RECORDING_";
 
+	private List<URL> dependentModels=new ArrayList<URL>();
+
 	public RecordingsModelInterpreter()
 	{
 		_logger.info("New recordings model service created");
@@ -82,6 +84,7 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	@Override
 	public IModel readModel(URL url, List<URL> recordings, String instancePath) throws ModelInterpreterException
 	{
+		dependentModels.clear();
 		// the model URL is ignored in a recordings model interpreter
 		ModelWrapper recordingsModel = new ModelWrapper(null);
 		try
@@ -91,6 +94,7 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 				int i = 1;
 				for(URL recording : recordings)
 				{
+					dependentModels.add(recording);
 					H5File file = HDF5Reader.readHDF5File(recording);
 					RecordingModel recordingModel = new RecordingModel(file);
 					recordingModel.setInstancePath(instancePath);
@@ -166,6 +170,12 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public List<URL> getDependentModels()
+	{
+		return dependentModels;
 	}
 
 }

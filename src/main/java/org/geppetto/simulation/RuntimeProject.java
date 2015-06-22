@@ -90,7 +90,7 @@ public class RuntimeProject
 		{
 			throw new GeppettoInitializationException(e);
 		}
- 
+
 		// decorate Simulation model
 		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
 		geppettoModel.accept(instancePathdecoratorVisitor);
@@ -128,6 +128,7 @@ public class RuntimeProject
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
 		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this, experiment, geppettoManagerCallbackListener);
 		experimentRuntime.put(experiment, runtimeExperiment);
+		activeExperiment = experiment;
 	}
 
 	/**
@@ -141,6 +142,7 @@ public class RuntimeProject
 		{
 			experimentRuntime.get(experiment).release();
 			experimentRuntime.remove(experiment);
+			activeExperiment = null;
 		}
 		else
 		{
@@ -178,15 +180,14 @@ public class RuntimeProject
 		}
 		activeExperiment = experiment;
 	}
-	
+
 	/**
 	 * 
 	 */
 	public void release()
 	{
 		experimentRuntime.clear();
-		//TODO delete any tmp file that might have been created, i.e. HDF5 files that were streamed, see URLReader.createLocalCopy
+		// TODO delete any tmp file that might have been created, i.e. HDF5 files that were streamed, see URLReader.createLocalCopy
 	}
-
 
 }

@@ -33,6 +33,7 @@
 package org.geppetto.simulation;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,13 +47,15 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.conversion.ConversionException;
 import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.data.DataManagerHelper;
-import org.geppetto.core.data.IGeppettoS3Manager;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
+import org.geppetto.core.data.model.IInstancePath;
+import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.data.model.PersistedDataType;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.quantities.Quantity;
@@ -61,6 +64,7 @@ import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.values.ValuesFactory;
+import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
@@ -88,9 +92,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	@Autowired
 	public AppConfig appConfig;
 
-	@Autowired
-	private IGeppettoS3Manager s3Manager;
-
 	private IExperiment experiment;
 
 	private Map<String, ISimulator> simulatorServices = new ConcurrentHashMap<>();
@@ -115,8 +116,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	private RuntimeExperiment runtimeExperiment;
 
 	private IGeppettoProject project;
-
-	private ISimulationResult simulationResult;
 
 	/**
 	 * @param experiment
@@ -211,7 +210,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					// Check if real model formats and conversion supported model formats match
 					supportedInputFormats.retainAll(inputFormats);
 					supportedOutputFormats.retainAll(outputFormats);
-					
+
 					// Try to convert until a input-output format combination works
 					for(ModelFormat inputFormat : supportedInputFormats)
 					{
@@ -251,7 +250,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 									// Verify supported outputs for this model
 									if(supportedModelFormat.equals(conversionServiceKey.getOutputModelFormat()))
 									{
-										iModelsConverted.add(entry.getValue().get(0).convert(models.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig));
+										iModelsConverted.add(entry.getValue().get(0)
+												.convert(models.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig));
 										break;
 									}
 								}
@@ -307,8 +307,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 				ISimulator simulator = simulatorServices.get(instancePath);
 
-				// if it's still stepping we don't step again
-				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING))
+				// if it's still stepping or completed we don't step again
+				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING) && !simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
 				{
 					// we advance the simulation for this simulator only if we are not already stepping
 					// note that some simulators might perform more than one step at the time (i.e. NEURON
@@ -448,15 +448,32 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#endOfSteps(java.lang.String)
 	 */
 	@Override
-	public void endOfSteps(String instancePath, File recordingsLocation)
+	public void endOfSteps(AspectNode aspectNode, File recordingsLocation) throws GeppettoExecutionException
 	{
-		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-		simulatorRuntime.setStatus(SimulatorRuntimeStatus.DONE);
-		experiment.addSimulationResult(DataManagerHelper.getDataManager().newSimulationResult());
-		if(s3Manager != null)
+		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(aspectNode.getInstancePath());
+
+		if(!DataManagerHelper.getDataManager().isDefault())
 		{
-			s3Manager.saveFileToS3(recordingsLocation, recordingsLocation.getAbsolutePath());
+			try
+			{
+				// where we store the results in S3
+				String fileName = recordingsLocation.getPath().substring(recordingsLocation.getPath().lastIndexOf("/") + 1);
+				String newPath = "projects/" + Long.toString(project.getId()) + "/" + experiment.getId() + "/" + aspectNode.getInstancePath() + "/" + fileName;
+				S3Manager.getInstance().saveFileToS3(recordingsLocation, newPath);
+
+				IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(aspectNode);
+				IPersistedData recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
+				ISimulationResult results = DataManagerHelper.getDataManager().newSimulationResult(aspect, recording);
+
+				experiment.addSimulationResult(results);
+				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+			}
+			catch(MalformedURLException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
 		}
+		simulatorRuntime.setStatus(SimulatorRuntimeStatus.DONE);
 	}
 
 	/*
@@ -473,5 +490,5 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
 		// TODO What else?
 	}
-	
+
 }

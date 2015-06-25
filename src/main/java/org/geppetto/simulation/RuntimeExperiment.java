@@ -76,6 +76,7 @@ import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
+import org.geppetto.simulation.visitor.FindDynamicVisulizationVariablesVisitor;
 import org.geppetto.simulation.visitor.FindModelTreeVisitor;
 import org.geppetto.simulation.visitor.FindParameterSpecificationNodeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
@@ -322,25 +323,26 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public Map<String, AspectSubTreeNode> updateSimulationTreeWithResults() throws GeppettoExecutionException
+	public Map<String, AspectSubTreeNode> updateRuntimeTreesWithResults() throws GeppettoExecutionException
 	{
 		Map<String, AspectSubTreeNode> loadedResults = new HashMap<String, AspectSubTreeNode>();
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			String instancePath = result.getAspect().getInstancePath();
-
-			// We first need to populate the simulation tree for the given aspect
-			populateSimulationTree(instancePath);
-
 			logger.info("Reading results for " + instancePath);
+			
 			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
 			getRuntimeTree().apply(findAspectNodeVisitor);
 			AspectNode aspect = findAspectNodeVisitor.getAspectNode();
-			AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
-			simulationTree.setModified(true);
 			aspect.setModified(true);
 			aspect.getParentEntity().setModified(true);
+			
+			// **SimTree** 
+			// We first need to populate the simulation tree for the given aspect
+			populateSimulationTree(instancePath);
 
+			AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
+			
 			URL url;
 			try
 			{
@@ -359,10 +361,33 @@ public class RuntimeExperiment
 			{
 				watchedVariables.add(ip.getInstancePath());
 			}
-
-			recordingReader.readRecording(watchedVariables, simulationTree, true);
-			loadedResults.put(instancePath, simulationTree);
-			logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + " with recordings");
+			
+			if(watchedVariables.size() > 0)
+			{
+				simulationTree.setModified(true);
+				recordingReader.readRecording(watchedVariables, simulationTree, true);
+				loadedResults.put(instancePath, simulationTree);
+				
+				logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + " with recordings");
+			}
+			
+			// **VizTree** - check if we have variables to read out for the visulization tree
+			AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
+			
+			// find any dynamic variable that might be in the visualization tree
+			FindDynamicVisulizationVariablesVisitor findVariablesVisitor = new FindDynamicVisulizationVariablesVisitor();
+			visualizationTree.apply(findVariablesVisitor);
+			List<String> visualizationVariables = findVariablesVisitor.getVariables();
+			
+			if(visualizationVariables.size() > 0)
+			{
+				// TODO: make sure any colladas are not sent twice!
+				visualizationTree.setModified(true);
+				recordingReader.readRecording(visualizationVariables, visualizationTree, true);
+				loadedResults.put(instancePath, visualizationTree);
+				
+				logger.info("Finished populating Visualization Tree " + visualizationTree.getInstancePath() + " with recordings");
+			}
 		}
 		return loadedResults;
 	}

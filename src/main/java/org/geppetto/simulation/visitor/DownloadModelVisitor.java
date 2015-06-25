@@ -42,6 +42,7 @@ import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
 import org.geppetto.core.services.ModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
@@ -88,6 +89,13 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 			IModelInterpreter modelInterpreter = node.getModelInterpreter();
 			try
 			{
+				//If no model format, let's get the model interpreter service format
+				if (this._modelFormat == null){
+					//FIXME: We are assuming there is only one format
+					List<ModelFormat> supportedOutputs = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
+					this._modelFormat = supportedOutputs.get(0);
+				}
+				
 				this._modelFile = modelInterpreter.downloadModel(node, this._modelFormat, this._aspectConfigurations);
 			}
 			catch(ModelInterpreterException e)

@@ -100,7 +100,7 @@ public class RuntimeExperiment
 	private IExperiment experiment;
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
-	
+
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
 		this.experiment = experiment;
@@ -128,7 +128,8 @@ public class RuntimeExperiment
 		runtimeTreeRoot.apply(populateVisualVisitor);
 
 		// If it is queued the whole simulation tree will be populated in order to have the units
-		if (!experiment.getStatus().equals(ExperimentStatus.QUEUED)){
+		if(!experiment.getStatus().equals(ExperimentStatus.QUEUED))
+		{
 			// create variables for each aspect node's simulation tree
 			for(IAspectConfiguration a : experiment.getAspectConfigurations())
 			{
@@ -299,7 +300,7 @@ public class RuntimeExperiment
 	public File downloadModel(String aspectInstancePath, ModelFormat format)
 	{
 		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
-		
+
 		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format, this.experiment.getAspectConfigurations());
 		runtimeTreeRoot.apply(downloadModelVistor);
 		return downloadModelVistor.getModelFile();
@@ -411,7 +412,7 @@ public class RuntimeExperiment
 						{
 							node = (ACompositeNode) child;
 						}
-						
+
 						found = true;
 						break;
 					}
@@ -466,19 +467,28 @@ public class RuntimeExperiment
 			}
 		}
 		runtimeTreeRoot.apply(parameterVisitor);
-		
-		FindModelTreeVisitor findParameterVisitor = new FindModelTreeVisitor(modelAspectPath+".ModelTree");
+
+		FindModelTreeVisitor findParameterVisitor = new FindModelTreeVisitor(modelAspectPath + ".ModelTree");
 		runtimeTreeRoot.apply(findParameterVisitor);
-		
+
 		return findParameterVisitor.getModelTreeNode();
 
 	}
 
-	public void uploadResults(String aspectID, ResultsFormat format,  DropboxUploadService dropboxService) throws GeppettoExecutionException {
+	/**
+	 * @param aspectID
+	 * @param format
+	 * @param dropboxService
+	 * @throws GeppettoExecutionException
+	 */
+	public void uploadResults(String aspectID, ResultsFormat format, DropboxUploadService dropboxService) throws GeppettoExecutionException
+	{
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getAspect().getInstancePath().equals(aspectID)){
-				if(result.getResult().getType().toString().equals(format.toString())){
+			if(result.getAspect().getInstancePath().equals(aspectID))
+			{
+				if(result.getResult().getType().toString().equals(format.toString()))
+				{
 					URL url;
 					try
 					{
@@ -486,7 +496,8 @@ public class RuntimeExperiment
 						File resultsFile = new File(url.toURI());
 						dropboxService.upload(resultsFile);
 					}
-					catch (Exception e) {
+					catch(Exception e)
+					{
 						throw new GeppettoExecutionException(e);
 					}
 				}
@@ -494,20 +505,31 @@ public class RuntimeExperiment
 		}
 	}
 
-	public File downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException {
+	/**
+	 * @param aspectPath
+	 * @param resultsFormat
+	 * @param dropboxService
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	public File downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException
+	{
 		logger.info("Downloading results for " + aspectPath + " in format " + resultsFormat.toString());
 		File resultsFile = null;
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getAspect().getInstancePath().equals(aspectPath)){
-				if(result.getResult().getType().toString().equals(resultsFormat.toString())){
+			if(result.getAspect().getInstancePath().equals(aspectPath))
+			{
+				if(result.getResult().getType().toString().equals(resultsFormat.toString()))
+				{
 					URL url;
 					try
 					{
 						url = URLReader.getURL(result.getResult().getUrl());
 						resultsFile = new File(url.toURI());
 					}
-					catch (Exception e) {
+					catch(Exception e)
+					{
 						throw new GeppettoExecutionException(e);
 					}
 				}

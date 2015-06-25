@@ -39,6 +39,7 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
@@ -47,6 +48,7 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
+import org.geppetto.simulation.visitor.PopulateExperimentVisitor;
 
 /**
  * The Runtime project holds the runtime state for an open project.
@@ -142,7 +144,10 @@ public class RuntimeProject
 		{
 			experimentRuntime.get(experiment).release();
 			experimentRuntime.remove(experiment);
-			activeExperiment = null;
+			if(activeExperiment == experiment)
+			{
+				activeExperiment = null;
+			}
 		}
 		else
 		{
@@ -173,12 +178,20 @@ public class RuntimeProject
 	 */
 	public void setActiveExperiment(IExperiment experiment) throws GeppettoExecutionException
 	{
-		if(activeExperiment != null)
+		if(getRuntimeExperiment(experiment) != null)
 		{
-			// switching the active experiment requires us to close the currently active one
-			closeExperiment(activeExperiment);
+			activeExperiment = experiment;
+			//if the experiment we are loading is not already the active one we set it as such in the parent project
+			if(experiment.getParentProject().getActiveExperiment()==null || !experiment.equals(experiment.getParentProject().getActiveExperiment()))
+			{
+				experiment.getParentProject().setActiveExperiment(experiment);
+				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+			}
 		}
-		activeExperiment = experiment;
+		else
+		{
+			throw new GeppettoExecutionException("An experiment not yet opened cannot be made active");
+		}
 	}
 
 	/**
@@ -188,6 +201,16 @@ public class RuntimeProject
 	{
 		experimentRuntime.clear();
 		// TODO delete any tmp file that might have been created, i.e. HDF5 files that were streamed, see URLReader.createLocalCopy
+	}
+
+	/**
+	 * @param experiment
+	 */
+	public void populateNewExperiment(IExperiment experiment)
+	{
+		PopulateExperimentVisitor populateExperimentVisitor=new PopulateExperimentVisitor(experiment);
+		geppettoModel.accept(populateExperimentVisitor);
+		
 	}
 
 }

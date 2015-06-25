@@ -90,7 +90,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 			try
 			{
 				//If no model format, let's get the model interpreter service format
-				if (this._modelFormat.getModelFormat().equals("")){
+				if (this._modelFormat == null){
 					//FIXME: We are assuming there is only one format
 					List<ModelFormat> supportedOutputs = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
 					this._modelFormat = supportedOutputs.get(0);

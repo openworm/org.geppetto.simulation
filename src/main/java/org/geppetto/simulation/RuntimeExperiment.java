@@ -537,21 +537,18 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public File downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException
+	public URL downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException
 	{
 		logger.info("Downloading results for " + aspectPath + " in format " + resultsFormat.toString());
-		File resultsFile = null;
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getAspect().getInstancePath().equals(aspectPath))
 			{
 				if(result.getResult().getType().toString().equals(resultsFormat.toString()))
 				{
-					URL url;
 					try
 					{
-						url = URLReader.getURL(result.getResult().getUrl());
-						resultsFile = new File(url.toURI());
+						return URLReader.getURL(result.getResult().getUrl());
 					}
 					catch(Exception e)
 					{
@@ -560,6 +557,6 @@ public class RuntimeExperiment
 				}
 			}
 		}
-		return resultsFile;
+		return null;
 	}
 }

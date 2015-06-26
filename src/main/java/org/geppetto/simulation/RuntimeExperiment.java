@@ -76,7 +76,6 @@ import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.CreateRuntimeTreeVisitor;
 import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
-import org.geppetto.simulation.visitor.FindDynamicVisulizationVariablesVisitor;
 import org.geppetto.simulation.visitor.FindModelTreeVisitor;
 import org.geppetto.simulation.visitor.FindParameterSpecificationNodeVisitor;
 import org.geppetto.simulation.visitor.LoadSimulationVisitor;
@@ -101,7 +100,7 @@ public class RuntimeExperiment
 	private IExperiment experiment;
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
-	
+
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
 	{
 		this.experiment = experiment;
@@ -129,7 +128,8 @@ public class RuntimeExperiment
 		runtimeTreeRoot.apply(populateVisualVisitor);
 
 		// If it is queued the whole simulation tree will be populated in order to have the units
-		if (!experiment.getStatus().equals(ExperimentStatus.QUEUED)){
+		if(!experiment.getStatus().equals(ExperimentStatus.QUEUED))
+		{
 			// create variables for each aspect node's simulation tree
 			for(IAspectConfiguration a : experiment.getAspectConfigurations())
 			{
@@ -300,7 +300,7 @@ public class RuntimeExperiment
 	public File downloadModel(String aspectInstancePath, ModelFormat format)
 	{
 		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
-		
+
 		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format, this.experiment.getAspectConfigurations());
 		runtimeTreeRoot.apply(downloadModelVistor);
 		return downloadModelVistor.getModelFile();
@@ -336,11 +336,12 @@ public class RuntimeExperiment
 			aspect.setModified(true);
 			aspect.getParentEntity().setModified(true);
 			
-			// **SimTree** 
 			// We first need to populate the simulation tree for the given aspect
+			// NOTE: it would seem that commenting this line out makes no difference - remove?
 			populateSimulationTree(instancePath);
 
 			AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
+			AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
 			
 			URL url;
 			try
@@ -353,39 +354,47 @@ public class RuntimeExperiment
 			}
 
 			RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)));
-			IAspectConfiguration aspectConfig = getAspectConfiguration(experiment, instancePath);
-
-			List<String> watchedVariables = new ArrayList<String>();
-			for(IInstancePath ip : aspectConfig.getWatchedVariables())
-			{
-				watchedVariables.add(ip.getInstancePath());
-			}
 			
+			// get all aspect configurations
+			List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();
+			
+			// get all watched variables from all aspect configurations
+			List<IInstancePath> watchedVariables = new ArrayList<IInstancePath>();
+			for(IAspectConfiguration aspectConfig : aspectConfigs)
+			{
+				for(IInstancePath ip : aspectConfig.getWatchedVariables())
+				{
+					watchedVariables.add(ip);
+				}
+			}
+			 
 			if(watchedVariables.size() > 0)
-			{
-				simulationTree.setModified(true);
-				recordingReader.readRecording(watchedVariables, simulationTree, true);
-				loadedResults.put(instancePath, simulationTree);
+			{	
+				// after reading values out from recording, amp to the correct aspect given the watched variable
+				for(IInstancePath watchedVariable : watchedVariables)
+				{
+					AspectTreeType treeType = watchedVariable.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
+					
+					recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
+					
+					String aspectPath = watchedVariable.getEntityInstancePath() + "." + watchedVariable.getAspect()
+										.replace("." + AspectTreeType.SIMULATION_TREE.toString(), "")
+										.replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
+					
+					// map results to the appropriate tree
+					loadedResults.put(aspectPath, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree);
+					
+					if(treeType == AspectTreeType.SIMULATION_TREE)
+					{
+						simulationTree.setModified(true);
+					}
+					else
+					{
+						visualizationTree.setModified(true);
+					}
+				}
 				
-				logger.info("Finished populating Simulation Tree " + simulationTree.getInstancePath() + " with recordings");
-			}
-			
-			// **VizTree** - check if we have variables to read out for the visulization tree
-			AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
-			
-			// find any dynamic variable that might be in the visualization tree
-			FindDynamicVisulizationVariablesVisitor findVariablesVisitor = new FindDynamicVisulizationVariablesVisitor();
-			visualizationTree.apply(findVariablesVisitor);
-			List<String> visualizationVariables = findVariablesVisitor.getVariables();
-			
-			if(visualizationVariables.size() > 0)
-			{
-				// TODO: make sure any colladas are not sent twice!
-				visualizationTree.setModified(true);
-				recordingReader.readRecording(visualizationVariables, visualizationTree, true);
-				loadedResults.put(instancePath, visualizationTree);
-				
-				logger.info("Finished populating Visualization Tree " + visualizationTree.getInstancePath() + " with recordings");
+				logger.info("Finished populating runtime trees " + instancePath + " with recordings");
 			}
 		}
 		return loadedResults;
@@ -436,7 +445,7 @@ public class RuntimeExperiment
 						{
 							node = (ACompositeNode) child;
 						}
-						
+
 						found = true;
 						break;
 					}
@@ -491,19 +500,28 @@ public class RuntimeExperiment
 			}
 		}
 		runtimeTreeRoot.apply(parameterVisitor);
-		
-		FindModelTreeVisitor findParameterVisitor = new FindModelTreeVisitor(modelAspectPath+".ModelTree");
+
+		FindModelTreeVisitor findParameterVisitor = new FindModelTreeVisitor(modelAspectPath + ".ModelTree");
 		runtimeTreeRoot.apply(findParameterVisitor);
-		
+
 		return findParameterVisitor.getModelTreeNode();
 
 	}
 
-	public void uploadResults(String aspectID, ResultsFormat format,  DropboxUploadService dropboxService) throws GeppettoExecutionException {
+	/**
+	 * @param aspectID
+	 * @param format
+	 * @param dropboxService
+	 * @throws GeppettoExecutionException
+	 */
+	public void uploadResults(String aspectID, ResultsFormat format, DropboxUploadService dropboxService) throws GeppettoExecutionException
+	{
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getAspect().getInstancePath().equals(aspectID)){
-				if(result.getResult().getType().toString().equals(format.toString())){
+			if(result.getAspect().getInstancePath().equals(aspectID))
+			{
+				if(result.getResult().getType().toString().equals(format.toString()))
+				{
 					URL url;
 					try
 					{
@@ -511,7 +529,8 @@ public class RuntimeExperiment
 						File resultsFile = new File(url.toURI());
 						dropboxService.upload(resultsFile);
 					}
-					catch (Exception e) {
+					catch(Exception e)
+					{
 						throw new GeppettoExecutionException(e);
 					}
 				}
@@ -519,25 +538,33 @@ public class RuntimeExperiment
 		}
 	}
 
-	public File downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException {
+	/**
+	 * @param aspectPath
+	 * @param resultsFormat
+	 * @param dropboxService
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	public URL downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException
+	{
 		logger.info("Downloading results for " + aspectPath + " in format " + resultsFormat.toString());
-		File resultsFile = null;
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getAspect().getInstancePath().equals(aspectPath)){
-				if(result.getResult().getType().toString().equals(resultsFormat.toString())){
-					URL url;
+			if(result.getAspect().getInstancePath().equals(aspectPath))
+			{
+				if(result.getResult().getType().toString().equals(resultsFormat.toString()))
+				{
 					try
 					{
-						url = URLReader.getURL(result.getResult().getUrl());
-						resultsFile = new File(url.toURI());
+						return URLReader.getURL(result.getResult().getUrl());
 					}
-					catch (Exception e) {
+					catch(Exception e)
+					{
 						throw new GeppettoExecutionException(e);
 					}
 				}
 			}
 		}
-		return resultsFile;
+		return null;
 	}
 }

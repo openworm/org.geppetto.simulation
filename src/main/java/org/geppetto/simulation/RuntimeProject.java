@@ -140,7 +140,7 @@ public class RuntimeProject
 	public void closeExperiment(IExperiment experiment) throws GeppettoExecutionException
 	{
 		// When an experiment is closed we release it (all the services are cleared and destroyed) and we remove it from the map
-		if(!experimentRuntime.containsKey(experiment) && experimentRuntime.get(experiment) != null)
+		if(experimentRuntime.containsKey(experiment) && experimentRuntime.get(experiment) != null)
 		{
 			experimentRuntime.get(experiment).release();
 			experimentRuntime.remove(experiment);

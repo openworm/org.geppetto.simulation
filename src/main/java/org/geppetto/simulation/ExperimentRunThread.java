@@ -326,6 +326,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			if(checkAllSimulatorsAreDone())
 			{
 				experiment.setStatus(ExperimentStatus.COMPLETED);
+				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
 				logger.info("All simulators are done, experiment " + experiment.getId() + " was completed.");
 			}
 
@@ -378,9 +379,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 		// Visit simulators to extract time from them
 		TimeVisitor timeVisitor = new TimeVisitor();
-
 		runtimeExperiment.getRuntimeTree().apply(timeVisitor);
-		String timeStepUnit = timeVisitor.getTimeStepUnit();
+		
 		// set global time
 		this.setGlobalTime(timeVisitor.getTime(), runtimeExperiment.getRuntimeTree());
 

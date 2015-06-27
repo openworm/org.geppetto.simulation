@@ -181,11 +181,14 @@ public class RuntimeProject
 		if(getRuntimeExperiment(experiment) != null)
 		{
 			activeExperiment = experiment;
-			//if the experiment we are loading is not already the active one we set it as such in the parent project
-			if(experiment.getParentProject().getActiveExperiment()==null || !experiment.equals(experiment.getParentProject().getActiveExperiment()))
+			// if the experiment we are loading is not already the active one we set it as such in the parent project
+			if(!experiment.getParentProject().isVolatile())
 			{
-				experiment.getParentProject().setActiveExperiment(experiment);
-				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+				if(experiment.getParentProject().getActiveExperimentId() == -1 || !(experiment.getId() == experiment.getParentProject().getActiveExperimentId()))
+				{
+					experiment.getParentProject().setActiveExperimentId(experiment.getId());
+					DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+				}
 			}
 		}
 		else
@@ -208,9 +211,9 @@ public class RuntimeProject
 	 */
 	public void populateNewExperiment(IExperiment experiment)
 	{
-		PopulateExperimentVisitor populateExperimentVisitor=new PopulateExperimentVisitor(experiment);
+		PopulateExperimentVisitor populateExperimentVisitor = new PopulateExperimentVisitor(experiment);
 		geppettoModel.accept(populateExperimentVisitor);
-		
+
 	}
 
 }

@@ -63,6 +63,7 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.CompositeNode;
 import org.geppetto.core.model.runtime.ParameterSpecificationNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
+import org.geppetto.core.model.runtime.SkeletonAnimationNode;
 import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
@@ -133,21 +134,18 @@ public class RuntimeExperiment
 			// create variables for each aspect node's simulation tree
 			for(IAspectConfiguration a : experiment.getAspectConfigurations())
 			{
-				List<String> variables = new ArrayList<String>();
 				List<? extends IInstancePath> vars = a.getWatchedVariables();
-				if(vars != null)
-				{
-					for(IInstancePath i : vars)
-					{
-						String var = i.getInstancePath();
-						variables.add(var);
-					}
-				}
+
 				String aspect = a.getAspect().getInstancePath();
 				FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
 				runtimeTreeRoot.apply(findAspectNodeVisitor);
 				AspectNode node = findAspectNodeVisitor.getAspectNode();
-				this.createVariables(variables, node.getSubTree(AspectTreeType.SIMULATION_TREE));
+				
+				for(IInstancePath var : vars)
+				{
+					AspectTreeType treeType = var.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
+					this.createVariables(var, node.getSubTree(treeType));
+				}
 			}
 		}
 
@@ -421,52 +419,59 @@ public class RuntimeExperiment
 	 * Creates variables to store in simulation tree
 	 * 
 	 * @param variables
-	 * @param simulationTree
+	 * @param tree
 	 */
-	public void createVariables(List<String> variables, AspectSubTreeNode simulationTree)
+	public void createVariables(IInstancePath variable, AspectSubTreeNode tree)
 	{
-		for(String watchedVariable : variables)
+		String path = "/" + variable.getInstancePath().replace(tree.getInstancePath() + ".", "");
+		path = path.replace(".", "/");
+
+		path = path.replaceFirst("/", "");
+		StringTokenizer tokenizer = new StringTokenizer(path, "/");
+		ACompositeNode node = tree;
+		while(tokenizer.hasMoreElements())
 		{
-			String path = "/" + watchedVariable.replace(simulationTree.getInstancePath() + ".", "");
-			path = path.replace(".", "/");
-
-			path = path.replaceFirst("/", "");
-			StringTokenizer tokenizer = new StringTokenizer(path, "/");
-			ACompositeNode node = simulationTree;
-			while(tokenizer.hasMoreElements())
+			String current = tokenizer.nextToken();
+			boolean found = false;
+			for(ANode child : node.getChildren())
 			{
-				String current = tokenizer.nextToken();
-				boolean found = false;
-				for(ANode child : node.getChildren())
+				if(child.getId().equals(current))
 				{
-					if(child.getId().equals(current))
+					if(child instanceof ACompositeNode)
 					{
-						if(child instanceof ACompositeNode)
-						{
-							node = (ACompositeNode) child;
-						}
-
-						found = true;
-						break;
+						node = (ACompositeNode) child;
 					}
+
+					found = true;
+					break;
 				}
-				if(found)
+			}
+			if(found)
+			{
+				continue;
+			}
+			else
+			{
+				if(tokenizer.hasMoreElements())
 				{
-					continue;
+					// not a leaf, create a composite state node
+					ACompositeNode newNode = new CompositeNode(current);
+					node.addChild(newNode);
+					node = newNode;
 				}
 				else
 				{
-					if(tokenizer.hasMoreElements())
+					// it's a leaf node
+					if(tree.getType() == AspectTreeType.SIMULATION_TREE)
 					{
-						// not a leaf, create a composite state node
-						ACompositeNode newNode = new CompositeNode(current);
-						node.addChild(newNode);
-						node = newNode;
-					}
-					else
-					{
-						// it's a leaf node
+						// for now leaf nodes in the Sim tree can only be variable nodes
 						VariableNode newNode = new VariableNode(current);
+						node.addChild(newNode);
+					}
+					else if (tree.getType() == AspectTreeType.VISUALIZATION_TREE)
+					{
+						// for now leaf nodes in the Viz tree can only be skeleton animation nodes
+						SkeletonAnimationNode newNode = new SkeletonAnimationNode(current);
 						node.addChild(newNode);
 					}
 				}

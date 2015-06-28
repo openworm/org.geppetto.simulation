@@ -98,12 +98,12 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	private Map<String, IConversion> conversionServices = new ConcurrentHashMap<>();
 
-	private List<IExperimentListener> experimentListeners = new ArrayList<>();
-
 	// This map contains the simulator runtime for each one of the simulators
 	private Map<String, SimulatorRuntime> simulatorRuntimes = new ConcurrentHashMap<String, SimulatorRuntime>();
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
+
+	private IExperimentListener listener;
 
 	private int updateCycles = 0;
 
@@ -121,30 +121,18 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @param experiment
 	 * @param runtimeExperiment
 	 * @param project
-	 * @param simulationCallbackListener
+	 * @param geppettoCallbackListener
+	 * @param listener
 	 */
-	public ExperimentRunThread(IExperiment experiment, RuntimeExperiment runtimeExperiment, IGeppettoProject project, IGeppettoManagerCallbackListener simulationCallbackListener)
+	public ExperimentRunThread(IExperiment experiment, RuntimeExperiment runtimeExperiment, IGeppettoProject project, IGeppettoManagerCallbackListener geppettoCallbackListener,
+			IExperimentListener listener)
 	{
 		this.experiment = experiment;
 		this.runtimeExperiment = runtimeExperiment;
+		this.geppettoManagerCallbackListener = geppettoCallbackListener;
+		this.listener = listener;
 		this.project = project;
 		init(experiment);
-	}
-
-	/**
-	 * @param listener
-	 */
-	public void addExperimentListener(IExperimentListener listener)
-	{
-		experimentListeners.add(listener);
-	}
-
-	/**
-	 * @param listener
-	 */
-	public void removeExperimentListener(IExperimentListener listener)
-	{
-		experimentListeners.remove(listener);
 	}
 
 	/**
@@ -295,7 +283,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * 
 	 * @see java.lang.Thread#run()
 	 */
-	public void run()
+	public synchronized void run()
 	{
 		while(experiment.getStatus().equals(ExperimentStatus.RUNNING))
 		{
@@ -303,22 +291,29 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
-				String instancePath = aspectConfig.getAspect().getInstancePath();
-				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-				ISimulator simulator = simulatorServices.get(instancePath);
-
-				// if it's still stepping or completed we don't step again
-				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING) && !simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
+				try
 				{
-					// we advance the simulation for this simulator only if we are not already stepping
-					// note that some simulators might perform more than one step at the time (i.e. NEURON
-					// so the status will be STEPPING until they are all completed)
+					String instancePath = aspectConfig.getAspect().getInstancePath();
+					SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+					ISimulator simulator = simulatorServices.get(instancePath);
 
-					FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
-					runtimeExperiment.getRuntimeTree().apply(findAspectNodeVisitor);
-					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, findAspectNodeVisitor.getAspectNode());
-					simulatorRunThread.start();
-					simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
+					// if it's still stepping or completed we don't step again
+					if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING) && !simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
+					{
+						// we advance the simulation for this simulator only if we are not already stepping
+						// note that some simulators might perform more than one step at the time (i.e. NEURON
+						// so the status will be STEPPING until they are all completed)
+
+						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
+						runtimeExperiment.getRuntimeTree().apply(findAspectNodeVisitor);
+						SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, findAspectNodeVisitor.getAspectNode());
+						simulatorRunThread.start();
+						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
+					}
+				}
+				catch(NullPointerException npe)
+				{
+					logger.error(npe);
 				}
 
 			}
@@ -339,16 +334,14 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		}
 
 		// and when done, notify about it
-		for(IExperimentListener listener : experimentListeners)
+		try
 		{
-			try
-			{
-				listener.experimentRunDone(this, experiment, project);
-			}
-			catch(GeppettoExecutionException e)
-			{
-				throw new RuntimeException("Post run experiment error", e);
-			}
+			listener.experimentRunDone(this, experiment, project);
+
+		}
+		catch(GeppettoExecutionException e)
+		{
+			throw new RuntimeException("Post run experiment error", e);
 		}
 
 	}
@@ -356,17 +349,25 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	/**
 	 * @return true if all the simulators associated with this experiment have completed their execution
 	 */
-	private boolean checkAllSimulatorsAreDone()
+	private synchronized boolean checkAllSimulatorsAreDone()
 	{
 		List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 		for(IAspectConfiguration aspectConfig : aspectConfigs)
 		{
-			String instancePath = aspectConfig.getAspect().getInstancePath();
-			SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-			if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
+			try
 			{
-				return false;
+				String instancePath = aspectConfig.getAspect().getInstancePath();
+				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
+				{
+					return false;
+				}
 			}
+			catch(NullPointerException npe)
+			{
+				logger.error(npe);
+			}
+
 		}
 		return true;
 	}
@@ -380,7 +381,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		// Visit simulators to extract time from them
 		TimeVisitor timeVisitor = new TimeVisitor();
 		runtimeExperiment.getRuntimeTree().apply(timeVisitor);
-		
+
 		// set global time
 		this.setGlobalTime(timeVisitor.getTime(), runtimeExperiment.getRuntimeTree());
 
@@ -438,7 +439,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		simulatorServices.clear();
 		conversionServices.clear();
 		simulatorRuntimes.clear();
-		experimentListeners.clear();
+		listener=null;
 		geppettoManagerCallbackListener = null;
 	}
 

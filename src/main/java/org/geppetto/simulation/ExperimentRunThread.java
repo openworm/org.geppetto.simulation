@@ -33,7 +33,8 @@
 package org.geppetto.simulation;
 
 import java.io.File;
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.beans.Settings;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.conversion.ConversionException;
@@ -56,6 +58,7 @@ import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.data.model.PersistedDataType;
+import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.quantities.Quantity;
@@ -72,6 +75,7 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener.GeppettoEvents;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.core.utilities.Zipper;
 import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
 import org.geppetto.simulation.visitor.TimeVisitor;
@@ -292,24 +296,23 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
 
-					String instancePath = aspectConfig.getAspect().getInstancePath();
-					SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-					ISimulator simulator = simulatorServices.get(instancePath);
+				String instancePath = aspectConfig.getAspect().getInstancePath();
+				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+				ISimulator simulator = simulatorServices.get(instancePath);
 
-					// if it's still stepping or completed we don't step again
-					if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING) && !simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
-					{
-						// we advance the simulation for this simulator only if we are not already stepping
-						// note that some simulators might perform more than one step at the time (i.e. NEURON
-						// so the status will be STEPPING until they are all completed)
+				// if it's still stepping or completed we don't step again
+				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING) && !simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
+				{
+					// we advance the simulation for this simulator only if we are not already stepping
+					// note that some simulators might perform more than one step at the time (i.e. NEURON
+					// so the status will be STEPPING until they are all completed)
 
-						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
-						runtimeExperiment.getRuntimeTree().apply(findAspectNodeVisitor);
-						SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, findAspectNodeVisitor.getAspectNode());
-						simulatorRunThread.start();
-						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
-					}
-
+					FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
+					runtimeExperiment.getRuntimeTree().apply(findAspectNodeVisitor);
+					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, findAspectNodeVisitor.getAspectNode());
+					simulatorRunThread.start();
+					simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
+				}
 
 			}
 
@@ -434,7 +437,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		simulatorServices.clear();
 		conversionServices.clear();
 		simulatorRuntimes.clear();
-		listener=null;
+		listener = null;
 		geppettoManagerCallbackListener = null;
 	}
 
@@ -444,7 +447,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#endOfSteps(java.lang.String)
 	 */
 	@Override
-	public void endOfSteps(AspectNode aspectNode, File recordingsLocation) throws GeppettoExecutionException
+	public void endOfSteps(AspectNode aspectNode, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(aspectNode.getInstancePath());
 
@@ -452,19 +455,50 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		{
 			try
 			{
+				List<File> rawToZip=new ArrayList<File>();
+				
 				// where we store the results in S3
-				String fileName = recordingsLocation.getPath().substring(recordingsLocation.getPath().lastIndexOf("/") + 1);
-				String newPath = "projects/" + Long.toString(project.getId()) + "/" + experiment.getId() + "/" + aspectNode.getInstancePath() + "/" + fileName;
-				S3Manager.getInstance().saveFileToS3(recordingsLocation, newPath);
+				for(File result : results.keySet())
+				{
+					switch(results.get(result))
+					{
+						case GEPPETTO_RECORDING:
+						{
+							String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
+							String newPath = Settings.getAspectDependentPath(project.getId(), experiment.getId(), aspectNode.getInstancePath(),fileName);
+							S3Manager.getInstance().saveFileToS3(result, newPath);
+							IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(aspectNode);
+							IPersistedData recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
+							ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, recording,ResultsFormat.GEPPETTO_RECORDING);
+							experiment.addSimulationResult(simulationResults);
+							break;
+						}
+						case RAW:
+						{
+							rawToZip.add(result);
+							break;
+						}
+					}
+				}
 
+				String fileName="rawRecording.zip";
+				Zipper zipper=new Zipper(Settings.getAspectDependentFullPath(project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName));
+				
+				for(File raw:rawToZip)
+				{
+					zipper.addToZip(raw.toURI().toURL());
+				}
+				Path zipped=zipper.processAddedFilesAndZip();
+				String newPath = Settings.getAspectDependentPath(project.getId(), experiment.getId(), aspectNode.getInstancePath(),fileName);
+				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
 				IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(aspectNode);
-				IPersistedData recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
-				ISimulationResult results = DataManagerHelper.getDataManager().newSimulationResult(aspect, recording);
-
-				experiment.addSimulationResult(results);
+				IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
+				ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, rawResults,ResultsFormat.RAW);
+				experiment.addSimulationResult(simulationResults);
+				
 				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
 			}
-			catch(MalformedURLException e)
+			catch(IOException e)
 			{
 				throw new GeppettoExecutionException(e);
 			}

@@ -32,10 +32,12 @@
  *******************************************************************************/
 package org.geppetto.simulation.test;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.object.h5.H5File;
@@ -44,6 +46,7 @@ import ncsa.hdf.utils.SetNatives;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
+import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.ACompositeNode;
@@ -119,7 +122,7 @@ public class RecordingsSimulatorTest
 			}
 
 			@Override
-			public void endOfSteps(AspectNode node, java.io.File recordingsFile) {
+			public void endOfSteps(AspectNode node, Map<File,ResultsFormat> recordingsFile) {
 				// TODO Auto-generated method stub
 				
 			}

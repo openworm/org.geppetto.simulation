@@ -60,7 +60,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 	// The id of aspect we will be populating
 	private String _instancePath;
 	private ModelFormat _modelFormat;
-	private List<? extends IAspectConfiguration> _aspectConfigurations;
+	private IAspectConfiguration _aspectConfiguration;
 
 	private File _modelFile;
 
@@ -68,12 +68,12 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 	 * @param simulationListener
 	 * @param instancePath
 	 */
-	public DownloadModelVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, ModelFormat format, List<? extends IAspectConfiguration> aspectConfigurations)
+	public DownloadModelVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, ModelFormat format, IAspectConfiguration aspectConfiguration)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 		this._modelFormat = format;
-		this._aspectConfigurations = aspectConfigurations;
+		this._aspectConfiguration = aspectConfiguration;
 	}
 
 	/*
@@ -96,7 +96,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 					this._modelFormat = supportedOutputs.get(0);
 				}
 				
-				this._modelFile = modelInterpreter.downloadModel(node, this._modelFormat, this._aspectConfigurations);
+				this._modelFile = modelInterpreter.downloadModel(node, this._modelFormat, this._aspectConfiguration);
 			}
 			catch(ModelInterpreterException e)
 			{

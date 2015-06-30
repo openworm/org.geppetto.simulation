@@ -246,7 +246,7 @@ public class RuntimeExperiment
 	public Map<String, AspectSubTreeNode> populateSimulationTree(String aspectInstancePath)
 	{
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
-		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
+		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath, getAspectConfiguration(experiment, aspectInstancePath));
 		runtimeTreeRoot.apply(populateSimulationVisitor);
 
 		return populateSimulationVisitor.getPopulatedSimulationTree();
@@ -268,7 +268,7 @@ public class RuntimeExperiment
 	{
 		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
 
-		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format, this.experiment.getAspectConfigurations());
+		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format, getAspectConfiguration(experiment, aspectInstancePath));
 		runtimeTreeRoot.apply(downloadModelVistor);
 		return downloadModelVistor.getModelFile();
 	}

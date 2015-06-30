@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.features.IWatchableVariableListFeature;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
@@ -62,15 +63,17 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 	private IGeppettoManagerCallbackListener _simulationCallBack;
 	//The id of aspect we will be populating
 	private String _instancePath;
+	private IAspectConfiguration _aspectConfiguration;
 	
 	//This is not being used at the moment
 	private HashMap<String, AspectSubTreeNode> _populateSimulationTree;
 
-	public PopulateSimulationTreeVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath)
+	public PopulateSimulationTreeVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, IAspectConfiguration aspectConfiguration)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 		this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
+		this._aspectConfiguration = aspectConfiguration;
 	}
 
 	/* (non-Javadoc)
@@ -84,7 +87,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			try
 			{
 				if(model!=null){
-					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariables(node);
+					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariables(node, this._aspectConfiguration);
 				}
 			}
 			catch(ModelInterpreterException e)

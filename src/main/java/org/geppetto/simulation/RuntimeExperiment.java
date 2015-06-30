@@ -214,7 +214,7 @@ public class RuntimeExperiment
 		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(experiment, watchedVariables);
 		runtimeTreeRoot.apply(setWatchedVariablesVisitor);
 		DataManagerHelper.getDataManager().saveEntity(experiment);
-		
+
 	}
 
 	/**
@@ -476,17 +476,33 @@ public class RuntimeExperiment
 		IAspectConfiguration config = this.getAspectConfiguration(experiment, modelAspectPath);
 		for(String path : parameters.keySet())
 		{
-			FindParameterSpecificationNodeVisitor findParameterVisitor = new FindParameterSpecificationNodeVisitor(path);
-			runtimeTreeRoot.apply(findParameterVisitor);
-			ParameterSpecificationNode p = findParameterVisitor.getParameterNode();
-			if(p != null)
+			IParameter existingParameter = null;
+			for(IParameter p : config.getModelParameter())
 			{
-				IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(p.getEntityInstancePath(), p.getAspectInstancePath(), p.getLocalInstancePath());
-				config.addModelParameter(DataManagerHelper.getDataManager().newParameter(instancePath, parameters.get(path)));
+				if(p.getVariable().getInstancePath().equals(path))
+				{
+					existingParameter = p;
+					break;
+				}
+			}
+			if(existingParameter!=null)
+			{
+				existingParameter.setValue(parameters.get(path));
 			}
 			else
 			{
-				throw new GeppettoExecutionException("Cannot find parameter " + path + "in the runtime tree.");
+				FindParameterSpecificationNodeVisitor findParameterVisitor = new FindParameterSpecificationNodeVisitor(path);
+				runtimeTreeRoot.apply(findParameterVisitor);
+				ParameterSpecificationNode p = findParameterVisitor.getParameterNode();
+				if(p != null)
+				{
+					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(p.getEntityInstancePath(), p.getAspectInstancePath(), p.getLocalInstancePath());
+					config.addModelParameter(DataManagerHelper.getDataManager().newParameter(instancePath, parameters.get(path)));
+				}
+				else
+				{
+					throw new GeppettoExecutionException("Cannot find parameter " + path + "in the runtime tree.");
+				}
 			}
 		}
 		runtimeTreeRoot.apply(parameterVisitor);

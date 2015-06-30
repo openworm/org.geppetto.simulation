@@ -32,7 +32,6 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +39,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoErrorCodes;
 import org.geppetto.core.features.ISetParameterFeature;
-import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
@@ -51,47 +49,51 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 /**
  * Visitor used for setting parameter(s) on an aspect's model.
  * 
- * @author  Jesus R. Martinez (jesus@metacell.us)
+ * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class SetParametersVisitor extends DefaultStateVisitor{
+public class SetParametersVisitor extends DefaultStateVisitor
+{
 
 	private static Log _logger = LogFactory.getLog(SetParametersVisitor.class);
 
-	//Listener used to send back errors 
+	// Listener used to send back errors
 	private IGeppettoManagerCallbackListener _simulationCallBack;
-	//The id of aspect we will be populating
+	// The id of aspect we will be populating
 	private String _instancePath;
-	private Map<String, String> _parameters = new HashMap<String,String>();
+	private Map<String, String> _parameters = new HashMap<String, String>();
 
-	public SetParametersVisitor(IGeppettoManagerCallbackListener simulationListener,Map<String, String> parameters, String instancePath)
+	public SetParametersVisitor(IGeppettoManagerCallbackListener simulationListener, Map<String, String> parameters, String instancePath)
 	{
 		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 		this._parameters = parameters;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		if(this._instancePath.equals(node.getModel().getInstancePath())){
+		if(this._instancePath.equals(node.getModel().getInstancePath()))
+		{
 			IModelInterpreter modelInterpreter = node.getModelInterpreter();
-			IModel model = node.getModel();
-			if(!modelInterpreter.isSupported(GeppettoFeature.SET_PARAMETERS_FEATURE)){
+			if(!modelInterpreter.isSupported(GeppettoFeature.SET_PARAMETERS_FEATURE))
+			{
 				return false;
 			}
 			try
 			{
-				((ISetParameterFeature)modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(_parameters);
+				((ISetParameterFeature) modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(_parameters);
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(),null,e);
-			}		
-			
+				_simulationCallBack.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null, e);
+			}
+
 			return true;
 		}
 

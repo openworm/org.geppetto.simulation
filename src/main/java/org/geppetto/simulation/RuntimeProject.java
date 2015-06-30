@@ -106,8 +106,9 @@ public class RuntimeProject
 	 * @param experiment
 	 * @throws MalformedURLException
 	 * @throws GeppettoInitializationException
+	 * @throws GeppettoExecutionException 
 	 */
-	public void openExperiment(String requestId, IExperiment experiment) throws MalformedURLException, GeppettoInitializationException
+	public void openExperiment(String requestId, IExperiment experiment) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
 		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this, experiment, geppettoManagerCallbackListener);

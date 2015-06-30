@@ -33,7 +33,6 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.data.DataManagerHelper;
-import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.ISimulatorConfiguration;

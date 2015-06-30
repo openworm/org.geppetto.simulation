@@ -291,8 +291,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
-				try
-				{
+
 					String instancePath = aspectConfig.getAspect().getInstancePath();
 					SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 					ISimulator simulator = simulatorServices.get(instancePath);
@@ -310,11 +309,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						simulatorRunThread.start();
 						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
 					}
-				}
-				catch(NullPointerException npe)
-				{
-					logger.error(npe);
-				}
+
 
 			}
 

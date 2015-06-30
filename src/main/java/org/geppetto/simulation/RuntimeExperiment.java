@@ -51,6 +51,7 @@ import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IInstancePath;
+import org.geppetto.core.data.model.IParameter;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
@@ -102,14 +103,14 @@ public class RuntimeExperiment
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
-	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener)
+	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener) throws GeppettoExecutionException
 	{
 		this.experiment = experiment;
 		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		init(runtimeProject.getGeppettoModel());
 	}
 
-	private void init(GeppettoModel geppettoModel)
+	private void init(GeppettoModel geppettoModel) throws GeppettoExecutionException
 	{
 		this.clearWatchLists();
 
@@ -140,12 +141,22 @@ public class RuntimeExperiment
 				FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
 				runtimeTreeRoot.apply(findAspectNodeVisitor);
 				AspectNode node = findAspectNodeVisitor.getAspectNode();
-				
+
 				for(IInstancePath var : vars)
 				{
 					AspectTreeType treeType = var.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
 					this.createVariables(var, node.getSubTree(treeType));
 				}
+			}
+		}
+
+		// let's set the parameters if they exist
+		for(IAspectConfiguration ac : experiment.getAspectConfigurations())
+		{
+			if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
+			{
+				populateModelTree(ac.getAspect().getInstancePath());
+				setModelParameters(ac.getAspect().getInstancePath(), ac.getModelParameter());
 			}
 		}
 
@@ -188,20 +199,6 @@ public class RuntimeExperiment
 			// TODO Exception or we change the "watched" and keep the "recorded"?
 		}
 
-		// SIM TODO instruct aspects to clear watch variables, this allows to change what a dynamic simulator
-		// is recording while they are doing it, do we keep this?
-		// for(ISimulator simulator : _sessionContext.getSimulators().values())
-		// {
-		// if(simulator != null)
-		// {
-		// IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-		// if(watchFeature != null)
-		// {
-		// watchFeature.clearWatchVariables();
-		// }
-		// }
-		// }
-
 	}
 
 	/**
@@ -214,38 +211,10 @@ public class RuntimeExperiment
 		logger.info("Setting watched variables in simulation tree");
 
 		// Update the RunTimeTreeModel
-		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(watchedVariables);
+		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(experiment, watchedVariables);
 		runtimeTreeRoot.apply(setWatchedVariablesVisitor);
-
-		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
-		{
-			// if we are still in design we ask the DataManager to change what we are watching
-			// TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we
-			// only want to get a portion of them in the client
-			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
-			for(IAspectConfiguration aspectConfig : aspectConfigs)
-			{
-				// TODO When do we create the aspect config? How do we map them to the variables?
-				// DataManagerHelper.getDataManager().setWatchedVariables(aspectConfig, watchedVariables);
-			}
-		}
-		else
-		{
-			// TODO Exception or we change the "watched" and keep the "recorded"?
-		}
-
-		// SIM TODO
-		// Call the function for each simulator, , this allows to change what a dynamic simulator
-		// is recording while they are doing it, do we keep this?
-		// for(Simulator simulatorModel : _sessionContext.getSimulators().keySet())
-		// {
-		// ISimulator simulator = _sessionContext.getSimulator(simulatorModel);
-		// IVariableWatchFeature watchFeature = ((IVariableWatchFeature) simulator.getFeature(GeppettoFeature.VARIABLE_WATCH_FEATURE));
-		// if(watchFeature != null)
-		// {
-		// watchFeature.setWatchedVariables(watchedVariables);
-		// }
-		// }
+		DataManagerHelper.getDataManager().saveEntity(experiment);
+		
 	}
 
 	/**
@@ -327,20 +296,20 @@ public class RuntimeExperiment
 		{
 			String instancePath = result.getAspect().getInstancePath();
 			logger.info("Reading results for " + instancePath);
-			
+
 			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
 			getRuntimeTree().apply(findAspectNodeVisitor);
 			AspectNode aspect = findAspectNodeVisitor.getAspectNode();
 			aspect.setModified(true);
 			aspect.getParentEntity().setModified(true);
-			
+
 			// We first need to populate the simulation tree for the given aspect
 			// NOTE: it would seem that commenting this line out makes no difference - remove?
 			populateSimulationTree(instancePath);
 
 			AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
 			AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
-			
+
 			URL url;
 			try
 			{
@@ -352,10 +321,10 @@ public class RuntimeExperiment
 			}
 
 			RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)));
-			
+
 			// get all aspect configurations
 			List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();
-			
+
 			// get all watched variables from all aspect configurations
 			List<IInstancePath> watchedVariables = new ArrayList<IInstancePath>();
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
@@ -365,23 +334,22 @@ public class RuntimeExperiment
 					watchedVariables.add(ip);
 				}
 			}
-			 
+
 			if(watchedVariables.size() > 0)
-			{	
+			{
 				// after reading values out from recording, amp to the correct aspect given the watched variable
 				for(IInstancePath watchedVariable : watchedVariables)
 				{
 					AspectTreeType treeType = watchedVariable.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
-					
+
 					recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
-					
-					String aspectPath = watchedVariable.getEntityInstancePath() + "." + watchedVariable.getAspect()
-										.replace("." + AspectTreeType.SIMULATION_TREE.toString(), "")
-										.replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
-					
+
+					String aspectPath = watchedVariable.getEntityInstancePath() + "."
+							+ watchedVariable.getAspect().replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
+
 					// map results to the appropriate tree
 					loadedResults.put(aspectPath, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree);
-					
+
 					if(treeType == AspectTreeType.SIMULATION_TREE)
 					{
 						simulationTree.setModified(true);
@@ -391,7 +359,7 @@ public class RuntimeExperiment
 						visualizationTree.setModified(true);
 					}
 				}
-				
+
 				logger.info("Finished populating runtime trees " + instancePath + " with recordings");
 			}
 		}
@@ -468,7 +436,7 @@ public class RuntimeExperiment
 						VariableNode newNode = new VariableNode(current);
 						node.addChild(newNode);
 					}
-					else if (tree.getType() == AspectTreeType.VISUALIZATION_TREE)
+					else if(tree.getType() == AspectTreeType.VISUALIZATION_TREE)
 					{
 						// for now leaf nodes in the Viz tree can only be skeleton animation nodes
 						SkeletonAnimationNode newNode = new SkeletonAnimationNode(current);
@@ -477,6 +445,22 @@ public class RuntimeExperiment
 				}
 			}
 		}
+	}
+
+	/**
+	 * @param instancePath
+	 * @param modelParameter
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	private AspectSubTreeNode setModelParameters(String instancePath, List<? extends IParameter> modelParameter) throws GeppettoExecutionException
+	{
+		Map<String, String> parameters = new HashMap<String, String>();
+		for(IParameter p : modelParameter)
+		{
+			parameters.put(p.getVariable().getInstancePath(), p.getValue());
+		}
+		return setModelParameters(instancePath, parameters);
 	}
 
 	/**
@@ -543,33 +527,4 @@ public class RuntimeExperiment
 		}
 	}
 
-	/**
-	 * @param aspectPath
-	 * @param resultsFormat
-	 * @param dropboxService
-	 * @return
-	 * @throws GeppettoExecutionException
-	 */
-	public URL downloadResults(String aspectPath, ResultsFormat resultsFormat, DropboxUploadService dropboxService) throws GeppettoExecutionException
-	{
-		logger.info("Downloading results for " + aspectPath + " in format " + resultsFormat.toString());
-		for(ISimulationResult result : experiment.getSimulationResults())
-		{
-			if(result.getAspect().getInstancePath().equals(aspectPath))
-			{
-				if(result.getResult().getType().toString().equals(resultsFormat.toString()))
-				{
-					try
-					{
-						return URLReader.getURL(result.getResult().getUrl());
-					}
-					catch(Exception e)
-					{
-						throw new GeppettoExecutionException(e);
-					}
-				}
-			}
-		}
-		return null;
-	}
 }

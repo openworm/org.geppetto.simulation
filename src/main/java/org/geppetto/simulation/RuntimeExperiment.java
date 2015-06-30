@@ -434,6 +434,7 @@ public class RuntimeExperiment
 					{
 						// for now leaf nodes in the Sim tree can only be variable nodes
 						VariableNode newNode = new VariableNode(current);
+						newNode.setWatched(true);
 						node.addChild(newNode);
 					}
 					else if(tree.getType() == AspectTreeType.VISUALIZATION_TREE)

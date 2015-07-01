@@ -321,6 +321,16 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				experiment.setStatus(ExperimentStatus.COMPLETED);
 				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
 				logger.info("All simulators are done, experiment " + experiment.getId() + " was completed.");
+				break;
+			}
+			
+			try
+			{
+				Thread.sleep(500);
+			}
+			catch(InterruptedException e)
+			{
+				throw new RuntimeException(e);
 			}
 
 		}

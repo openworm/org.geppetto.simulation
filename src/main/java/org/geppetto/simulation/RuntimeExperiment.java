@@ -246,7 +246,8 @@ public class RuntimeExperiment
 	public Map<String, AspectSubTreeNode> populateSimulationTree(String aspectInstancePath)
 	{
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
-		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath, getAspectConfiguration(experiment, aspectInstancePath));
+		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath, getAspectConfiguration(experiment,
+				aspectInstancePath));
 		runtimeTreeRoot.apply(populateSimulationVisitor);
 
 		return populateSimulationVisitor.getPopulatedSimulationTree();
@@ -294,73 +295,76 @@ public class RuntimeExperiment
 		Map<String, AspectSubTreeNode> loadedResults = new HashMap<String, AspectSubTreeNode>();
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			String instancePath = result.getAspect().getInstancePath();
-			logger.info("Reading results for " + instancePath);
-
-			FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
-			getRuntimeTree().apply(findAspectNodeVisitor);
-			AspectNode aspect = findAspectNodeVisitor.getAspectNode();
-			aspect.setModified(true);
-			aspect.getParentEntity().setModified(true);
-
-			// We first need to populate the simulation tree for the given aspect
-			// NOTE: it would seem that commenting this line out makes no difference - remove?
-			populateSimulationTree(instancePath);
-
-			AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
-			AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
-
-			URL url;
-			try
+			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))
 			{
-				url = URLReader.getURL(result.getResult().getUrl());
-			}
-			catch(IOException e)
-			{
-				throw new GeppettoExecutionException(e);
-			}
+				String instancePath = result.getAspect().getInstancePath();
+				logger.info("Reading results for " + instancePath);
 
-			RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)));
+				FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
+				getRuntimeTree().apply(findAspectNodeVisitor);
+				AspectNode aspect = findAspectNodeVisitor.getAspectNode();
+				aspect.setModified(true);
+				aspect.getParentEntity().setModified(true);
 
-			// get all aspect configurations
-			List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();
+				// We first need to populate the simulation tree for the given aspect
+				// NOTE: it would seem that commenting this line out makes no difference - remove?
+				populateSimulationTree(instancePath);
 
-			// get all watched variables from all aspect configurations
-			List<IInstancePath> watchedVariables = new ArrayList<IInstancePath>();
-			for(IAspectConfiguration aspectConfig : aspectConfigs)
-			{
-				for(IInstancePath ip : aspectConfig.getWatchedVariables())
+				AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
+				AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
+
+				URL url;
+				try
 				{
-					watchedVariables.add(ip);
+					url = URLReader.getURL(result.getResult().getUrl());
 				}
-			}
-
-			if(watchedVariables.size() > 0)
-			{
-				// after reading values out from recording, amp to the correct aspect given the watched variable
-				for(IInstancePath watchedVariable : watchedVariables)
+				catch(IOException e)
 				{
-					AspectTreeType treeType = watchedVariable.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
+					throw new GeppettoExecutionException(e);
+				}
 
-					recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
+				RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)));
 
-					String aspectPath = watchedVariable.getEntityInstancePath() + "."
-							+ watchedVariable.getAspect().replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
+				// get all aspect configurations
+				List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();
 
-					// map results to the appropriate tree
-					loadedResults.put(aspectPath, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree);
-
-					if(treeType == AspectTreeType.SIMULATION_TREE)
+				// get all watched variables from all aspect configurations
+				List<IInstancePath> watchedVariables = new ArrayList<IInstancePath>();
+				for(IAspectConfiguration aspectConfig : aspectConfigs)
+				{
+					for(IInstancePath ip : aspectConfig.getWatchedVariables())
 					{
-						simulationTree.setModified(true);
-					}
-					else
-					{
-						visualizationTree.setModified(true);
+						watchedVariables.add(ip);
 					}
 				}
 
-				logger.info("Finished populating runtime trees " + instancePath + " with recordings");
+				if(watchedVariables.size() > 0)
+				{
+					// after reading values out from recording, amp to the correct aspect given the watched variable
+					for(IInstancePath watchedVariable : watchedVariables)
+					{
+						AspectTreeType treeType = watchedVariable.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
+
+						recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
+
+						String aspectPath = watchedVariable.getEntityInstancePath() + "."
+								+ watchedVariable.getAspect().replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
+
+						// map results to the appropriate tree
+						loadedResults.put(aspectPath, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree);
+
+						if(treeType == AspectTreeType.SIMULATION_TREE)
+						{
+							simulationTree.setModified(true);
+						}
+						else
+						{
+							visualizationTree.setModified(true);
+						}
+					}
+
+					logger.info("Finished populating runtime trees " + instancePath + " with recordings");
+				}
 			}
 		}
 		return loadedResults;
@@ -485,7 +489,7 @@ public class RuntimeExperiment
 					break;
 				}
 			}
-			if(existingParameter!=null)
+			if(existingParameter != null)
 			{
 				existingParameter.setValue(parameters.get(path));
 			}

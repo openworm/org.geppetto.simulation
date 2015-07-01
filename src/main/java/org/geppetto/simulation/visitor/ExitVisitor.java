@@ -38,7 +38,7 @@ import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.ParameterSpecificationNode;
 import org.geppetto.core.model.runtime.TextMetadataNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 
 /**
  * Visitor used for setting modified flag on subtree to flase after sending update
@@ -46,7 +46,7 @@ import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
  * @author Jesus R. Martinez (jesus@metacell.us)
  * 
  */
-public class ExitVisitor extends DefaultStateVisitor
+public class ExitVisitor extends RuntimeTreeVisitor
 {
 
 	public ExitVisitor()

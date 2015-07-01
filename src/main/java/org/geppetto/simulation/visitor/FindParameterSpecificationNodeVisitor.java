@@ -33,13 +33,13 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.runtime.ParameterSpecificationNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 
 /**
  * @author matteocantarelli
  *
  */
-public class FindParameterSpecificationNodeVisitor extends DefaultStateVisitor 
+public class FindParameterSpecificationNodeVisitor extends RuntimeTreeVisitor 
 {
 
 	private String instancePath;

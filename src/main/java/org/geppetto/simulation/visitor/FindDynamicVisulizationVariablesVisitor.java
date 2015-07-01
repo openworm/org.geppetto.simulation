@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geppetto.core.model.runtime.SkeletonAnimationNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 
 /**
  * 
@@ -45,7 +45,7 @@ import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
  * FindDynamicVisulizationVariables - looks for dynamic variables having to do with visualization
  * Only visits nodes of interest for dynamic visualization variables
  */
-public class FindDynamicVisulizationVariablesVisitor extends DefaultStateVisitor {
+public class FindDynamicVisulizationVariablesVisitor extends RuntimeTreeVisitor {
 	
 	private List<String> variables = new ArrayList<String>();
 	

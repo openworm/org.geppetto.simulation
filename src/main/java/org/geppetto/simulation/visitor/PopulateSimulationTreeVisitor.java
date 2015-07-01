@@ -35,7 +35,7 @@ package org.geppetto.simulation.visitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.features.IWatchableVariableListFeature;
 import org.geppetto.core.model.IModel;
@@ -47,9 +47,8 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.VariableNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
  * Visitor used for retrieving simulator from aspect node's and sending call to simulator
@@ -58,9 +57,9 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
  * @author  Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
+public class PopulateSimulationTreeVisitor extends RuntimeTreeVisitor{
 	
-	private IGeppettoManagerCallbackListener _simulationCallBack;
+
 	//The id of aspect we will be populating
 	private String _instancePath;
 	private IAspectConfiguration _aspectConfiguration;
@@ -68,9 +67,8 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 	//This is not being used at the moment
 	private HashMap<String, AspectSubTreeNode> _populateSimulationTree;
 
-	public PopulateSimulationTreeVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, IAspectConfiguration aspectConfiguration)
+	public PopulateSimulationTreeVisitor(String instancePath, IAspectConfiguration aspectConfiguration)
 	{
-		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 		this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
 		this._aspectConfiguration = aspectConfiguration;
@@ -92,7 +90,7 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+				exception = new GeppettoExecutionException(e);
 			}
 			
 			//FIXME: If it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity

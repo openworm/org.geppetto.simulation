@@ -35,7 +35,7 @@ package org.geppetto.simulation.visitor;
 import java.util.List;
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -52,10 +52,8 @@ import org.geppetto.core.model.simulation.CustomProperty;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.VisualObjectReference;
-import org.geppetto.core.model.simulation.visitor.BaseVisitor;
-import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
 import org.geppetto.core.model.values.FloatValue;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.visualisation.model.Point;
 
 /**
@@ -64,23 +62,21 @@ import org.geppetto.core.visualisation.model.Point;
  * @author Jesus R. Martinez (jesus@metacell.us)
  * 
  */
-public class CreateRuntimeTreeVisitor extends TraversingVisitor
+public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 {
 
 	// private SessionContext _sessionContext;
 	private Map<String, IModelInterpreter> _modelInterpreters;
 	private Map<String, IModel> _model;
-	private IGeppettoManagerCallbackListener _simulationCallback;
 	// Head node that holds the entities
 	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
-	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot, IGeppettoManagerCallbackListener simulationCallback)
+	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot)
 	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
+		super();
 		// this._sessionContext = sessionContext;
 		_modelInterpreters = modelInterpreters;
 		_model = model;
-		this._simulationCallback = simulationCallback;
 	}
 
 	/*
@@ -120,7 +116,7 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 			// }
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null, e);
+				exception = new GeppettoExecutionException(e);
 			}
 		}
 

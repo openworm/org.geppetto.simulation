@@ -37,14 +37,13 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.features.ISetParameterFeature;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
  * Visitor used for setting parameter(s) on an aspect's model.
@@ -52,20 +51,17 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
  * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class SetParametersVisitor extends DefaultStateVisitor
+public class SetParametersVisitor extends RuntimeTreeVisitor
 {
 
-	private static Log _logger = LogFactory.getLog(SetParametersVisitor.class);
+	private static Log logger = LogFactory.getLog(SetParametersVisitor.class);
 
-	// Listener used to send back errors
-	private IGeppettoManagerCallbackListener _simulationCallBack;
 	// The id of aspect we will be populating
 	private String _instancePath;
 	private Map<String, String> _parameters = new HashMap<String, String>();
 
-	public SetParametersVisitor(IGeppettoManagerCallbackListener simulationListener, Map<String, String> parameters, String instancePath)
+	public SetParametersVisitor(Map<String, String> parameters, String instancePath)
 	{
-		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 		this._parameters = parameters;
 	}
@@ -91,7 +87,7 @@ public class SetParametersVisitor extends DefaultStateVisitor
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null, e);
+				exception = new GeppettoExecutionException(e);
 			}
 
 			return true;

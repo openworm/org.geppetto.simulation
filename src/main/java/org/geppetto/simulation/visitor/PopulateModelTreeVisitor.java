@@ -35,7 +35,7 @@ package org.geppetto.simulation.visitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
@@ -43,8 +43,7 @@ import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.EntityNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 
 /**
  * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter for populating the model tree
@@ -52,12 +51,9 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
  * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class PopulateModelTreeVisitor extends DefaultStateVisitor
+public class PopulateModelTreeVisitor extends RuntimeTreeVisitor
 {
 
-	// Listener used to send back errors
-	private IGeppettoManagerCallbackListener _simulationCallBack;
-	
 	// The id of aspect we will be populating
 	private String _instancePath;
 	
@@ -67,9 +63,8 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor
 	 * @param simulationListener
 	 * @param instancePath
 	 */
-	public PopulateModelTreeVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath)
+	public PopulateModelTreeVisitor(String instancePath)
 	{
-		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 	}
 
@@ -90,7 +85,7 @@ public class PopulateModelTreeVisitor extends DefaultStateVisitor
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+				exception = new GeppettoExecutionException(e);
 			}
 
 			this._populateModelTree = new HashMap<String, AspectSubTreeNode>();

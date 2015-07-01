@@ -39,6 +39,7 @@ import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
  * @author matteocantarelli

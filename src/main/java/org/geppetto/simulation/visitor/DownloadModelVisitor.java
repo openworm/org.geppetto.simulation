@@ -35,15 +35,14 @@ package org.geppetto.simulation.visitor;
 import java.io.File;
 import java.util.List;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
  * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter for downloading the model
@@ -51,11 +50,9 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
  * @author Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class DownloadModelVisitor extends DefaultStateVisitor
+public class DownloadModelVisitor extends RuntimeTreeVisitor
 {
 
-	// Listener used to send back errors
-	private IGeppettoManagerCallbackListener _simulationCallBack;
 
 	// The id of aspect we will be populating
 	private String _instancePath;
@@ -68,9 +65,8 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 	 * @param simulationListener
 	 * @param instancePath
 	 */
-	public DownloadModelVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath, ModelFormat format, IAspectConfiguration aspectConfiguration)
+	public DownloadModelVisitor(String instancePath, ModelFormat format, IAspectConfiguration aspectConfiguration)
 	{
-		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 		this._modelFormat = format;
 		this._aspectConfiguration = aspectConfiguration;
@@ -100,7 +96,7 @@ public class DownloadModelVisitor extends DefaultStateVisitor
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+				exception = new GeppettoExecutionException(e);
 			}
 		}
 

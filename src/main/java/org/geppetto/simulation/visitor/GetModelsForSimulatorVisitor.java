@@ -39,6 +39,7 @@ import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
  * This visitor discovers any model which belongs to the scope

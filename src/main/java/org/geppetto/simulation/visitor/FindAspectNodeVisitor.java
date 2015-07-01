@@ -33,13 +33,13 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 
 /**
  * @author matteocantarelli
  *
  */
-public class FindAspectNodeVisitor extends DefaultStateVisitor 
+public class FindAspectNodeVisitor extends RuntimeTreeVisitor 
 {
 
 	private String instancePath;

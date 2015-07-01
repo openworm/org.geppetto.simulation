@@ -42,14 +42,12 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.visitor.BaseVisitor;
-import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
+import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
 import org.geppetto.core.utilities.URLReader;
 
 /**
@@ -58,21 +56,19 @@ import org.geppetto.core.utilities.URLReader;
  * @author matteocantarelli
  * 
  */
-public class LoadSimulationVisitor extends TraversingVisitor
+public class LoadSimulationVisitor extends GeppettoModelVisitor
 {
 
 	private Map<String, IModelInterpreter> _modelInterpreters;
 	private Map<String, IModel> _model;
-	private IGeppettoManagerCallbackListener _simulationCallback;
 	private final String SERVER_ROOT_TOKEN = "%SERVER_ROOT%";
 	private static Log _logger = LogFactory.getLog(LoadSimulationVisitor.class);
 
-	public LoadSimulationVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, IGeppettoManagerCallbackListener simulationListener)
+	public LoadSimulationVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model)
 	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
+		super();
 		_modelInterpreters = modelInterpreters;
 		_model = model;
-		_simulationCallback = simulationListener;
 	}
 
 	/*
@@ -144,8 +140,7 @@ public class LoadSimulationVisitor extends TraversingVisitor
 		}
 		catch(ModelInterpreterException | IOException e)
 		{
-			_logger.error("Malformed URL for model", e);
-			_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), "Unable to load model for " + pModel.getInstancePath(), e);
+			exception = new GeppettoExecutionException(e);
 		}
 
 	}

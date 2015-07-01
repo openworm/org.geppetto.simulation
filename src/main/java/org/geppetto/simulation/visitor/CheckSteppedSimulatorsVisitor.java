@@ -34,6 +34,7 @@ package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
  * This visitor checks if all the simulators have stepped Note: This visitor at the moment doesn't take into account that different simulators could have different time steps and in this case the

@@ -34,13 +34,12 @@ package org.geppetto.simulation.visitor;
 
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.visitor.BaseVisitor;
-import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
-import org.geppetto.simulation.ServiceCreator;
+import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
+import org.geppetto.core.services.ServiceCreator;
 
 /**
  * This visitor discovers and instantiates the services for each model interpreter and simulator. A thread is used to instantiate the services so that a new instance of the services is created at each
@@ -49,17 +48,16 @@ import org.geppetto.simulation.ServiceCreator;
  * @author matteocantarelli
  * 
  */
-public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
+public class CreateModelInterpreterServicesVisitor extends GeppettoModelVisitor
 {
 
-	private Map<String, IModelInterpreter> _model;
-	private IGeppettoManagerCallbackListener _simulationCallBack;
+	private Map<String, IModelInterpreter> models;
 
-	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> model, IGeppettoManagerCallbackListener simulationCallBack)
+
+	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> models)
 	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_model = model;
-		_simulationCallBack = simulationCallBack;
+		super();
+		this.models = models;
 	}
 
 	/*
@@ -73,17 +71,13 @@ public class CreateModelInterpreterServicesVisitor extends TraversingVisitor
 		super.visit(model);
 		try
 		{
-			ServiceCreator<String, IModelInterpreter> sc = new ServiceCreator<String, IModelInterpreter>(model.getModelInterpreterId(), IModelInterpreter.class.getName(), model.getInstancePath(),
-					_model);
-
-			Thread t = new Thread(sc);
-			t.start();
-
-			t.join();
+			models.put(model.getInstancePath(), (IModelInterpreter) ServiceCreator.getNewServiceInstance(model.getModelInterpreterId()));
 		}
-		catch(InterruptedException e)
+		catch(GeppettoInitializationException e)
 		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+			exception=new GeppettoExecutionException(e);
 		}
 	}
+	
+
 }

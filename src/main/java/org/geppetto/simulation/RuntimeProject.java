@@ -44,7 +44,6 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.model.simulation.GeppettoModel;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
@@ -66,8 +65,6 @@ public class RuntimeProject
 
 	private GeppettoModel geppettoModel;
 
-	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
-
 	public GeppettoModel getGeppettoModel()
 	{
 		return geppettoModel;
@@ -79,9 +76,8 @@ public class RuntimeProject
 	 * @throws MalformedURLException
 	 * @throws GeppettoInitializationException
 	 */
-	public RuntimeProject(IGeppettoProject project, IGeppettoManagerCallbackListener geppettoManagerCallbackListener) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeProject(IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException
 	{
-		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 
 		try
@@ -106,12 +102,12 @@ public class RuntimeProject
 	 * @param experiment
 	 * @throws MalformedURLException
 	 * @throws GeppettoInitializationException
-	 * @throws GeppettoExecutionException 
+	 * @throws GeppettoExecutionException
 	 */
 	public void openExperiment(String requestId, IExperiment experiment) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException
 	{
 		// You need a RuntimeExperiment inside the RuntimeProject for each experiment we are doing something with, i.e. we are either running a simulation or the user is connected and working with it.
-		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this, experiment, geppettoManagerCallbackListener);
+		RuntimeExperiment runtimeExperiment = new RuntimeExperiment(this, experiment);
 		experimentRuntime.put(experiment, runtimeExperiment);
 		activeExperiment = experiment;
 	}

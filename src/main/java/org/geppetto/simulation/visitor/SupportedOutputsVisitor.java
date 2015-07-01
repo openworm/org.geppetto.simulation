@@ -34,13 +34,12 @@ package org.geppetto.simulation.visitor;
 
 import java.util.List;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 import org.geppetto.core.services.ModelFormat;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
  * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter asking for supported outputs formats
@@ -48,11 +47,8 @@ import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
  * @author Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class SupportedOutputsVisitor extends DefaultStateVisitor
+public class SupportedOutputsVisitor extends RuntimeTreeVisitor
 {
-
-	// Listener used to send back errors
-	private IGeppettoManagerCallbackListener _simulationCallBack;
 
 	// The id of aspect we will be populating
 	private String _instancePath;
@@ -63,9 +59,8 @@ public class SupportedOutputsVisitor extends DefaultStateVisitor
 	 * @param simulationListener
 	 * @param instancePath
 	 */
-	public SupportedOutputsVisitor(IGeppettoManagerCallbackListener simulationListener, String instancePath)
+	public SupportedOutputsVisitor(String instancePath)
 	{
-		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
 	}
 
@@ -86,7 +81,7 @@ public class SupportedOutputsVisitor extends DefaultStateVisitor
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(), null, e);
+				exception = new GeppettoExecutionException(e);
 			}
 		}
 

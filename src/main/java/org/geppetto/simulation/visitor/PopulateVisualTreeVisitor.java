@@ -32,33 +32,27 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.features.IVisualTreeFeature;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.VariableNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 
 /**
- * Visitor used for retrieving simulator from aspect node's and sending call to simulator
- * for populating the visualization tree
+ * Visitor used for retrieving simulator from aspect node's and sending call to simulator for populating the visualization tree
  * 
- * @author  Jesus R. Martinez (jesus@metacell.us)
+ * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
-	
-	private IGeppettoManagerCallbackListener _simulationCallBack;
+public class PopulateVisualTreeVisitor extends RuntimeTreeVisitor
+{
 
-	public PopulateVisualTreeVisitor(IGeppettoManagerCallbackListener simulationListener)
-	{
-		this._simulationCallBack = simulationListener;
-	}
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
@@ -67,19 +61,22 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 		IModelInterpreter model = node.getModelInterpreter();
 		try
 		{
-			if(model!=null){
+			if(model != null)
+			{
 				((IVisualTreeFeature) model.getFeature(GeppettoFeature.VISUAL_TREE_FEATURE)).populateVisualTree(node);
 			}
 		}
 		catch(ModelInterpreterException e)
 		{
-			_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+			exception = new GeppettoExecutionException(e);
 		}
-		
+
 		return super.inAspectNode(node);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
 	 */
 	@Override
@@ -88,7 +85,9 @@ public class PopulateVisualTreeVisitor extends DefaultStateVisitor{
 		return super.outAspectNode(node);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#visitSimpleStateNode(org.geppetto.core.model.state.SimpleStateNode)
 	 */
 	@Override

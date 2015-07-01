@@ -7,7 +7,7 @@ import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
-import org.geppetto.simulation.visitor.DepthFirstTraverserEntitiesFirst;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 import org.junit.Assert;
 
 /**

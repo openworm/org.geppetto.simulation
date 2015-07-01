@@ -71,7 +71,6 @@ import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.model.state.visitors.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.services.ModelFormat;
-import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
@@ -94,8 +93,6 @@ public class RuntimeExperiment
 
 	private Map<String, IModel> instancePathToIModelMap = new HashMap<>();
 
-	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
-
 	// Head node that holds the entities
 	private RuntimeTreeRoot runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
@@ -103,10 +100,9 @@ public class RuntimeExperiment
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
-	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment, IGeppettoManagerCallbackListener geppettoManagerCallbackListener) throws GeppettoExecutionException
+	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment) throws GeppettoExecutionException
 	{
 		this.experiment = experiment;
-		this.geppettoManagerCallbackListener = geppettoManagerCallbackListener;
 		init(runtimeProject.getGeppettoModel());
 	}
 
@@ -115,19 +111,23 @@ public class RuntimeExperiment
 		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
-		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoManagerCallbackListener);
+		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters);
 		geppettoModel.accept(createServicesVisitor);
+		createServicesVisitor.postProcessVisit();
 
-		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, instancePathToIModelMap, geppettoManagerCallbackListener);
+		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, instancePathToIModelMap);
 		geppettoModel.accept(loadSimulationVisitor);
-
-		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, instancePathToIModelMap, runtimeTreeRoot, geppettoManagerCallbackListener);
+		loadSimulationVisitor.postProcessVisit();
+		
+		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, instancePathToIModelMap, runtimeTreeRoot);
 		geppettoModel.accept(runtimeTreeVisitor);
+		runtimeTreeVisitor.postProcessVisit();
 
 		runtimeTreeRoot = runtimeTreeVisitor.getRuntimeModel();
 
-		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor(geppettoManagerCallbackListener);
+		PopulateVisualTreeVisitor populateVisualVisitor = new PopulateVisualTreeVisitor();
 		runtimeTreeRoot.apply(populateVisualVisitor);
+		populateVisualVisitor.postProcessVisit();
 
 		// If it is queued the whole simulation tree will be populated in order to have the units
 		if(!experiment.getStatus().equals(ExperimentStatus.QUEUED))
@@ -230,26 +230,29 @@ public class RuntimeExperiment
 	/**
 	 * @param aspectInstancePath
 	 * @return
+	 * @throws GeppettoExecutionException 
 	 */
-	public Map<String, AspectSubTreeNode> populateModelTree(String aspectInstancePath)
+	public Map<String, AspectSubTreeNode> populateModelTree(String aspectInstancePath) throws GeppettoExecutionException
 	{
 		logger.info("Populating Model Tree for " + aspectInstancePath);
-		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath);
+		PopulateModelTreeVisitor populateModelVisitor = new PopulateModelTreeVisitor(aspectInstancePath);
 		runtimeTreeRoot.apply(populateModelVisitor);
+		populateModelVisitor.postProcessVisit();
 		return populateModelVisitor.getPopulatedModelTree();
 	}
 
 	/**
 	 * @param aspectInstancePath
 	 * @return
+	 * @throws GeppettoExecutionException 
 	 */
-	public Map<String, AspectSubTreeNode> populateSimulationTree(String aspectInstancePath)
+	public Map<String, AspectSubTreeNode> populateSimulationTree(String aspectInstancePath) throws GeppettoExecutionException
 	{
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
-		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(geppettoManagerCallbackListener, aspectInstancePath, getAspectConfiguration(experiment,
+		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(aspectInstancePath, getAspectConfiguration(experiment,
 				aspectInstancePath));
 		runtimeTreeRoot.apply(populateSimulationVisitor);
-
+		populateSimulationVisitor.postProcessVisit();
 		return populateSimulationVisitor.getPopulatedSimulationTree();
 	}
 
@@ -264,25 +267,29 @@ public class RuntimeExperiment
 	/**
 	 * @param aspectInstancePath
 	 * @return
+	 * @throws GeppettoExecutionException 
 	 */
-	public File downloadModel(String aspectInstancePath, ModelFormat format)
+	public File downloadModel(String aspectInstancePath, ModelFormat format) throws GeppettoExecutionException
 	{
 		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
 
-		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(geppettoManagerCallbackListener, aspectInstancePath, format, getAspectConfiguration(experiment, aspectInstancePath));
+		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(aspectInstancePath, format, getAspectConfiguration(experiment, aspectInstancePath));
 		runtimeTreeRoot.apply(downloadModelVistor);
+		downloadModelVistor.postProcessVisit();
 		return downloadModelVistor.getModelFile();
 	}
 
 	/**
 	 * @param aspectInstancePath
 	 * @return
+	 * @throws GeppettoExecutionException 
 	 */
-	public List<ModelFormat> supportedOuputs(String aspectInstancePath)
+	public List<ModelFormat> supportedOuputs(String aspectInstancePath) throws GeppettoExecutionException
 	{
 		logger.info("Getting supported outputs for " + aspectInstancePath);
-		SupportedOutputsVisitor supportedOutputsModelVisitor = new SupportedOutputsVisitor(geppettoManagerCallbackListener, aspectInstancePath);
+		SupportedOutputsVisitor supportedOutputsModelVisitor = new SupportedOutputsVisitor(aspectInstancePath);
 		runtimeTreeRoot.apply(supportedOutputsModelVisitor);
+		supportedOutputsModelVisitor.postProcessVisit();
 		return supportedOutputsModelVisitor.getSupportedOutputs();
 	}
 
@@ -476,7 +483,7 @@ public class RuntimeExperiment
 	 */
 	public AspectSubTreeNode setModelParameters(String modelAspectPath, Map<String, String> parameters) throws GeppettoExecutionException
 	{
-		SetParametersVisitor parameterVisitor = new SetParametersVisitor(geppettoManagerCallbackListener, parameters, modelAspectPath);
+		SetParametersVisitor parameterVisitor = new SetParametersVisitor(parameters, modelAspectPath);
 		IAspectConfiguration config = this.getAspectConfiguration(experiment, modelAspectPath);
 		for(String path : parameters.keySet())
 		{
@@ -510,7 +517,7 @@ public class RuntimeExperiment
 			}
 		}
 		runtimeTreeRoot.apply(parameterVisitor);
-
+		parameterVisitor.postProcessVisit();
 		FindModelTreeVisitor findParameterVisitor = new FindModelTreeVisitor(modelAspectPath + ".ModelTree");
 		runtimeTreeRoot.apply(findParameterVisitor);
 

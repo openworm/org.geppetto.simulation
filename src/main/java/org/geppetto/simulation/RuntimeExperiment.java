@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
@@ -250,7 +251,7 @@ public class RuntimeExperiment
 	{
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
 		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(aspectInstancePath, getAspectConfiguration(experiment,
-				aspectInstancePath));
+				aspectInstancePath)); 
 		runtimeTreeRoot.apply(populateSimulationVisitor);
 		populateSimulationVisitor.postProcessVisit();
 		return populateSimulationVisitor.getPopulatedSimulationTree();
@@ -384,6 +385,12 @@ public class RuntimeExperiment
 	 */
 	private IAspectConfiguration getAspectConfiguration(IExperiment experiment, String instancePath)
 	{
+		//Check if it is a subAspect Instance Path and extract the base one
+		String[] instancePathSplit = instancePath.split("\\.");
+		if (instancePathSplit.length > 2){
+			instancePath = instancePathSplit[0] + "." + instancePathSplit[2];
+		}
+				
 		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
 		{
 			if(aspectConfig.getAspect().getInstancePath().equals(instancePath))

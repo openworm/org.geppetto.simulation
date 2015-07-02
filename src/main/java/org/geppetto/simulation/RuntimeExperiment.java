@@ -303,7 +303,7 @@ public class RuntimeExperiment
 		Map<String, AspectSubTreeNode> loadedResults = new HashMap<String, AspectSubTreeNode>();
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))
+			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING) || result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING_FULLPATH))
 			{
 				String instancePath = result.getAspect().getInstancePath();
 				logger.info("Reading results for " + instancePath);
@@ -331,7 +331,7 @@ public class RuntimeExperiment
 					throw new GeppettoExecutionException(e);
 				}
 
-				RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)));
+				RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)), result.getFormat());
 
 				// get all aspect configurations
 				List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();
@@ -355,8 +355,10 @@ public class RuntimeExperiment
 
 						recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
 
-						String aspectPath = watchedVariable.getEntityInstancePath() + "."
-								+ watchedVariable.getAspect().replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
+						String aspectPath = watchedVariable.getEntityInstancePath() + "." + 
+											watchedVariable.getAspect().
+											replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").
+											replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
 
 						// map results to the appropriate tree
 						loadedResults.put(aspectPath, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree);

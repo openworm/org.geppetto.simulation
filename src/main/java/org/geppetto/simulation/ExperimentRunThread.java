@@ -142,7 +142,10 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			String simulatorId = simConfig.getSimulatorId();
 			String instancePath = aspectConfig.getAspect().getInstancePath();
 
-			conversionServices.put(instancePath, (IConversion) ServiceCreator.getNewServiceInstance(simConfig.getConversionServiceId()));
+			if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
+			{
+				conversionServices.put(instancePath, (IConversion) ServiceCreator.getNewServiceInstance(simConfig.getConversionServiceId()));
+			}
 			simulatorServices.put(instancePath, (ISimulator) ServiceCreator.getNewServiceInstance(simulatorId));
 			simulatorRuntimes.put(instancePath, new SimulatorRuntime());
 
@@ -156,7 +159,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 				ISimulator simulator = simulatorServices.get(instancePath);
 				// get conversion service
-				IConversion conversionService = this.conversionServices.get(simConfig.getConversionServiceId());
+				IConversion conversionService = null;
+				if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
+				{
+					conversionService = this.conversionServices.get(simConfig.getConversionServiceId());
+				}
 				IModelInterpreter modelService = runtimeExperiment.getModelInterpreters().get(instancePath);
 
 				// TODO: Extract formats from model interpreters from within here somehow

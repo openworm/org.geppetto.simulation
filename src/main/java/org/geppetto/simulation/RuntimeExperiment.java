@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
@@ -544,14 +543,13 @@ public class RuntimeExperiment
 		{
 			if(result.getAspect().getInstancePath().equals(aspectID))
 			{
-				if(result.getResult().getType().toString().equals(format.toString()))
+				if(result.getFormat().equals(format))
 				{
 					URL url;
 					try
 					{
 						url = URLReader.getURL(result.getResult().getUrl());
-						File resultsFile = new File(url.toURI());
-						dropboxService.upload(resultsFile);
+						dropboxService.upload(new File(URLReader.createLocalCopy(url).toURI()));
 					}
 					catch(Exception e)
 					{

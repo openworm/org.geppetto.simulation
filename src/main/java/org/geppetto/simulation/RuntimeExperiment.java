@@ -118,7 +118,7 @@ public class RuntimeExperiment
 		LoadSimulationVisitor loadSimulationVisitor = new LoadSimulationVisitor(modelInterpreters, instancePathToIModelMap);
 		geppettoModel.accept(loadSimulationVisitor);
 		loadSimulationVisitor.postProcessVisit();
-		
+
 		CreateRuntimeTreeVisitor runtimeTreeVisitor = new CreateRuntimeTreeVisitor(modelInterpreters, instancePathToIModelMap, runtimeTreeRoot);
 		geppettoModel.accept(runtimeTreeVisitor);
 		runtimeTreeVisitor.postProcessVisit();
@@ -136,16 +136,18 @@ public class RuntimeExperiment
 			for(IAspectConfiguration a : experiment.getAspectConfigurations())
 			{
 				List<? extends IInstancePath> vars = a.getWatchedVariables();
-
-				String aspect = a.getAspect().getInstancePath();
-				FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
-				runtimeTreeRoot.apply(findAspectNodeVisitor);
-				AspectNode node = findAspectNodeVisitor.getAspectNode();
-
-				for(IInstancePath var : vars)
+				if(vars != null)
 				{
-					AspectTreeType treeType = var.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
-					this.createVariables(var, node.getSubTree(treeType));
+					String aspect = a.getAspect().getInstancePath();
+					FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
+					runtimeTreeRoot.apply(findAspectNodeVisitor);
+					AspectNode node = findAspectNodeVisitor.getAspectNode();
+
+					for(IInstancePath var : vars)
+					{
+						AspectTreeType treeType = var.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
+						this.createVariables(var, node.getSubTree(treeType));
+					}
 				}
 			}
 		}
@@ -230,7 +232,7 @@ public class RuntimeExperiment
 	/**
 	 * @param aspectInstancePath
 	 * @return
-	 * @throws GeppettoExecutionException 
+	 * @throws GeppettoExecutionException
 	 */
 	public Map<String, AspectSubTreeNode> populateModelTree(String aspectInstancePath) throws GeppettoExecutionException
 	{
@@ -244,13 +246,12 @@ public class RuntimeExperiment
 	/**
 	 * @param aspectInstancePath
 	 * @return
-	 * @throws GeppettoExecutionException 
+	 * @throws GeppettoExecutionException
 	 */
 	public Map<String, AspectSubTreeNode> populateSimulationTree(String aspectInstancePath) throws GeppettoExecutionException
 	{
 		logger.info("Populating Simulation Tree for " + aspectInstancePath);
-		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(aspectInstancePath, getAspectConfiguration(experiment,
-				aspectInstancePath)); 
+		PopulateSimulationTreeVisitor populateSimulationVisitor = new PopulateSimulationTreeVisitor(aspectInstancePath, getAspectConfiguration(experiment, aspectInstancePath));
 		runtimeTreeRoot.apply(populateSimulationVisitor);
 		populateSimulationVisitor.postProcessVisit();
 		return populateSimulationVisitor.getPopulatedSimulationTree();
@@ -267,7 +268,7 @@ public class RuntimeExperiment
 	/**
 	 * @param aspectInstancePath
 	 * @return
-	 * @throws GeppettoExecutionException 
+	 * @throws GeppettoExecutionException
 	 */
 	public File downloadModel(String aspectInstancePath, ModelFormat format) throws GeppettoExecutionException
 	{
@@ -282,7 +283,7 @@ public class RuntimeExperiment
 	/**
 	 * @param aspectInstancePath
 	 * @return
-	 * @throws GeppettoExecutionException 
+	 * @throws GeppettoExecutionException
 	 */
 	public List<ModelFormat> supportedOuputs(String aspectInstancePath) throws GeppettoExecutionException
 	{
@@ -384,12 +385,13 @@ public class RuntimeExperiment
 	 */
 	private IAspectConfiguration getAspectConfiguration(IExperiment experiment, String instancePath)
 	{
-		//Check if it is a subAspect Instance Path and extract the base one
+		// Check if it is a subAspect Instance Path and extract the base one
 		String[] instancePathSplit = instancePath.split("\\.");
-		if (instancePathSplit.length > 2){
+		if(instancePathSplit.length > 2)
+		{
 			instancePath = instancePathSplit[0] + "." + instancePathSplit[2];
 		}
-				
+
 		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
 		{
 			if(aspectConfig.getAspect().getInstancePath().equals(instancePath))

@@ -61,7 +61,6 @@ public class LoadSimulationVisitor extends GeppettoModelVisitor
 
 	private Map<String, IModelInterpreter> _modelInterpreters;
 	private Map<String, IModel> _model;
-	private final String SERVER_ROOT_TOKEN = "%SERVER_ROOT%";
 	private static Log _logger = LogFactory.getLog(LoadSimulationVisitor.class);
 
 	public LoadSimulationVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model)
@@ -94,15 +93,7 @@ public class LoadSimulationVisitor extends GeppettoModelVisitor
 					{
 						URL url = null;
 
-						if(recording.contains(SERVER_ROOT_TOKEN))
-						{
-							recording = recording.replace(SERVER_ROOT_TOKEN, "");
-							url = this.getLocalURL(recording);
-						}
-						else
-						{
-							url = this.getClass().getResource(recording);
-						}
+						url = URLReader.getURL(recording);
 
 						recordings.add(url);
 					}
@@ -114,23 +105,14 @@ public class LoadSimulationVisitor extends GeppettoModelVisitor
 				String modelUrlStr = pModel.getModelURL();
 				if(modelUrlStr != null)
 				{
-					if(modelUrlStr.contains(SERVER_ROOT_TOKEN))
-					{
-						modelUrlStr = modelUrlStr.replace(SERVER_ROOT_TOKEN, "");
-						modelUrl = this.getLocalURL(modelUrlStr);
-					}
-					else
-					{
-
-						modelUrl = URLReader.getURL(pModel.getModelURL());
-					}
+					modelUrl = URLReader.getURL(modelUrlStr);
+					
 					model = modelInterpreter.readModel(modelUrl, recordings, pModel.getParentAspect().getInstancePath());
 					model.setInstancePath(pModel.getInstancePath());
 					_model.put(pModel.getInstancePath(), model);
 
 					long end = System.currentTimeMillis();
 					_logger.info("Finished reading model, took " + (end - start) + " ms ");
-
 				}
 				else
 				{
@@ -144,11 +126,4 @@ public class LoadSimulationVisitor extends GeppettoModelVisitor
 		}
 
 	}
-
-	private URL getLocalURL(String localPath) throws MalformedURLException
-	{
-		File catalinaBase = new File(System.getProperty("catalina.home")).getAbsoluteFile();
-		return new File(catalinaBase, localPath).toURI().toURL();
-	}
-
 }

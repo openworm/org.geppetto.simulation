@@ -159,7 +159,7 @@ public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 		{
 			for(Connection c : entity.getConnections())
 			{
-				ConnectionNode clientConnection = new ConnectionNode(c.getId());
+				ConnectionNode clientConnection = new ConnectionNode(c.getId(),null);
 				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
 				clientConnection.setType(c.getType());
 				clientConnection.setName(c.getId());

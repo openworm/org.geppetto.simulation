@@ -138,13 +138,14 @@ public class RuntimeExperiment
 				List<? extends IInstancePath> vars = a.getWatchedVariables();
 				if(vars != null)
 				{
-					String aspect = a.getAspect().getInstancePath();
-					FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(aspect);
-					runtimeTreeRoot.apply(findAspectNodeVisitor);
-					AspectNode node = findAspectNodeVisitor.getAspectNode();
-
 					for(IInstancePath var : vars)
 					{
+						// Retrieve aspect node for current watched variable
+						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(var.getEntityInstancePath() + "." + var.getAspect().substring(0,var.getAspect().indexOf(".")));
+						runtimeTreeRoot.apply(findAspectNodeVisitor);
+						AspectNode node = findAspectNodeVisitor.getAspectNode();
+						
+						//Create variable node in Aspect tree
 						AspectTreeType treeType = var.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
 						this.createVariables(var, node.getSubTree(treeType));
 					}

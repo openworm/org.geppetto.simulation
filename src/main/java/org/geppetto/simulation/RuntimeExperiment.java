@@ -141,11 +141,11 @@ public class RuntimeExperiment
 					for(IInstancePath var : vars)
 					{
 						// Retrieve aspect node for current watched variable
-						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(var.getEntityInstancePath() + "." + var.getAspect().substring(0,var.getAspect().indexOf(".")));
+						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(var.getEntityInstancePath() + "." + var.getAspect().substring(0, var.getAspect().indexOf(".")));
 						runtimeTreeRoot.apply(findAspectNodeVisitor);
 						AspectNode node = findAspectNodeVisitor.getAspectNode();
-						
-						//Create variable node in Aspect tree
+
+						// Create variable node in Aspect tree
 						AspectTreeType treeType = var.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
 						this.createVariables(var, node.getSubTree(treeType));
 					}
@@ -304,7 +304,7 @@ public class RuntimeExperiment
 		Map<String, AspectSubTreeNode> loadedResults = new HashMap<String, AspectSubTreeNode>();
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING) || result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING_FULLPATH))
+			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))
 			{
 				URL url;
 				try
@@ -339,13 +339,14 @@ public class RuntimeExperiment
 						logger.info("Reading results for " + watchedVariable.getInstancePath());
 
 						// Retrieve aspect node for current watched variable
-						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(watchedVariable.getEntityInstancePath() + "." + watchedVariable.getAspect().substring(0,watchedVariable.getAspect().indexOf(".")));
+						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(watchedVariable.getEntityInstancePath() + "."
+								+ watchedVariable.getAspect().substring(0, watchedVariable.getAspect().indexOf(".")));
 						runtimeTreeRoot.apply(findAspectNodeVisitor);
 						AspectNode aspect = findAspectNodeVisitor.getAspectNode();
 						aspect.setModified(true);
 						aspect.getParentEntity().setModified(true);
-						
-						//Create variable node in Aspect tree
+
+						// Create variable node in Aspect tree
 						AspectTreeType treeType = watchedVariable.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
 
 						// We first need to populate the simulation tree for the given aspect
@@ -355,13 +356,11 @@ public class RuntimeExperiment
 
 						AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
 						AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
-						
+
 						recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
 
-						String aspectPath = watchedVariable.getEntityInstancePath() + "." + 
-											watchedVariable.getAspect().
-											replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").
-											replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
+						String aspectPath = watchedVariable.getEntityInstancePath() + "."
+								+ watchedVariable.getAspect().replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
 
 						// map results to the appropriate tree
 						loadedResults.put(aspectPath, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree);

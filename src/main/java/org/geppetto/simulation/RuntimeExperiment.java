@@ -306,22 +306,6 @@ public class RuntimeExperiment
 		{
 			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING) || result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING_FULLPATH))
 			{
-				String instancePath = result.getAspect().getInstancePath();
-				logger.info("Reading results for " + instancePath);
-
-				FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
-				getRuntimeTree().apply(findAspectNodeVisitor);
-				AspectNode aspect = findAspectNodeVisitor.getAspectNode();
-				aspect.setModified(true);
-				aspect.getParentEntity().setModified(true);
-
-				// We first need to populate the simulation tree for the given aspect
-				// NOTE: it would seem that commenting this line out makes no difference - remove?
-				populateSimulationTree(instancePath);
-
-				AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
-				AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
-
 				URL url;
 				try
 				{
@@ -352,8 +336,26 @@ public class RuntimeExperiment
 					// after reading values out from recording, amp to the correct aspect given the watched variable
 					for(IInstancePath watchedVariable : watchedVariables)
 					{
+						logger.info("Reading results for " + watchedVariable.getInstancePath());
+
+						// Retrieve aspect node for current watched variable
+						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(watchedVariable.getEntityInstancePath() + "." + watchedVariable.getAspect().substring(0,watchedVariable.getAspect().indexOf(".")));
+						runtimeTreeRoot.apply(findAspectNodeVisitor);
+						AspectNode aspect = findAspectNodeVisitor.getAspectNode();
+						aspect.setModified(true);
+						aspect.getParentEntity().setModified(true);
+						
+						//Create variable node in Aspect tree
 						AspectTreeType treeType = watchedVariable.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
 
+						// We first need to populate the simulation tree for the given aspect
+						// NOTE: it would seem that commenting this line out makes no difference - remove?
+						String instancePath = aspect.getInstancePath();
+						populateSimulationTree(instancePath);
+
+						AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
+						AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
+						
 						recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
 
 						String aspectPath = watchedVariable.getEntityInstancePath() + "." + 
@@ -372,9 +374,10 @@ public class RuntimeExperiment
 						{
 							visualizationTree.setModified(true);
 						}
+
+						logger.info("Finished reading results for " + watchedVariable.getInstancePath());
 					}
 
-					logger.info("Finished populating runtime trees " + instancePath + " with recordings");
 				}
 			}
 		}

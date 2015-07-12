@@ -54,6 +54,8 @@ import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IParameter;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ResultsFormat;
+import org.geppetto.core.manager.IGeppettoManager;
+import org.geppetto.core.manager.Scope;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.RecordingModel;
@@ -98,11 +100,14 @@ public class RuntimeExperiment
 
 	private IExperiment experiment;
 
+	private IGeppettoManager geppettoManager;
+
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment) throws GeppettoExecutionException
 	{
 		this.experiment = experiment;
+		geppettoManager = runtimeProject.getGeppettoManager();
 		init(runtimeProject.getGeppettoModel());
 	}
 
@@ -111,7 +116,7 @@ public class RuntimeExperiment
 		this.clearWatchLists();
 
 		// retrieve model interpreters and simulators
-		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters);
+		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, experiment.getParentProject().getId(), geppettoManager.getScope());
 		geppettoModel.accept(createServicesVisitor);
 		createServicesVisitor.postProcessVisit();
 
@@ -228,6 +233,7 @@ public class RuntimeExperiment
 		modelInterpreters.clear();
 		instancePathToIModelMap.clear();
 		runtimeTreeRoot = null;
+		geppettoManager = null;
 	}
 
 	/**
@@ -316,7 +322,7 @@ public class RuntimeExperiment
 					throw new GeppettoExecutionException(e);
 				}
 
-				RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url)), result.getFormat());
+				RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
 
 				// get all aspect configurations
 				List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();
@@ -556,7 +562,7 @@ public class RuntimeExperiment
 					try
 					{
 						url = URLReader.getURL(result.getResult().getUrl());
-						dropboxService.upload(new File(URLReader.createLocalCopy(url).toURI()));
+						dropboxService.upload(new File(URLReader.createLocalCopy(Scope.CONNECTION, experiment.getParentProject().getId(), url).toURI()));
 					}
 					catch(Exception e)
 					{

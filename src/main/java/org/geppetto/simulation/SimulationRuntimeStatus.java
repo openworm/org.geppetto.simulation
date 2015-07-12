@@ -39,9 +39,6 @@ package org.geppetto.simulation;
 @Deprecated
 public enum SimulationRuntimeStatus
 {
-	
-	IDLE,
-	RUNNING,
-	PAUSED,
-	STOPPED
+
+	IDLE, RUNNING, PAUSED, STOPPED
 }

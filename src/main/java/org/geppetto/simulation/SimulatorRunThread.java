@@ -57,8 +57,8 @@ public class SimulatorRunThread extends Thread
 	{
 		this.experiment = experiment;
 		this.simulator = simulator;
-		this.aspectNode=aspectNode;
-		this.aspectConfiguration=aspectConfiguration;
+		this.aspectNode = aspectNode;
+		this.aspectConfiguration = aspectConfiguration;
 	}
 
 	/*

@@ -43,9 +43,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geppetto.core.beans.Settings;
+import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.conversion.AConversion;
 import org.geppetto.core.conversion.ConversionException;
 import org.geppetto.core.conversion.IConversion;
 import org.geppetto.core.data.DataManagerHelper;
@@ -59,25 +60,20 @@ import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.data.model.PersistedDataType;
 import org.geppetto.core.data.model.ResultsFormat;
+import org.geppetto.core.manager.Scope;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.quantities.Quantity;
-import org.geppetto.core.model.quantities.Unit;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.RuntimeTreeRoot;
-import org.geppetto.core.model.runtime.VariableNode;
-import org.geppetto.core.model.values.ValuesFactory;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
+import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.utilities.Zipper;
-import org.geppetto.simulation.visitor.ExitVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
-import org.geppetto.simulation.visitor.TimeVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -144,9 +140,14 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 			if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
 			{
-				conversionServices.put(instancePath, (IConversion) ServiceCreator.getNewServiceInstance(simConfig.getConversionServiceId()));
+				AConversion conversionService = (AConversion) ServiceCreator.getNewServiceInstance(simConfig.getConversionServiceId());
+				conversionService.setScope(Scope.RUN);
+				conversionService.setProjectId(experiment.getParentProject().getId());
+				conversionServices.put(instancePath, conversionService);
 			}
-			simulatorServices.put(instancePath, (ISimulator) ServiceCreator.getNewServiceInstance(simulatorId));
+			ASimulator simulator=(ASimulator) ServiceCreator.getNewServiceInstance(simulatorId);
+			simulator.setProjectId(experiment.getParentProject().getId());
+			simulatorServices.put(instancePath, simulator);
 			simulatorRuntimes.put(instancePath, new SimulatorRuntime());
 
 			try
@@ -157,7 +158,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				List<IModel> models = new ArrayList<IModel>();
 				models.add(model);
 
-				ISimulator simulator = simulatorServices.get(instancePath);
 				// get conversion service
 				IConversion conversionService = null;
 				if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
@@ -220,6 +220,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 									// Verify supported outputs for this model
 									if(supportedModelFormat.equals(conversionServiceKey.getOutputModelFormat()))
 									{
+										((AConversion)entry.getValue().get(0)).setScope(Scope.RUN);
+										((AConversion)entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());
 										iModelsConverted.add(entry.getValue().get(0)
 												.convert(models.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig));
 										break;
@@ -371,43 +373,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		return true;
 	}
 
-	/**
-	 * Send update to client with new run time tree
-	 */
-	private void sendSimulationCallback()
-	{
 
-		// Visit simulators to extract time from them
-		TimeVisitor timeVisitor = new TimeVisitor();
-		runtimeExperiment.getRuntimeTree().apply(timeVisitor);
-
-		// set global time
-		this.setGlobalTime(timeVisitor.getTime(), runtimeExperiment.getRuntimeTree());
-
-		ExitVisitor exitVisitor = new ExitVisitor();
-		runtimeExperiment.getRuntimeTree().apply(exitVisitor);
-
-	}
-
-	/**
-	 * Updates the time node in the run time tree root node
-	 * 
-	 * @param newTimeValue
-	 *            - New time
-	 * @param tree
-	 *            -Tree root node
-	 */
-	private void setGlobalTime(double newTimeValue, RuntimeTreeRoot tree)
-	{
-		runtime += newTimeValue;
-		VariableNode time = new VariableNode("time");
-		time.setUnit(new Unit(timeStepUnit));
-		Quantity t = new Quantity();
-		t.setValue(ValuesFactory.getDoubleValue(runtime));
-		time.addQuantity(t);
-		time.setParent(tree);
-		tree.setTime(time);
-	}
 
 	/**
 	 * @throws GeppettoExecutionException
@@ -464,7 +430,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						case GEPPETTO_RECORDING:
 						{
 							String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
-							String newPath = Settings.getAspectDependentPath(project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName);
+							String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName);
 							S3Manager.getInstance().saveFileToS3(result, newPath);
 							IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(aspectNode);
 							IPersistedData recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
@@ -481,14 +447,14 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				}
 
 				String fileName = "rawRecording.zip";
-				Zipper zipper = new Zipper(Settings.getAspectDependentFullPath(project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName));
+				Zipper zipper = new Zipper(PathConfiguration.createExperimentTmpPath(Scope.RUN, project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName));
 
 				for(File raw : rawToZip)
 				{
 					zipper.addToZip(raw.toURI().toURL());
 				}
 				Path zipped = zipper.processAddedFilesAndZip();
-				String newPath = Settings.getAspectDependentPath(project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName);
+				String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName);
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
 				IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(aspectNode);
 				IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);

@@ -90,7 +90,7 @@ public class RecordingsSimulatorTest
 		System.out.println("new aspect");
 		
 		URL url = this.getClass().getResource("/recording_small.h5");
-		H5File file=HDF5Reader.readHDF5File(url);
+		H5File file=HDF5Reader.readHDF5File(url,-1l);
 		RecordingModel recording=new RecordingModel(file);
 		recording.setInstancePath("entity.model");
 		RecordingsSimulator simulator=new RecordingsSimulator();

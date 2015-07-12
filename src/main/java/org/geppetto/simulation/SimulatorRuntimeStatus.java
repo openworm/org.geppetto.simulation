@@ -38,9 +38,5 @@ package org.geppetto.simulation;
  */
 public enum SimulatorRuntimeStatus
 {
-	IDLE,
-	STEPPING,
-	STEPPED,
-	DONE,
-	CONVERSION,
+	IDLE, STEPPING, STEPPED, DONE, CONVERSION,
 }

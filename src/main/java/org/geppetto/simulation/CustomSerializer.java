@@ -68,7 +68,7 @@ public class CustomSerializer extends StdSerializer<Double>
 		{
 			final String pattern = "#.##";
 			final DecimalFormat myFormatter = new DecimalFormat(pattern);
-			final String output = myFormatter.format(value).replace(",",".");
+			final String output = myFormatter.format(value).replace(",", ".");
 			jgen.writeNumber(output);
 		}
 	}

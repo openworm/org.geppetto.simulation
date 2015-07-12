@@ -43,6 +43,7 @@ import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
+import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
@@ -65,6 +66,8 @@ public class RuntimeProject
 
 	private GeppettoModel geppettoModel;
 
+	private IGeppettoManager geppettoManager;
+
 	public GeppettoModel getGeppettoModel()
 	{
 		return geppettoModel;
@@ -76,8 +79,9 @@ public class RuntimeProject
 	 * @throws MalformedURLException
 	 * @throws GeppettoInitializationException
 	 */
-	public RuntimeProject(IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
 	{
+		this.geppettoManager = geppettoManager;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 
 		try
@@ -181,8 +185,13 @@ public class RuntimeProject
 	 */
 	public void release()
 	{
+		for(IExperiment e : experimentRuntime.keySet())
+		{
+			getRuntimeExperiment(e).release();
+		}
+		activeExperiment = null;
+		geppettoManager = null;
 		experimentRuntime.clear();
-		// TODO delete any tmp file that might have been created, i.e. HDF5 files that were streamed, see URLReader.createLocalCopy
 	}
 
 	/**
@@ -193,6 +202,11 @@ public class RuntimeProject
 		PopulateExperimentVisitor populateExperimentVisitor = new PopulateExperimentVisitor(experiment);
 		geppettoModel.accept(populateExperimentVisitor);
 
+	}
+
+	public IGeppettoManager getGeppettoManager()
+	{
+		return geppettoManager;
 	}
 
 }

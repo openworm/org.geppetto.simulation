@@ -36,6 +36,8 @@ import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.manager.Scope;
+import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.simulation.Model;
 import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
@@ -52,11 +54,15 @@ public class CreateModelInterpreterServicesVisitor extends GeppettoModelVisitor
 {
 
 	private Map<String, IModelInterpreter> models;
+	private Scope scope;
+	private long projectId;
 
 
-	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> models)
+	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> models, long projectId, Scope scope)
 	{
 		super();
+		this.scope = scope;
+		this.projectId=projectId;
 		this.models = models;
 	}
 
@@ -71,7 +77,10 @@ public class CreateModelInterpreterServicesVisitor extends GeppettoModelVisitor
 		super.visit(model);
 		try
 		{
-			models.put(model.getInstancePath(), (IModelInterpreter) ServiceCreator.getNewServiceInstance(model.getModelInterpreterId()));
+			AModelInterpreter modelInterpreter=(AModelInterpreter) ServiceCreator.getNewServiceInstance(model.getModelInterpreterId());
+			modelInterpreter.setProjectId(projectId);
+			modelInterpreter.setScope(scope);
+			models.put(model.getInstancePath(), modelInterpreter);
 		}
 		catch(GeppettoInitializationException e)
 		{

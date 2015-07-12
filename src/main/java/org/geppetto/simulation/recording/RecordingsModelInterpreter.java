@@ -42,13 +42,12 @@ import ncsa.hdf.object.h5.H5File;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.features.IFeature;
+import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModel;
-import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
@@ -63,7 +62,7 @@ import org.springframework.stereotype.Service;
  * 
  */
 @Service
-public class RecordingsModelInterpreter implements IModelInterpreter
+public class RecordingsModelInterpreter extends AModelInterpreter
 {
 
 	private static Log _logger = LogFactory.getLog(RecordingsModelInterpreter.class);
@@ -96,7 +95,7 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 				for(URL recording : recordings)
 				{
 					dependentModels.add(recording);
-					H5File file = HDF5Reader.readHDF5File(recording);
+					H5File file = HDF5Reader.readHDF5File(recording,projectId);
 					RecordingModel recordingModel = new RecordingModel(file);
 					recordingModel.setInstancePath(instancePath);
 					recordingsModel.wrapModel(ID + i++, recordingModel);
@@ -179,11 +178,6 @@ public class RecordingsModelInterpreter implements IModelInterpreter
 		return dependentModels;
 	}
 
-	@Override
-	public PathConfiguration getPathConfiguration()
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 }

@@ -37,9 +37,9 @@ import java.util.List;
 
 import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
  * This visitor discovers any model which belongs to the scope
@@ -74,7 +74,8 @@ import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
 public class GetModelsForSimulatorVisitor extends TraversingVisitor
 {
 
-	private Simulator _simulator = null;
+	// SIM TODO
+//	private Simulator _simulator = null;
 	private String _simulatorAspectId = null;
 	private List<Model> _models = new ArrayList<Model>();
 
@@ -82,11 +83,12 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 	 * @param simulatorModel
 	 * @param sessionContext
 	 */
-	public GetModelsForSimulatorVisitor(Simulator simulatorModel)
+	// SIM TODO
+	public GetModelsForSimulatorVisitor()//Simulator simulatorModel)
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_simulator = simulatorModel;
-		_simulatorAspectId = _simulator.getParentAspect().getId();
+//		_simulator = simulatorModel;
+//		_simulatorAspectId = _simulator.getParentAspect().getId();
 	}
 
 	/*
@@ -97,40 +99,39 @@ public class GetModelsForSimulatorVisitor extends TraversingVisitor
 	@Override
 	public void visit(Model model)
 	{
-		//we are interested in this model if it has no simulator associated with it or if the simulator associated with it
-		//is the one we are targeting with this visit
-		if(model.getParentAspect().getSimulator() == null || model.getParentAspect().getSimulator().equals(_simulator))
-		{
-			//we are interested in this model if it has no simulator associated with it but its aspect id
-			//is the same that as the aspect id which contains the simulator we are targeting with this visit
-			if(model.getParentAspect().getId().equalsIgnoreCase(_simulatorAspectId))
-			{
-				_models.add(model);
-			}
-		}
+			//we are interested in this model if it has no simulator associated with it or if the simulator associated with it
+			//is the one we are targeting with this visit
+			// SIM TODO
+//			if(model.getParentAspect().getSimulator() == null || model.getParentAspect().getSimulator().equals(_simulator))
+//			{
+//				//we are interested in this model if it has no simulator associated with it but its aspect id
+//				//is the same that as the aspect id which contains the simulator we are targeting with this visit
+//				if(model.getParentAspect().getId().equalsIgnoreCase(_simulatorAspectId))
+//				{
+//					_models.add(model);
+//				}
+//			}
 	}
 
 	@Override
 	public void visit(Aspect aspect)
 	{
-		// NOTE: the if statements in this method are not combined to make it easier to understand the logic
-		
-		// Let's check the simulator is set (not null) otherwise we don't need to fetch models
-		// as the aspect that doens't need to be simulated.
-		if(aspect.getSimulator()!=null)
-		{
-			// Let's check it's not the same simulator as the parent entity the visitor was applied to.
-			if(!aspect.getSimulator().equals(_simulator))
-			{
-				// If we find another aspect in a child entity that has a simulator for the same aspect
-				// we return without fetching models that fall in the inner simulator scope.
-				if(aspect.getId().equals(_simulatorAspectId))
-				{
-					return;
-				}
-			}
-			super.visit(aspect);
-		}
+		// SIM TODO
+//		if(!_stopVisiting && aspect.getSimulator()!=null)
+//		{
+//			if(!aspect.getSimulator().equals(_simulator))
+//			{
+//				if(aspect.getId().equals(_simulatorAspectId))
+//				{
+//					//if we find another aspect further down the hierarchy which has a simulator
+//					//for the same aspect then we stop visiting as any other model that we 
+//					//were to find from this moment on would fall in this simulator scope
+//					//and out of the scope we are visiting
+//					_stopVisiting = true;
+//				}
+//			}
+//			super.visit(aspect);
+//		}
 	}
 
 	/**

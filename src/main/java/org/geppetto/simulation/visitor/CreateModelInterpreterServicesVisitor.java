@@ -30,46 +30,63 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.visitor;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
+import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.manager.Scope;
+import org.geppetto.core.model.AModelInterpreter;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
+import org.geppetto.core.services.ServiceCreator;
 
 /**
+ * This visitor discovers and instantiates the services for each model interpreter and simulator. A thread is used to instantiate the services so that a new instance of the services is created at each
+ * time (the services use a ThreadScope).
+ * 
  * @author matteocantarelli
  * 
  */
-public class CustomSerializer extends StdSerializer<Double>
+public class CreateModelInterpreterServicesVisitor extends GeppettoModelVisitor
 {
-	public CustomSerializer(Class<Double> t)
+
+	private Map<String, IModelInterpreter> models;
+	private Scope scope;
+	private long projectId;
+
+
+	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> models, long projectId, Scope scope)
 	{
-		super(t);
+		super();
+		this.scope = scope;
+		this.projectId=projectId;
+		this.models = models;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Model)
+	 */
 	@Override
-	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
+	public void visit(Model model)
 	{
-
-		if(null == value)
+		super.visit(model);
+		try
 		{
-			// write the word 'null' if there's no value available
-			jgen.writeNull();
+			AModelInterpreter modelInterpreter=(AModelInterpreter) ServiceCreator.getNewServiceInstance(model.getModelInterpreterId());
+			modelInterpreter.setProjectId(projectId);
+			modelInterpreter.setScope(scope);
+			models.put(model.getInstancePath(), modelInterpreter);
 		}
-		else if(value.equals(Double.NaN))
+		catch(GeppettoInitializationException e)
 		{
-			jgen.writeNumber(Double.NaN);
-		}
-		else
-		{
-			final String pattern = "#.##";
-			final DecimalFormat myFormatter = new DecimalFormat(pattern);
-			final String output = myFormatter.format(value).replace(",", ".");
-			jgen.writeNumber(output);
+			exception=new GeppettoExecutionException(e);
 		}
 	}
+	
+
 }

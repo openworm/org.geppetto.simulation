@@ -58,8 +58,7 @@ import org.xml.sax.SAXException;
 public class GeppettoModelReader
 {
 
-	// static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
-	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/datamanager/src/main/resources/schema/simulation/simulationSchema.xsd";
+	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
 
 	public static GeppettoModel readGeppettoModel(URL url) throws GeppettoInitializationException
 	{

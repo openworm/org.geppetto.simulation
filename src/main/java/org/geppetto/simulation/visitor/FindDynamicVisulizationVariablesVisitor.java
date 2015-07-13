@@ -30,46 +30,39 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.visitor;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.geppetto.core.model.runtime.SkeletonAnimationNode;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 
 /**
- * @author matteocantarelli
  * 
+ * @author giovanniidili
+ *
+ * FindDynamicVisulizationVariables - looks for dynamic variables having to do with visualization
+ * Only visits nodes of interest for dynamic visualization variables
  */
-public class CustomSerializer extends StdSerializer<Double>
-{
-	public CustomSerializer(Class<Double> t)
+public class FindDynamicVisulizationVariablesVisitor extends RuntimeTreeVisitor {
+	
+	private List<String> variables = new ArrayList<String>();
+	
+	/*
+	 * Find any skeleton animation node and get instance path
+	 */
+	@Override
+	public boolean visitSkeletonAnimationNode(SkeletonAnimationNode node)
 	{
-		super(t);
+		String instancePath = node.getAspectInstancePath();
+		
+		getVariables().add(instancePath);
+		
+		return super.visitSkeletonAnimationNode(node);
 	}
 
-	@Override
-	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
-	{
-
-		if(null == value)
-		{
-			// write the word 'null' if there's no value available
-			jgen.writeNull();
-		}
-		else if(value.equals(Double.NaN))
-		{
-			jgen.writeNumber(Double.NaN);
-		}
-		else
-		{
-			final String pattern = "#.##";
-			final DecimalFormat myFormatter = new DecimalFormat(pattern);
-			final String output = myFormatter.format(value).replace(",", ".");
-			jgen.writeNumber(output);
-		}
+	public List<String> getVariables() {
+		return variables;
 	}
 }

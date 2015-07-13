@@ -32,8 +32,10 @@
  *******************************************************************************/
 package org.geppetto.simulation.recording;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ncsa.hdf.object.h5.H5File;
@@ -42,16 +44,19 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.HDF5Reader;
+import org.geppetto.core.data.model.IAspectConfiguration;
+import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModel;
-import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.GeppettoFeature;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.springframework.stereotype.Service;
+
 /**
  * @author matteocantarelli
  * 
@@ -59,35 +64,41 @@ import org.springframework.stereotype.Service;
 @Service
 public class RecordingsModelInterpreter extends AModelInterpreter
 {
-	
+
 	private static Log _logger = LogFactory.getLog(RecordingsModelInterpreter.class);
 
+	private static final String ID = "RECORDING_";
 
-	private static final String ID="RECORDING_";
-	
-	public RecordingsModelInterpreter() {
+	private List<URL> dependentModels=new ArrayList<URL>();
+
+	public RecordingsModelInterpreter()
+	{
 		_logger.info("New recordings model service created");
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.model.IModelInterpreter#readModel(java.net.URL, java.util.List)
 	 */
 	@Override
 	public IModel readModel(URL url, List<URL> recordings, String instancePath) throws ModelInterpreterException
 	{
-		//the model URL is ignored in a recordings model interpreter
+		dependentModels.clear();
+		// the model URL is ignored in a recordings model interpreter
 		ModelWrapper recordingsModel = new ModelWrapper(null);
 		try
 		{
 			if(recordings != null)
 			{
-				int i=1;
+				int i = 1;
 				for(URL recording : recordings)
 				{
-					H5File file = HDF5Reader.readHDF5File(recording);
+					dependentModels.add(recording);
+					H5File file = HDF5Reader.readHDF5File(recording,projectId);
 					RecordingModel recordingModel = new RecordingModel(file);
 					recordingModel.setInstancePath(instancePath);
-					recordingsModel.wrapModel(ID+i++, recordingModel);
+					recordingsModel.wrapModel(ID + i++, recordingModel);
 				}
 			}
 		}
@@ -99,13 +110,15 @@ public class RecordingsModelInterpreter extends AModelInterpreter
 	}
 
 	@Override
-	public boolean populateModelTree(AspectNode aspectNode) {
+	public boolean populateModelTree(AspectNode aspectNode)
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean populateRuntimeTree(AspectNode aspectNode) {
+	public boolean populateRuntimeTree(AspectNode aspectNode)
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -117,11 +130,54 @@ public class RecordingsModelInterpreter extends AModelInterpreter
 	}
 
 	@Override
-	public void registerGeppettoService() {
-		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
-		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
-		ServicesRegistry.registerModelInterpreterService(this, modelFormatList);
-		
+	public void registerGeppettoService()
+	{
+		List<ModelFormat> modelFormats = new ArrayList<ModelFormat>(Arrays.asList(ServicesRegistry.registerModelFormat("GEPPETTO_RECORDING_SIMULATOR")));
+		ServicesRegistry.registerModelInterpreterService(this, modelFormats);
+
 	}
+
+	@Override
+	public boolean isSupported(GeppettoFeature feature)
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public IFeature getFeature(GeppettoFeature feature)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void addFeature(IFeature feature)
+	{
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public File downloadModel(AspectNode aspectNode, ModelFormat format, IAspectConfiguration aspectConfiguration) throws ModelInterpreterException
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<ModelFormat> getSupportedOutputs(AspectNode aspectNode) throws ModelInterpreterException
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<URL> getDependentModels()
+	{
+		return dependentModels;
+	}
+
+
 
 }

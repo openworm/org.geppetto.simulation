@@ -33,25 +33,25 @@
 package org.geppetto.simulation.recording;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.IModel;
-import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.services.IModelFormat;
+import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
-import org.geppetto.core.simulation.IRunConfiguration;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.springframework.stereotype.Service;
 
-/**
+/** 
  * @author matteocantarelli
  * 
  */
@@ -69,10 +69,10 @@ public class RecordingsSimulator extends ASimulator
 	}
 
 	@Override
-	public void simulate(IRunConfiguration runConfiguration, AspectNode aspect) throws GeppettoExecutionException
+	public void simulate(IAspectConfiguration aspectConfiguration, AspectNode aspect) throws GeppettoExecutionException
 	{
 		advanceRecordings(aspect);
-		notifyStateTreeUpdated();
+		notifySimulatorHasStepped(aspect);
 	}
 
 
@@ -87,14 +87,12 @@ public class RecordingsSimulator extends ASimulator
 	{
 		return "recordingsSimulator";
 	}
-
+ 
 	@Override
 	public void registerGeppettoService()
 	{
-		List<IModelFormat> modelFormatList = new ArrayList<IModelFormat>();
-		modelFormatList.add(ModelFormat.GEPPETTO_RECORDING_SIMULATOR);
-		ServicesRegistry.registerSimulatorService(this, modelFormatList);
-		
+		List<ModelFormat> modelFormats = new ArrayList<ModelFormat>(Arrays.asList(ServicesRegistry.registerModelFormat("GEPPETTO_RECORDING_SIMULATOR")));
+		ServicesRegistry.registerSimulatorService(this, modelFormats);
 	}
 
 	@Override

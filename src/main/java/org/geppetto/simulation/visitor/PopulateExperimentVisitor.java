@@ -30,46 +30,39 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.visitor;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.geppetto.core.data.DataManagerHelper;
+import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.core.data.model.IInstancePath;
+import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.model.simulation.Aspect;
+import org.geppetto.core.model.simulation.visitor.BaseVisitor;
+import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
  * @author matteocantarelli
- * 
+ *
  */
-public class CustomSerializer extends StdSerializer<Double>
+public class PopulateExperimentVisitor extends TraversingVisitor
 {
-	public CustomSerializer(Class<Double> t)
+
+	private IExperiment experiment;
+
+	public PopulateExperimentVisitor(IExperiment experiment)
 	{
-		super(t);
+		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
+		this.experiment=experiment;
 	}
 
 	@Override
-	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
+	public void visit(Aspect aBean)
 	{
-
-		if(null == value)
-		{
-			// write the word 'null' if there's no value available
-			jgen.writeNull();
-		}
-		else if(value.equals(Double.NaN))
-		{
-			jgen.writeNumber(Double.NaN);
-		}
-		else
-		{
-			final String pattern = "#.##";
-			final DecimalFormat myFormatter = new DecimalFormat(pattern);
-			final String output = myFormatter.format(value).replace(",", ".");
-			jgen.writeNumber(output);
-		}
+		super.visit(aBean);
+		IInstancePath instancePath=DataManagerHelper.getDataManager().newInstancePath(aBean.getParentEntity().getInstancePath(),aBean.getId(),"");
+		ISimulatorConfiguration simulatorConfiguration=DataManagerHelper.getDataManager().newSimulatorConfiguration("","",0l,0l);
+		DataManagerHelper.getDataManager().newAspectConfiguration(experiment,instancePath,simulatorConfiguration);
 	}
+
 }

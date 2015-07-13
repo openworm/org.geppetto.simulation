@@ -32,44 +32,53 @@
  *******************************************************************************/
 package org.geppetto.simulation;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.data.model.ExperimentStatus;
+import org.geppetto.core.data.model.IAspectConfiguration;
+import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.simulator.ISimulator;
 
 /**
- * @author matteocantarelli
+ * This class helps incapsulating the execution of a simulator in a separate thread
  * 
+ * @author matteocantarelli
+ *
  */
-public class CustomSerializer extends StdSerializer<Double>
+public class SimulatorRunThread extends Thread
 {
-	public CustomSerializer(Class<Double> t)
+
+	private ISimulator simulator;
+	private IAspectConfiguration aspectConfiguration;
+	private AspectNode aspectNode;
+	private IExperiment experiment;
+
+	public SimulatorRunThread(IExperiment experiment, ISimulator simulator, IAspectConfiguration aspectConfiguration, AspectNode aspectNode)
 	{
-		super(t);
+		this.experiment = experiment;
+		this.simulator = simulator;
+		this.aspectNode = aspectNode;
+		this.aspectConfiguration = aspectConfiguration;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
 	@Override
-	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
+	public void run()
 	{
+		try
+		{
+			simulator.simulate(aspectConfiguration, aspectNode);
+		}
+		catch(GeppettoExecutionException e)
+		{
+			experiment.setStatus(ExperimentStatus.ERROR);
+			throw new RuntimeException(e);
+		}
 
-		if(null == value)
-		{
-			// write the word 'null' if there's no value available
-			jgen.writeNull();
-		}
-		else if(value.equals(Double.NaN))
-		{
-			jgen.writeNumber(Double.NaN);
-		}
-		else
-		{
-			final String pattern = "#.##";
-			final DecimalFormat myFormatter = new DecimalFormat(pattern);
-			final String output = myFormatter.format(value).replace(",", ".");
-			jgen.writeNumber(output);
-		}
 	}
+
 }

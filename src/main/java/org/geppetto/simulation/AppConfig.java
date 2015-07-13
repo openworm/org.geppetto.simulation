@@ -33,25 +33,30 @@
 
 package org.geppetto.simulation;
 
-public class AppConfig {
-	
+public class AppConfig
+{
+
 	private int _maxBufferSize;
 	private int _updateCycle;
 	private int _simulationCapacity;
-	
-	public int getSimulationCapacity() {
+
+	public int getSimulationCapacity()
+	{
 		return _simulationCapacity;
 	}
 
-	public void setSimulationCapacity(int simulationCapacity) {
+	public void setSimulationCapacity(int simulationCapacity)
+	{
 		this._simulationCapacity = simulationCapacity;
 	}
 
-	public int getMaxBufferSize() {
+	public int getMaxBufferSize()
+	{
 		return _maxBufferSize;
 	}
-	
-	public void setMaxBufferSize(int elemCount) {
+
+	public void setMaxBufferSize(int elemCount)
+	{
 		this._maxBufferSize = elemCount;
 	}
 

@@ -30,49 +30,69 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
+package org.geppetto.simulation.visitor;
 
-package org.geppetto.simulation;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.model.simulation.Simulator;
-import org.geppetto.core.model.state.visitors.SerializeTreeVisitor;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulation.ISimulatorCallbackListener;
-import org.geppetto.simulation.visitor.ExitVisitor;
+import org.geppetto.core.features.ISetParameterFeature;
+import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.services.GeppettoFeature;
 
-public class SimulatorCallbackListener implements ISimulatorCallbackListener
+/**
+ * Visitor used for setting parameter(s) on an aspect's model.
+ * 
+ * @author Jesus R. Martinez (jesus@metacell.us)
+ *
+ */
+public class SetParametersVisitor extends RuntimeTreeVisitor
 {
 
-	private Simulator _simulatorModel;
-	private SimulatorRuntime _simulatorRuntime;
-	private SessionContext _sessionContext;
-	private ISimulationCallbackListener _simulationCallback;
+	private static Log logger = LogFactory.getLog(SetParametersVisitor.class);
 
-	private static Log _logger = LogFactory.getLog(SimulatorCallbackListener.class);
+	// The id of aspect we will be populating
+	private String _instancePath;
+	private Map<String, String> _parameters = new HashMap<String, String>();
 
-	public SimulatorCallbackListener(Simulator simulatorModel, 
-			SessionContext context, ISimulationCallbackListener simulationCallback)
+	public SetParametersVisitor(Map<String, String> parameters, String instancePath)
 	{
-		_simulatorModel = simulatorModel;
-		_sessionContext = context;
-		_simulatorRuntime=_sessionContext.getSimulatorRuntime(_simulatorModel.getSimulatorId());
-		_simulationCallback = simulationCallback;
+		this._instancePath = instancePath;
+		this._parameters = parameters;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
+	 */
 	@Override
-	public void stateTreeUpdated() throws GeppettoExecutionException
+	public boolean inAspectNode(AspectNode node)
 	{
-		if(!_simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.OVER)){
-			_simulatorRuntime.incrementProcessedSteps();
-			_simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
+		if(this._instancePath.equals(node.getModel().getInstancePath()))
+		{
+			IModelInterpreter modelInterpreter = node.getModelInterpreter();
+			if(!modelInterpreter.isSupported(GeppettoFeature.SET_PARAMETERS_FEATURE))
+			{
+				return false;
+			}
+			try
+			{
+				((ISetParameterFeature) modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(_parameters);
+			}
+			catch(ModelInterpreterException e)
+			{
+				exception = new GeppettoExecutionException(e);
+			}
+
+			return true;
 		}
-	}
 
-	@Override
-	public void endOfSteps(String message) {		
-		_simulatorRuntime.setStatus(SimulatorRuntimeStatus.OVER);
-		this._simulationCallback.message(message);
+		return super.inAspectNode(node);
 	}
 }

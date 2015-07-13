@@ -32,23 +32,45 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
+import java.io.File;
+import java.util.List;
+
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.features.IVisualTreeFeature;
+import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
-import org.geppetto.core.services.GeppettoFeature;
+import org.geppetto.core.services.ModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 
 /**
- * Visitor used for retrieving simulator from aspect node's and sending call to simulator for populating the visualization tree
+ * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter for downloading the model
  * 
- * @author Jesus R. Martinez (jesus@metacell.us)
+ * @author Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class PopulateVisualTreeVisitor extends RuntimeTreeVisitor
+public class DownloadModelVisitor extends RuntimeTreeVisitor
 {
+
+
+	// The id of aspect we will be populating
+	private String _instancePath;
+	private ModelFormat _modelFormat;
+	private IAspectConfiguration _aspectConfiguration;
+
+	private File _modelFile;
+
+	/**
+	 * @param simulationListener
+	 * @param instancePath
+	 */
+	public DownloadModelVisitor(String instancePath, ModelFormat format, IAspectConfiguration aspectConfiguration)
+	{
+		this._instancePath = instancePath;
+		this._modelFormat = format;
+		this._aspectConfiguration = aspectConfiguration;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -58,41 +80,34 @@ public class PopulateVisualTreeVisitor extends RuntimeTreeVisitor
 	@Override
 	public boolean inAspectNode(AspectNode node)
 	{
-		IModelInterpreter model = node.getModelInterpreter();
-		try
+		if(this._instancePath.equals(node.getInstancePath()))
 		{
-			if(model != null)
+			IModelInterpreter modelInterpreter = node.getModelInterpreter();
+			try
 			{
-				((IVisualTreeFeature) model.getFeature(GeppettoFeature.VISUAL_TREE_FEATURE)).populateVisualTree(node);
+				//If no model format, let's get the model interpreter service format
+				if (this._modelFormat == null){
+					//FIXME: We are assuming there is only one format
+					List<ModelFormat> supportedOutputs = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
+					this._modelFormat = supportedOutputs.get(0);
+				}
+				
+				this._modelFile = modelInterpreter.downloadModel(node, this._modelFormat, this._aspectConfiguration);
 			}
-		}
-		catch(ModelInterpreterException e)
-		{
-			exception = new GeppettoExecutionException(e);
+			catch(ModelInterpreterException e)
+			{
+				exception = new GeppettoExecutionException(e);
+			}
 		}
 
 		return super.inAspectNode(node);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#outCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
+	/**
+	 * @return
 	 */
-	@Override
-	public boolean outAspectNode(AspectNode node)
+	public File getModelFile()
 	{
-		return super.outAspectNode(node);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#visitSimpleStateNode(org.geppetto.core.model.state.SimpleStateNode)
-	 */
-	@Override
-	public boolean visitVariableNode(VariableNode node)
-	{
-		return super.visitVariableNode(node);
+		return this._modelFile;
 	}
 }

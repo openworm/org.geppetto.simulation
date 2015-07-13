@@ -35,9 +35,9 @@ package org.geppetto.simulation.visitor;
 import org.geppetto.core.model.simulation.Aspect;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
  * This visitor decorates the simulation tree with a parent for the nodes
@@ -103,10 +103,11 @@ public class ParentsDecoratorVisitor extends TraversingVisitor
 	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
-	@Override
-	public void visit(Simulator simulator)
-	{
-		simulator.setParentAspect(_currentAspectParent);
-	}
+	// SIM TODO
+//	@Override
+//	public void visit(Simulator simulator)
+//	{
+//		simulator.setParentAspect(_currentAspectParent);
+//	}
 
 }

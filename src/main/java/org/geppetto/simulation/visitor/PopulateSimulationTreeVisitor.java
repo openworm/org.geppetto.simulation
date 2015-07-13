@@ -35,7 +35,8 @@ package org.geppetto.simulation.visitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.features.IWatchableVariableListFeature;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
@@ -46,9 +47,8 @@ import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.VariableNode;
-import org.geppetto.core.model.state.visitors.DefaultStateVisitor;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
 
 /**
  * Visitor used for retrieving simulator from aspect node's and sending call to simulator
@@ -57,19 +57,21 @@ import org.geppetto.core.simulation.ISimulationCallbackListener;
  * @author  Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
+public class PopulateSimulationTreeVisitor extends RuntimeTreeVisitor{
 	
-	private ISimulationCallbackListener _simulationCallBack;
+
 	//The id of aspect we will be populating
 	private String _instancePath;
+	private IAspectConfiguration _aspectConfiguration;
 	
 	//This is not being used at the moment
 	private HashMap<String, AspectSubTreeNode> _populateSimulationTree;
 
-	public PopulateSimulationTreeVisitor(ISimulationCallbackListener simulationListener, String instancePath)
+	public PopulateSimulationTreeVisitor(String instancePath, IAspectConfiguration aspectConfiguration)
 	{
-		this._simulationCallBack = simulationListener;
 		this._instancePath = instancePath;
+		this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
+		this._aspectConfiguration = aspectConfiguration;
 	}
 
 	/* (non-Javadoc)
@@ -83,32 +85,32 @@ public class PopulateSimulationTreeVisitor extends DefaultStateVisitor{
 			try
 			{
 				if(model!=null){
-					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariables(node);
+					((IWatchableVariableListFeature) model.getFeature(GeppettoFeature.WATCHABLE_VARIABLE_LIST_FEATURE)).listWatchableVariables(node, this._aspectConfiguration);
 				}
 			}
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallBack.error(GeppettoErrorCodes.INITIALIZATION, this.getClass().getName(),null,e);
+				exception = new GeppettoExecutionException(e);
 			}
 			
-			//FIXME: It it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
-			this._populateSimulationTree = new HashMap<String, AspectSubTreeNode>();
+			//FIXME: If it is possible to call it from the js api we should populate as in PopulateModelTree, depending if it is an entity or a subentity
 			this._populateSimulationTree.put(node.getInstancePath(),((AspectSubTreeNode) node.getSubTree(AspectTreeType.SIMULATION_TREE)));
 						
 			IModel imodel =  node.getModel();
 			if(imodel instanceof ModelWrapper){
 				ModelWrapper wrapper = (ModelWrapper)imodel;
 				Map<String, EntityNode> mapping = (Map<String, EntityNode>) wrapper.getModel("entitiesMapping");
-				EntityNode entityNode = mapping.get(node.getParent().getId());
-				if (entityNode == null){
-					for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
-						String key = entry.getKey();
+				if(mapping!=null){
+					EntityNode entityNode = mapping.get(node.getParent().getId());
+					if (entityNode == null){
+						for (Map.Entry<String, EntityNode> entry : mapping.entrySet()) {
 
-						for (AspectNode aspectNode : entry.getValue().getAspects()){
-							if (aspectNode.getId() == node.getId()){
-								this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
-							}
-						}	
+							for (AspectNode aspectNode : entry.getValue().getAspects()){
+								if (aspectNode.getId() == node.getId()){
+									this._populateSimulationTree.put(aspectNode.getInstancePath(),(AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.SIMULATION_TREE));
+								}
+							}	
+						}
 					}
 				}
 			}

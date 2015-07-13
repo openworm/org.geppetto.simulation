@@ -30,46 +30,43 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.visitor;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 
 /**
  * @author matteocantarelli
- * 
+ *
  */
-public class CustomSerializer extends StdSerializer<Double>
+public class FindAspectNodeVisitor extends RuntimeTreeVisitor 
 {
-	public CustomSerializer(Class<Double> t)
+
+	private String instancePath;
+	
+	private AspectNode aspectNode=null;
+
+	public FindAspectNodeVisitor(String instancePath)
 	{
-		super(t);
+		super();
+		this.instancePath = instancePath;
+	}
+
+	public AspectNode getAspectNode()
+	{
+		return aspectNode;
 	}
 
 	@Override
-	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
+	public boolean inAspectNode(AspectNode node)
 	{
-
-		if(null == value)
+		if(node.getInstancePath().equals(instancePath))
 		{
-			// write the word 'null' if there's no value available
-			jgen.writeNull();
+			aspectNode=node;
+			doStopVisiting();
 		}
-		else if(value.equals(Double.NaN))
-		{
-			jgen.writeNumber(Double.NaN);
-		}
-		else
-		{
-			final String pattern = "#.##";
-			final DecimalFormat myFormatter = new DecimalFormat(pattern);
-			final String output = myFormatter.format(value).replace(",", ".");
-			jgen.writeNumber(output);
-		}
+		return false;
 	}
+
+
 }

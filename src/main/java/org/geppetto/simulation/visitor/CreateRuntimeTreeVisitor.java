@@ -33,9 +33,9 @@
 package org.geppetto.simulation.visitor;
 
 import java.util.List;
+import java.util.Map;
 
-import org.geppetto.core.common.GeppettoErrorCodes;
-import org.geppetto.core.common.GeppettoInitializationException;
+import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -51,15 +51,10 @@ import org.geppetto.core.model.simulation.Connection;
 import org.geppetto.core.model.simulation.CustomProperty;
 import org.geppetto.core.model.simulation.Entity;
 import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.VisualObjectReference;
-import org.geppetto.core.model.simulation.visitor.BaseVisitor;
-import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
 import org.geppetto.core.model.values.FloatValue;
-import org.geppetto.core.simulation.ISimulationCallbackListener;
-import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.visualisation.model.Point;
-import org.geppetto.simulation.SessionContext;
 
 /**
  * Visitor used for retrieving entities and aspects from simulation file. a Entity and Aspect nodes are created, and used to create skeleton of run time tree.
@@ -67,17 +62,21 @@ import org.geppetto.simulation.SessionContext;
  * @author Jesus R. Martinez (jesus@metacell.us)
  * 
  */
-public class CreateRuntimeTreeVisitor extends TraversingVisitor
+public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 {
 
-	private SessionContext _sessionContext;
-	private ISimulationCallbackListener _simulationCallback;
+	// private SessionContext _sessionContext;
+	private Map<String, IModelInterpreter> _modelInterpreters;
+	private Map<String, IModel> _model;
+	// Head node that holds the entities
+	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
 
-	public CreateRuntimeTreeVisitor(SessionContext sessionContext, ISimulationCallbackListener simulationCallback)
+	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot)
 	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		this._sessionContext = sessionContext;
-		this._simulationCallback = simulationCallback;
+		super();
+		// this._sessionContext = sessionContext;
+		_modelInterpreters = modelInterpreters;
+		_model = model;
 	}
 
 	/*
@@ -92,49 +91,51 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		 * Extract information from aspect and create local aspect node
 		 */
 		Model model = aspect.getModel();
-		Simulator simulator = aspect.getSimulator();
+		// SIM TODO
+		// Simulator simulator = aspect.getSimulator();
 		AspectNode clientAspect = new AspectNode(aspect.getId());
 		clientAspect.setName(aspect.getId());
 
 		// attach to parent entity before populating skeleton of aspect node
-		addAspectToEntity(clientAspect, aspect.getParentEntity(), this._sessionContext.getRuntimeTreeRoot().getChildren());
+		addAspectToEntity(clientAspect, aspect.getParentEntity(), _runtimeTreeRoot.getChildren());
 
 		if(model != null)
 		{
 			try
 			{
 				// use model interpreter from aspect to populate runtime tree
-				IModelInterpreter modelInterpreter = _sessionContext.getModelInterpreter(model);
-				IModel wrapper = _sessionContext.getModels().get(model.getInstancePath());
+				IModelInterpreter modelInterpreter = _modelInterpreters.get(model.getInstancePath());
+				IModel wrapper = _model.get(model.getInstancePath());
 				clientAspect.setModel(wrapper);
 				clientAspect.setModelInterpreter(modelInterpreter);
 				modelInterpreter.populateRuntimeTree(clientAspect);
 			}
-			catch(GeppettoInitializationException e)
-			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-			}
+			// catch(GeppettoInitializationException e)
+			// {
+			// _simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+			// }
 			catch(ModelInterpreterException e)
 			{
-				_simulationCallback.error(GeppettoErrorCodes.MODEL_INTERPRETER, this.getClass().getName(), null, e);
+				exception = new GeppettoExecutionException(e);
 			}
 		}
 
 		/*
 		 * Extract simulator from aspect and set it to client aspect node
 		 */
-		if(simulator != null)
-		{
-			try
-			{
-				ISimulator simulatorService = _sessionContext.getSimulator(simulator);
-				clientAspect.setSimulator(simulatorService);
-			}
-			catch(GeppettoInitializationException e)
-			{
-				_simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-			}
-		}
+		// SIM TODO
+		// if(simulator != null)
+		// {
+		// try
+		// {
+		// ISimulator simulatorService = _sessionContext.getSimulator(simulator);
+		// clientAspect.setSimulator(simulatorService);
+		// }
+		// catch(GeppettoInitializationException e)
+		// {
+		// _simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
+		// }
+		// }
 	}
 
 	/*
@@ -154,29 +155,33 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 			position.setZ(new Double(entity.getPosition().getZ()));
 			clientEntity.setPosition(position);
 		}
-		if(entity.getConnections()!=null){
-			for(Connection c : entity.getConnections()){
-				ConnectionNode clientConnection = new ConnectionNode(c.getId());
+		if(entity.getConnections() != null)
+		{
+			for(Connection c : entity.getConnections())
+			{
+				ConnectionNode clientConnection = new ConnectionNode(c.getId(),null);
 				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
 				clientConnection.setType(c.getType());
 				clientConnection.setName(c.getId());
 				clientConnection.setParent(clientEntity);
 				clientEntity.getConnections().add(clientConnection);
-				
-				for(VisualObjectReference ref : c.getVisualObjectReferences()){
+
+				for(VisualObjectReference ref : c.getVisualObjectReferences())
+				{
 					VisualObjectReferenceNode refNode = new VisualObjectReferenceNode(ref.getId());
 					refNode.setAspectInstancePath(ref.getAspectInstancePath());
 					refNode.setVisualObjectId(ref.getVisualObjectID());
 					refNode.setParent(clientConnection);
 					clientConnection.getVisualReferences().add(refNode);
-				}	
-				
-				for(CustomProperty custom : c.getCustomProperties()){
+				}
+
+				for(CustomProperty custom : c.getCustomProperties())
+				{
 					TextMetadataNode text = new TextMetadataNode(custom.getId());
 					text.setValue(new FloatValue(custom.getValue()));
 					text.setName(custom.getName());
 					text.setParent(clientConnection);
-					
+
 					clientConnection.getCustomNodes().add(text);
 				}
 			}
@@ -229,9 +234,8 @@ public class CreateRuntimeTreeVisitor extends TraversingVisitor
 		}
 	}
 
-
 	public RuntimeTreeRoot getRuntimeModel()
 	{
-		return _sessionContext.getRuntimeTreeRoot();
+		return _runtimeTreeRoot;
 	}
 }

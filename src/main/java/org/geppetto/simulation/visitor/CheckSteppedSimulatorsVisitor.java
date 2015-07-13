@@ -32,11 +32,9 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.model.simulation.Simulator;
 import org.geppetto.core.model.simulation.visitor.BaseVisitor;
 import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
-import org.geppetto.simulation.SessionContext;
-import org.geppetto.simulation.SimulatorRuntime;
+import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
  * This visitor checks if all the simulators have stepped Note: This visitor at the moment doesn't take into account that different simulators could have different time steps and in this case the
@@ -48,14 +46,14 @@ import org.geppetto.simulation.SimulatorRuntime;
 public class CheckSteppedSimulatorsVisitor extends TraversingVisitor
 {
 
-	private SessionContext _sessionContext = null;
+	// private SessionContext _sessionContext = null;
 	private boolean _allStepped = true;
 	private boolean _noneEverStepped = true;
 
-	public CheckSteppedSimulatorsVisitor(SessionContext sessionContext)
+	public CheckSteppedSimulatorsVisitor()
 	{
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-		_sessionContext = sessionContext;
+		// _sessionContext = sessionContext;
 	}
 
 	/*
@@ -63,28 +61,29 @@ public class CheckSteppedSimulatorsVisitor extends TraversingVisitor
 	 * 
 	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
 	 */
-	@Override
-	public void visit(Simulator simulator)
-	{
-		
-		if(_allStepped || _noneEverStepped)
-		{
-			SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator.getSimulatorId());
-			
-			if(simulatorRuntime.getNonConsumedSteps() < 0)
-			{
-				// this simulator has no steps to consume
-				_allStepped = false;
-			}
-			
-			if(simulatorRuntime.getProcessedSteps() != 0)
-			{
-				// this simulator has steps to consume
-				_noneEverStepped = false;
-			}
-		}
-
-	}
+	// @Override
+	// SIM TODO
+	// public void visit(Simulator simulator)
+	// {
+	//
+	// if(_allStepped || _noneEverStepped)
+	// {
+	// SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator.getSimulatorId());
+	//
+	// if(simulatorRuntime.getNonConsumedSteps() < 0)
+	// {
+	// // this simulator has no steps to consume
+	// _allStepped = false;
+	// }
+	//
+	// if(simulatorRuntime.getProcessedSteps() != 0)
+	// {
+	// // this simulator has steps to consume
+	// _noneEverStepped = false;
+	// }
+	// }
+	//
+	// }
 
 	/**
 	 * @return

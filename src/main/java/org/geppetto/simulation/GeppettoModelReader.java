@@ -47,6 +47,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.model.simulation.GeppettoModel;
 import org.xml.sax.SAXException;
@@ -57,9 +58,6 @@ import org.xml.sax.SAXException;
  */
 public class GeppettoModelReader
 {
-
-	static String schemaURl = "https://raw.githubusercontent.com/openworm/org.geppetto.core/master/src/main/resources/schema/simulation/simulationSchema.xsd";
-
 	public static GeppettoModel readGeppettoModel(URL url) throws GeppettoInitializationException
 	{
 
@@ -67,12 +65,12 @@ public class GeppettoModelReader
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(GeppettoModel.class).createUnmarshaller();
-			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
+			unmarshaller.setSchema(parseSchema(PathConfiguration.getModelSchemaURL()));
 			sim = (GeppettoModel) unmarshaller.unmarshal(url);
 		}
-		catch(JAXBException | MalformedURLException e1)
+		catch(JAXBException e)
 		{
-			throw new GeppettoInitializationException("Unable to unmarshall simulation with url : " + url.toString(), e1);
+			throw new GeppettoInitializationException("Unable to unmarshall simulation with url: " + url.toString(), e);
 		}
 
 		return sim;
@@ -94,12 +92,12 @@ public class GeppettoModelReader
 		try
 		{
 			Unmarshaller unmarshaller = JAXBContext.newInstance(GeppettoModel.class).createUnmarshaller();
-			unmarshaller.setSchema(parseSchema(new URL(schemaURl)));
+			unmarshaller.setSchema(parseSchema(PathConfiguration.getModelSchemaURL()));
 			sim = (GeppettoModel) unmarshaller.unmarshal(reader);
 		}
-		catch(JAXBException | MalformedURLException e)
+		catch(JAXBException e)
 		{
-			throw new GeppettoInitializationException("Unable to unmarshall simulation");
+			throw new GeppettoInitializationException("Unable to unmarshall simulation", e);
 		}
 
 		return sim;

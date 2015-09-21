@@ -44,7 +44,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.manager.IGeppettoManager;
-import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.core.model.geppettomodel.GeppettoModel;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
 import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;

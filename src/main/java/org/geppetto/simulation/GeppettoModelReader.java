@@ -37,7 +37,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.xml.XMLConstants;
@@ -49,7 +48,7 @@ import javax.xml.validation.SchemaFactory;
 
 import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.core.model.geppettomodel.GeppettoModel;
 import org.xml.sax.SAXException;
 
 /**

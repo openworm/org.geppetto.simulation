@@ -32,8 +32,8 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.model.simulation.visitor.BaseVisitor;
-import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.geppettomodel.visitor.BaseVisitor;
+import org.geppetto.core.model.geppettomodel.visitor.TraversingVisitor;
 import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**
@@ -55,35 +55,6 @@ public class CheckSteppedSimulatorsVisitor extends TraversingVisitor
 		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
 		// _sessionContext = sessionContext;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Simulator)
-	 */
-	// @Override
-	// SIM TODO
-	// public void visit(Simulator simulator)
-	// {
-	//
-	// if(_allStepped || _noneEverStepped)
-	// {
-	// SimulatorRuntime simulatorRuntime = _sessionContext.getSimulatorRuntime(simulator.getSimulatorId());
-	//
-	// if(simulatorRuntime.getNonConsumedSteps() < 0)
-	// {
-	// // this simulator has no steps to consume
-	// _allStepped = false;
-	// }
-	//
-	// if(simulatorRuntime.getProcessedSteps() != 0)
-	// {
-	// // this simulator has steps to consume
-	// _noneEverStepped = false;
-	// }
-	// }
-	//
-	// }
 
 	/**
 	 * @return

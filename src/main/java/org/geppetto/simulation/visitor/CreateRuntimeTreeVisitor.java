@@ -39,6 +39,12 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.model.geppettomodel.Aspect;
+import org.geppetto.core.model.geppettomodel.Connection;
+import org.geppetto.core.model.geppettomodel.CustomProperty;
+import org.geppetto.core.model.geppettomodel.Entity;
+import org.geppetto.core.model.geppettomodel.Model;
+import org.geppetto.core.model.geppettomodel.VisualObjectReference;
 import org.geppetto.core.model.runtime.ANode;
 import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.ConnectionNode;
@@ -46,12 +52,6 @@ import org.geppetto.core.model.runtime.EntityNode;
 import org.geppetto.core.model.runtime.RuntimeTreeRoot;
 import org.geppetto.core.model.runtime.TextMetadataNode;
 import org.geppetto.core.model.runtime.VisualObjectReferenceNode;
-import org.geppetto.core.model.simulation.Aspect;
-import org.geppetto.core.model.simulation.Connection;
-import org.geppetto.core.model.simulation.CustomProperty;
-import org.geppetto.core.model.simulation.Entity;
-import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.VisualObjectReference;
 import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
 import org.geppetto.core.model.values.FloatValue;
 import org.geppetto.core.visualisation.model.Point;
@@ -70,6 +70,7 @@ public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 	private Map<String, IModel> _model;
 	// Head node that holds the entities
 	private RuntimeTreeRoot _runtimeTreeRoot = new RuntimeTreeRoot("scene");
+	private EntityNode parentClientEntity = null;
 
 	public CreateRuntimeTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, Map<String, IModel> model, RuntimeTreeRoot runtimeTreeRoot)
 	{
@@ -91,8 +92,6 @@ public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 		 * Extract information from aspect and create local aspect node
 		 */
 		Model model = aspect.getModel();
-		// SIM TODO
-		// Simulator simulator = aspect.getSimulator();
 		AspectNode clientAspect = new AspectNode(aspect.getId());
 		clientAspect.setName(aspect.getId());
 
@@ -120,22 +119,6 @@ public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 			}
 		}
 
-		/*
-		 * Extract simulator from aspect and set it to client aspect node
-		 */
-		// SIM TODO
-		// if(simulator != null)
-		// {
-		// try
-		// {
-		// ISimulator simulatorService = _sessionContext.getSimulator(simulator);
-		// clientAspect.setSimulator(simulatorService);
-		// }
-		// catch(GeppettoInitializationException e)
-		// {
-		// _simulationCallback.error(GeppettoErrorCodes.SIMULATION, this.getClass().getName(), null, e);
-		// }
-		// }
 	}
 
 	/*
@@ -147,6 +130,10 @@ public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 	public void visit(Entity entity)
 	{
 		EntityNode clientEntity = new EntityNode(entity.getId());
+		if(entity.getName()!=null)
+		{
+			clientEntity.setName(entity.getName());
+		}
 		if(entity.getPosition() != null)
 		{
 			Point position = new Point();
@@ -159,7 +146,7 @@ public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 		{
 			for(Connection c : entity.getConnections())
 			{
-				ConnectionNode clientConnection = new ConnectionNode(c.getId(),null);
+				ConnectionNode clientConnection = new ConnectionNode(c.getId(), null);
 				clientConnection.setEntityInstancePath(c.getEntityInstancePath());
 				clientConnection.setType(c.getType());
 				clientConnection.setName(c.getId());
@@ -188,20 +175,25 @@ public class CreateRuntimeTreeVisitor extends GeppettoModelVisitor
 		}
 		if(entity.getParentEntity() != null)
 		{
-			for(ANode node : getRuntimeModel().getChildren())
+			if(parentClientEntity != null)
 			{
-				if(node.getId().equals(entity.getParentEntity().getId()))
-				{
-					((EntityNode) node).addChild(clientEntity);
-				}
+				parentClientEntity.addChild(clientEntity);
 			}
+			else
+			{
+				exception=new GeppettoExecutionException("Parent entity was not found to append processed child entity");
+				return;
+			}
+
 		}
 		else
 		{
 			getRuntimeModel().addChild(clientEntity);
 		}
-
+		EntityNode grandParent = parentClientEntity;
+		parentClientEntity = clientEntity;
 		super.visit(entity);
+		parentClientEntity = grandParent;
 	}
 
 	/**

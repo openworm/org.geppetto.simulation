@@ -240,11 +240,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 					if(iModelsConverted.size() == 0)
 					{
-						simulator.initialize(models, this);
+						simulator.initialize(models, this, aspectConfig);
 					}
 					else
 					{
-						simulator.initialize(iModelsConverted, this);
+						simulator.initialize(iModelsConverted, this, aspectConfig);
 					}
 					long end = System.currentTimeMillis();
 					logger.info("Finished initializing simulator, took " + (end - start) + " ms ");

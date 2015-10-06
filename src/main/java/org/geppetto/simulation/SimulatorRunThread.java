@@ -71,7 +71,7 @@ public class SimulatorRunThread extends Thread
 	{
 		try
 		{
-			simulator.simulate(aspectConfiguration, aspectNode);
+			simulator.simulate(aspectNode);
 		}
 		catch(GeppettoExecutionException e)
 		{

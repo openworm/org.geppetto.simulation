@@ -129,7 +129,7 @@ public class RecordingsSimulatorTest
 		};
 		List<IModel> models=new ArrayList<IModel>();
 		models.add(recording);
-		simulator.initialize(models, listener);
+		simulator.initialize(models, listener, null);
 //		VariableList vlist=simulator.getWatchableVariables();
 //		Assert.assertNotNull(vlist);
 //		Assert.assertFalse(vlist.getVariables().isEmpty());

@@ -63,13 +63,13 @@ public class RecordingsSimulator extends ASimulator
 	public RecordingsSimulator() {}
 	
 	@Override
-	public void initialize(List<IModel> models, ISimulatorCallbackListener listener) throws GeppettoInitializationException, GeppettoExecutionException
+	public void initialize(List<IModel> models, ISimulatorCallbackListener listener, IAspectConfiguration aspectConfiguration) throws GeppettoInitializationException, GeppettoExecutionException
 	{
-		super.initialize(models, listener);
+		super.initialize(models, listener, aspectConfiguration);
 	}
 
 	@Override
-	public void simulate(IAspectConfiguration aspectConfiguration, AspectNode aspect) throws GeppettoExecutionException
+	public void simulate(AspectNode aspect) throws GeppettoExecutionException
 	{
 		advanceRecordings(aspect);
 		notifySimulatorHasStepped(aspect);

@@ -32,9 +32,7 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +44,7 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.geppettomodel.Model;
 import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
 import org.geppetto.core.utilities.URLReader;
 

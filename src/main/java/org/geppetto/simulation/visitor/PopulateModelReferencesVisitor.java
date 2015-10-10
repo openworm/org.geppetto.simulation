@@ -35,9 +35,9 @@ package org.geppetto.simulation.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geppetto.core.model.simulation.Model;
-import org.geppetto.core.model.simulation.visitor.BaseVisitor;
-import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.geppettomodel.Model;
+import org.geppetto.core.model.geppettomodel.visitor.BaseVisitor;
+import org.geppetto.core.model.geppettomodel.visitor.TraversingVisitor;
 import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 
 /**

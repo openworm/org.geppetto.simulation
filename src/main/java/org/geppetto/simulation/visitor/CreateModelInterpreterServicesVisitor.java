@@ -39,7 +39,7 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.simulation.Model;
+import org.geppetto.core.model.geppettomodel.Model;
 import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
 import org.geppetto.core.services.ServiceCreator;
 

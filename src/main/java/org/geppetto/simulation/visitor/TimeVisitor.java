@@ -33,7 +33,6 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.VariableNode;
 import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
 import org.geppetto.core.simulator.ISimulator;
 

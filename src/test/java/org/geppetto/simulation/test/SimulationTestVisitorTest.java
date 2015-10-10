@@ -7,9 +7,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.model.simulation.GeppettoModel;
+import org.geppetto.core.model.geppettomodel.GeppettoModel;
 import org.geppetto.simulation.GeppettoModelReader;
-import org.junit.Test;
 
 /**
  * @author matteocantarelli

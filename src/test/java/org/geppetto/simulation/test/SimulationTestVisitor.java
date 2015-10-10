@@ -3,10 +3,10 @@
  */
 package org.geppetto.simulation.test;
 
-import org.geppetto.core.model.simulation.Aspect;
-import org.geppetto.core.model.simulation.Entity;
-import org.geppetto.core.model.simulation.visitor.BaseVisitor;
-import org.geppetto.core.model.simulation.visitor.TraversingVisitor;
+import org.geppetto.core.model.geppettomodel.Aspect;
+import org.geppetto.core.model.geppettomodel.Entity;
+import org.geppetto.core.model.geppettomodel.visitor.BaseVisitor;
+import org.geppetto.core.model.geppettomodel.visitor.TraversingVisitor;
 import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
 import org.junit.Assert;
 

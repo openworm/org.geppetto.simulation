@@ -33,13 +33,13 @@
 package org.geppetto.simulation.visitor;
 
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 
 /**
  * @author matteocantarelli
  *
  */
-public class FindModelTreeVisitor extends RuntimeTreeVisitor 
+public class FindModelTreeVisitor extends AnalysisVisitor 
 {
 
 	private String instancePath;

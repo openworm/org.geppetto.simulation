@@ -32,19 +32,19 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.model.runtime.ParameterSpecificationNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.values.ParameterValue;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 
 /**
  * @author matteocantarelli
  *
  */
-public class FindParameterSpecificationNodeVisitor extends RuntimeTreeVisitor 
+public class FindParameterSpecificationNodeVisitor extends AnalysisVisitor 
 {
 
 	private String instancePath;
 	
-	private ParameterSpecificationNode parameterNode=null;
+	private ParameterValue parameterNode=null;
 
 	public FindParameterSpecificationNodeVisitor(String instancePath)
 	{
@@ -52,14 +52,14 @@ public class FindParameterSpecificationNodeVisitor extends RuntimeTreeVisitor
 		this.instancePath = instancePath;
 	}
 
-	public ParameterSpecificationNode getParameterNode()
+	public ParameterValue getParameterNode()
 	{
 		return parameterNode;
 	}
 	
 
 	@Override
-	public boolean visitParameterSpecificationNode(ParameterSpecificationNode node)
+	public boolean visitParameterSpecificationNode(ParameterValue node)
 	{
 		if(node.getInstancePath().equals(instancePath))
 		{

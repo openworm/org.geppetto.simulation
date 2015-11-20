@@ -36,7 +36,6 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
-import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.simulator.ISimulator;
 
 /**

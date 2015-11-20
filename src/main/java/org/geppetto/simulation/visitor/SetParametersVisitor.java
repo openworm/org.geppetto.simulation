@@ -41,8 +41,8 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.features.ISetParameterFeature;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.AspectNode;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 import org.geppetto.core.services.GeppettoFeature;
 
 /**
@@ -51,7 +51,7 @@ import org.geppetto.core.services.GeppettoFeature;
  * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class SetParametersVisitor extends RuntimeTreeVisitor
+public class SetParametersVisitor extends AnalysisVisitor
 {
 
 	private static Log logger = LogFactory.getLog(SetParametersVisitor.class);

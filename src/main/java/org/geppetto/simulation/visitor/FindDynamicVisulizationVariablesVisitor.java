@@ -35,8 +35,8 @@ package org.geppetto.simulation.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geppetto.core.model.runtime.SkeletonAnimationNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.values.SkeletonAnimationValue;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 
 /**
  * 
@@ -45,7 +45,7 @@ import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
  * FindDynamicVisulizationVariables - looks for dynamic variables having to do with visualization
  * Only visits nodes of interest for dynamic visualization variables
  */
-public class FindDynamicVisulizationVariablesVisitor extends RuntimeTreeVisitor {
+public class FindDynamicVisulizationVariablesVisitor extends AnalysisVisitor {
 	
 	private List<String> variables = new ArrayList<String>();
 	
@@ -53,7 +53,7 @@ public class FindDynamicVisulizationVariablesVisitor extends RuntimeTreeVisitor 
 	 * Find any skeleton animation node and get instance path
 	 */
 	@Override
-	public boolean visitSkeletonAnimationNode(SkeletonAnimationNode node)
+	public boolean visitSkeletonAnimationNode(SkeletonAnimationValue node)
 	{
 		String instancePath = node.getAspectInstancePath();
 		

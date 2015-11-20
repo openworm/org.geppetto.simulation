@@ -36,9 +36,9 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.features.IVisualTreeFeature;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.VariableNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.AspectNode;
+import org.geppetto.core.model.typesystem.values.VariableValue;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 import org.geppetto.core.services.GeppettoFeature;
 
 /**
@@ -47,7 +47,7 @@ import org.geppetto.core.services.GeppettoFeature;
  * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class PopulateVisualTreeVisitor extends RuntimeTreeVisitor
+public class PopulateVisualTreeVisitor extends AnalysisVisitor
 {
 
 	/*
@@ -91,7 +91,7 @@ public class PopulateVisualTreeVisitor extends RuntimeTreeVisitor
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#visitSimpleStateNode(org.geppetto.core.model.state.SimpleStateNode)
 	 */
 	@Override
-	public boolean visitVariableNode(VariableNode node)
+	public boolean visitVariableNode(VariableValue node)
 	{
 		return super.visitVariableNode(node);
 	}

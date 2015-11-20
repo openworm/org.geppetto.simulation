@@ -49,12 +49,12 @@ import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.RecordingModel;
-import org.geppetto.core.model.runtime.ACompositeNode;
-import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.runtime.CompositeNode;
 import org.geppetto.core.model.runtime.EntityNode;
-import org.geppetto.core.model.runtime.RuntimeTreeRoot;
-import org.geppetto.core.model.runtime.VariableNode;
+import org.geppetto.core.model.typesystem.AspectNode;
+import org.geppetto.core.model.typesystem.Root;
+import org.geppetto.core.model.typesystem.values.ACompositeValue;
+import org.geppetto.core.model.typesystem.values.CompositeValue;
+import org.geppetto.core.model.typesystem.values.VariableValue;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.simulation.recording.RecordingsSimulator;
 import org.junit.Assert;
@@ -67,7 +67,7 @@ import org.junit.Test;
  */
 public class RecordingsSimulatorTest
 {
-	private RuntimeTreeRoot runtime;
+	private Root runtime;
 	private EntityNode entity;
 	private AspectNode aspectNode;
 
@@ -84,7 +84,7 @@ public class RecordingsSimulatorTest
 	public void test() throws GeppettoExecutionException, GeppettoInitializationException, IOException
 	{
 		
-		runtime = new RuntimeTreeRoot("runtime");
+		runtime = new Root("runtime");
 		entity = new EntityNode("Entity");
 		aspectNode = new AspectNode("Aspect");
 		System.out.println("new aspect");
@@ -104,12 +104,12 @@ public class RecordingsSimulatorTest
 			@Override
 			public void stepped(AspectNode aspect) throws GeppettoExecutionException
 			{
-				ACompositeNode wtree = (ACompositeNode) aspectNode.getChildren().get(0);
-				VariableNode time = (VariableNode) wtree.getChildren().get(0);
-				CompositeNode a =  (CompositeNode) wtree.getChildren().get(1);
-				CompositeNode b = (CompositeNode) a.getChildren().get(0);
-				VariableNode c = (VariableNode) b.getChildren().get(0);
-				VariableNode d = (VariableNode) b.getChildren().get(1);
+				ACompositeValue wtree = (ACompositeValue) aspectNode.getChildren().get(0);
+				VariableValue time = (VariableValue) wtree.getChildren().get(0);
+				CompositeValue a =  (CompositeValue) wtree.getChildren().get(1);
+				CompositeValue b = (CompositeValue) a.getChildren().get(0);
+				VariableValue c = (VariableValue) b.getChildren().get(0);
+				VariableValue d = (VariableValue) b.getChildren().get(1);
 
 				
 				double value = Double.valueOf(time.getTimeSeries().get(0).getValue().getStringValue());

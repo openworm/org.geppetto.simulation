@@ -39,7 +39,7 @@ import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.model.geppettomodel.Aspect;
 import org.geppetto.core.model.geppettomodel.visitor.BaseVisitor;
 import org.geppetto.core.model.geppettomodel.visitor.TraversingVisitor;
-import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
+import org.geppetto.core.model.typesystem.visitor.DepthFirstTraverserImportsFirst;
 
 /**
  * @author matteocantarelli
@@ -52,7 +52,7 @@ public class PopulateExperimentVisitor extends TraversingVisitor
 
 	public PopulateExperimentVisitor(IExperiment experiment)
 	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
+		super(new DepthFirstTraverserImportsFirst(), new BaseVisitor());
 		this.experiment=experiment;
 	}
 

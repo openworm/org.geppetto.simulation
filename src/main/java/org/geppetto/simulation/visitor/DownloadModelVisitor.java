@@ -39,8 +39,8 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.AspectNode;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 
@@ -50,7 +50,7 @@ import org.geppetto.core.services.registry.ServicesRegistry;
  * @author Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class DownloadModelVisitor extends RuntimeTreeVisitor
+public class DownloadModelVisitor extends AnalysisVisitor
 {
 
 

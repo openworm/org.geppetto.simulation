@@ -48,7 +48,7 @@ import javax.xml.validation.SchemaFactory;
 
 import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.model.geppettomodel.GeppettoModel;
+import org.geppetto.model.GeppettoModel;
 import org.xml.sax.SAXException;
 
 /**

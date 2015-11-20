@@ -37,8 +37,8 @@ import java.util.List;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.AspectNode;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 import org.geppetto.core.services.ModelFormat;
 
 /**
@@ -47,7 +47,7 @@ import org.geppetto.core.services.ModelFormat;
  * @author Adrian Quintana (adrian.perez@ucl.ac.uk)
  *
  */
-public class SupportedOutputsVisitor extends RuntimeTreeVisitor
+public class SupportedOutputsVisitor extends AnalysisVisitor
 {
 
 	// The id of aspect we will be populating

@@ -32,13 +32,13 @@
  *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
-import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
-import org.geppetto.core.model.runtime.ConnectionNode;
 import org.geppetto.core.model.runtime.EntityNode;
-import org.geppetto.core.model.runtime.ParameterSpecificationNode;
-import org.geppetto.core.model.runtime.TextMetadataNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.AspectNode;
+import org.geppetto.core.model.typesystem.values.ConnectionValue;
+import org.geppetto.core.model.typesystem.values.ParameterValue;
+import org.geppetto.core.model.typesystem.values.TextMetadataValue;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 
 /**
  * Visitor used for setting modified flag on subtree to flase after sending update
@@ -46,7 +46,7 @@ import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
  * @author Jesus R. Martinez (jesus@metacell.us)
  * 
  */
-public class ExitVisitor extends RuntimeTreeVisitor
+public class ExitVisitor extends AnalysisVisitor
 {
 
 	public ExitVisitor()
@@ -95,20 +95,20 @@ public class ExitVisitor extends RuntimeTreeVisitor
 	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#
 	 */
 	@Override
-	public boolean outConnectionNode(ConnectionNode node)
+	public boolean outConnectionNode(ConnectionValue node)
 	{
 		node.setModified(false);
 		return super.inConnectionNode(node);
 	}
 	
 	@Override
-	public boolean visitTextMetadataNode(TextMetadataNode node){
+	public boolean visitTextMetadataNode(TextMetadataValue node){
 		node.setModified(false);
 		return super.visitTextMetadataNode(node);
 	}
 	
 	@Override
-	public boolean visitParameterSpecificationNode(ParameterSpecificationNode node){
+	public boolean visitParameterSpecificationNode(ParameterValue node){
 		node.setModified(false);
 		return super.visitParameterSpecificationNode(node);
 	}

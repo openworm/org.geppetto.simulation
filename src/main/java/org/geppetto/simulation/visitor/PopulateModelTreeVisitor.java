@@ -39,11 +39,11 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
-import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode;
 import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
 import org.geppetto.core.model.runtime.EntityNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.model.typesystem.AspectNode;
+import org.geppetto.core.model.typesystem.visitor.AnalysisVisitor;
 
 /**
  * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter for populating the model tree
@@ -51,7 +51,7 @@ import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
  * @author Jesus R. Martinez (jesus@metacell.us)
  *
  */
-public class PopulateModelTreeVisitor extends RuntimeTreeVisitor
+public class PopulateModelTreeVisitor extends AnalysisVisitor
 {
 
 	// The id of aspect we will be populating

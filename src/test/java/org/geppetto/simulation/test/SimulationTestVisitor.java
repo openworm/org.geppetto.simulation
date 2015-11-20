@@ -7,7 +7,7 @@ import org.geppetto.core.model.geppettomodel.Aspect;
 import org.geppetto.core.model.geppettomodel.Entity;
 import org.geppetto.core.model.geppettomodel.visitor.BaseVisitor;
 import org.geppetto.core.model.geppettomodel.visitor.TraversingVisitor;
-import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
+import org.geppetto.core.model.typesystem.visitor.DepthFirstTraverserImportsFirst;
 import org.junit.Assert;
 
 /**
@@ -22,7 +22,7 @@ public class SimulationTestVisitor extends TraversingVisitor
 	
 	public SimulationTestVisitor()
 	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
+		super(new DepthFirstTraverserImportsFirst(), new BaseVisitor());
 	}
 
 	@Override

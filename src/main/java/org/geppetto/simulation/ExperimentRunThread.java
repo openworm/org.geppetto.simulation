@@ -63,7 +63,6 @@ import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.runtime.AspectNode;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.ServiceCreator;

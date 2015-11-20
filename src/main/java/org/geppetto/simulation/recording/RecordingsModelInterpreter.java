@@ -51,7 +51,7 @@ import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.RecordingModel;
-import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.typesystem.AspectNode;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;

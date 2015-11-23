@@ -37,6 +37,7 @@ import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.model.values.Pointer;
 
 /**
  * This class helps incapsulating the execution of a simulator in a separate thread
@@ -49,14 +50,14 @@ public class SimulatorRunThread extends Thread
 
 	private ISimulator simulator;
 	private IAspectConfiguration aspectConfiguration;
-	private AspectNode aspectNode;
+	private Pointer pointer;
 	private IExperiment experiment;
 
-	public SimulatorRunThread(IExperiment experiment, ISimulator simulator, IAspectConfiguration aspectConfiguration, AspectNode aspectNode)
+	public SimulatorRunThread(IExperiment experiment, ISimulator simulator, IAspectConfiguration aspectConfiguration, Pointer pointer)
 	{
 		this.experiment = experiment;
 		this.simulator = simulator;
-		this.aspectNode = aspectNode;
+		this.pointer = pointer;
 		this.aspectConfiguration = aspectConfiguration;
 	}
 
@@ -70,7 +71,7 @@ public class SimulatorRunThread extends Thread
 	{
 		try
 		{
-			simulator.simulate(aspectConfiguration, aspectNode);
+			simulator.simulate(aspectConfiguration, pointer);
 		}
 		catch(GeppettoExecutionException e)
 		{

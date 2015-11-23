@@ -37,9 +37,9 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.library.LibraryManager;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.utilities.URLReader;
+import org.geppetto.model.LibraryManager;
 import org.geppetto.model.aspect.Aspect;
 import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.Type;

@@ -72,6 +72,7 @@ import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.utilities.Zipper;
+import org.geppetto.model.values.Pointer;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -411,7 +412,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#endOfSteps(java.lang.String)
 	 */
 	@Override
-	public void endOfSteps(AspectNode aspectNode, Map<File, ResultsFormat> results) throws GeppettoExecutionException
+	public void endOfSteps(Pointer pointer, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(aspectNode.getInstancePath());
 
@@ -476,7 +477,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#stateTreeUpdated()
 	 */
 	@Override
-	public void stepped(AspectNode aspect) throws GeppettoExecutionException
+	public void stepped(Pointer pointer) throws GeppettoExecutionException
 	{
 		String instancePath = aspect.getInstancePath();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);

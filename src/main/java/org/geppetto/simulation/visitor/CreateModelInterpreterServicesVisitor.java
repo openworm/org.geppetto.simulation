@@ -50,7 +50,7 @@ import org.geppetto.model.types.util.TypesSwitch;
  * @author matteocantarelli
  * 
  */
-public class CreateModelInterpreterServicesVisitor extends TypesSwitch<GeppettoExecutionException>
+public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 {
 
 	private Map<String, IModelInterpreter> models;
@@ -65,7 +65,7 @@ public class CreateModelInterpreterServicesVisitor extends TypesSwitch<GeppettoE
 	}
 
 	@Override
-	public GeppettoExecutionException caseImportType(ImportType type)
+	public Object caseImportType(ImportType type)
 	{
 		try
 		{

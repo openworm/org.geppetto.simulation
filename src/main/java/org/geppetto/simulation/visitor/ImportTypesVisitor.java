@@ -33,17 +33,18 @@
 package org.geppetto.simulation.visitor;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.utilities.URLReader;
-import org.geppetto.model.LibraryManager;
-import org.geppetto.model.aspect.Aspect;
+import org.geppetto.model.GeppettoLibrary;
+import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.util.TypesSwitch;
+import org.geppetto.model.variables.VariablesPackage;
 
 /**
  * This visitor traverses the Geppetto Model and creates the variables and types delegating to the model interpreter creation of the domain specific types
@@ -51,31 +52,43 @@ import org.geppetto.model.types.util.TypesSwitch;
  * @author matteocantarelli
  * 
  */
-public class CreateInstanceTreeVisitor extends TypesSwitch<GeppettoExecutionException>
+public class ImportTypesVisitor extends TypesSwitch<Object>
 {
 
-	private LibraryManager libraryManager;
 	private Map<String, IModelInterpreter> modelInterpreters;
 
-
 	@Override
-	public GeppettoExecutionException caseImportType(ImportType type)
+	public Object caseImportType(ImportType type)
 	{
 		try
 		{
-			// use model interpreter from aspect to populate runtime tree
 			IModelInterpreter modelInterpreter = modelInterpreters.get(type.getModelInterpreterId());
-			// there is not a 1:1 between a model interpreter and an aspect, an aspect defines a domain
-			// a model interpreter a particular format that can be handled by Geppetto
-			// the same model interpreter, e.g. OBJ, could be used in different aspects.
-			// while aspects hold types by domain, libraries hold types by model interpreter
-			Collection<Type> types = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), libraryManager);
-			Aspect aspect = type.getAspect();
-			aspect.getTypes().addAll(types);
+			Type importedType = null;
+			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
+			{
+				// this import type is inside a library
+				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
+				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library);
+				library.getTypes().remove(type);
+				library.getTypes().add(importedType);
+			}
+			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)
+			{
+				// this import is inside a variable as anonymous type
+				// importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library);
+				// ((Variable) type.eContainer()).getAnonymousTypes().remove(type);
+				// ((Variable) type.eContainer()).getAnonymousTypes().add(importedType);
+				return new GeppettoExecutionException("Anonymous types at the root level initially not supported");
+			}
+
 		}
 		catch(IOException e)
 		{
 			return new GeppettoExecutionException(e);
+		}
+		catch(ModelInterpreterException e)
+		{
+			return e;
 		}
 		return super.caseImportType(type);
 	}
@@ -84,10 +97,9 @@ public class CreateInstanceTreeVisitor extends TypesSwitch<GeppettoExecutionExce
 	 * @param modelInterpreters
 	 * @param libraryManager
 	 */
-	public CreateInstanceTreeVisitor(Map<String, IModelInterpreter> modelInterpreters, LibraryManager libraryManager)
+	public ImportTypesVisitor(Map<String, IModelInterpreter> modelInterpreters)
 	{
 		super();
-		this.libraryManager = libraryManager;
 		this.modelInterpreters = modelInterpreters;
 
 	}

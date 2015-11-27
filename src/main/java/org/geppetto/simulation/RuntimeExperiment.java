@@ -43,6 +43,13 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.emfjson.jackson.resource.JsonResourceFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
@@ -56,6 +63,7 @@ import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
+import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.RecordingModel;
@@ -65,9 +73,10 @@ import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.LibraryManager;
 import org.geppetto.model.util.GeppettoModelTraversal;
-import org.geppetto.simulation.visitor.CreateInstanceTreeVisitor;
+import org.geppetto.simulation.visitor.ImportTypesVisitor;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
@@ -89,42 +98,36 @@ public class RuntimeExperiment
 
 	private IGeppettoManager geppettoManager;
 
-	private static LibraryManager libraryManager;
-
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment) throws GeppettoExecutionException
 	{
 		this.experiment = experiment;
 		geppettoManager = runtimeProject.getGeppettoManager();
-		libraryManager = new LibraryManager();
-		geppettoModel=runtimeProject.getGeppettoModel();
+		geppettoModel = runtimeProject.getGeppettoModel();
 		init();
 	}
 
-
-	
 	private void init() throws GeppettoExecutionException
 	{
-		this.clearWatchLists();
-
-		// retrieve model interpreters and simulators
-		CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, experiment.getParentProject().getId(), geppettoManager.getScope());
-		GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
-
-		
-		CreateInstanceTreeVisitor runtimeTreeVisitor = new CreateInstanceTreeVisitor(modelInterpreters, libraryManager);
-		GeppettoModelTraversal.apply(geppettoModel, runtimeTreeVisitor);
-
-
-		// let's set the parameters if they exist
-		for(IAspectConfiguration ac : experiment.getAspectConfigurations())
+		try
 		{
-			if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
-			{
-				populateModelTree(ac.getAspect().getInstancePath());
-				setModelParameters(ac.getAspect().getInstancePath(), ac.getModelParameter());
-			}
+
+			// load Geppetto common library
+			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
+
+			// create model interpreters
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, experiment.getParentProject().getId(),
+					geppettoManager.getScope());
+			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
+
+			// import the types defined in the geppetot model using the model interpreters
+			ImportTypesVisitor runtimeTreeVisitor = new ImportTypesVisitor(modelInterpreters);
+			GeppettoModelTraversal.apply(geppettoModel, runtimeTreeVisitor);
+		}
+		catch(Exception e)
+		{
+			throw new GeppettoExecutionException(e);
 		}
 
 	}
@@ -137,35 +140,6 @@ public class RuntimeExperiment
 	public Map<String, IModelInterpreter> getModelInterpreters()
 	{
 		return modelInterpreters;
-	}
-
-	/**
-	 * 
-	 */
-	public void clearWatchLists()
-	{
-		logger.info("Clearing watched variables in simulation tree");
-
-		// Update the RunTimeTreeModel setting watched to false for every node
-		SetWatchedVariablesVisitor clearWatchedVariablesVisitor = new SetWatchedVariablesVisitor();
-		geppettoModel.apply(clearWatchedVariablesVisitor);
-
-		if(experiment.getStatus().equals(ExperimentStatus.DESIGN))
-		{
-			// if we are still in design we ask the DataManager to change what we are watching
-			// TODO Do we need "recordedVariables"? Thinking of the scenario that we recorded many and we
-			// only want to get a portion of them in the client
-			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
-			for(IAspectConfiguration aspectConfig : aspectConfigs)
-			{
-				DataManagerHelper.getDataManager().clearWatchedVariables(aspectConfig);
-			}
-		}
-		else
-		{
-			// TODO Exception or we change the "watched" and keep the "recorded"?
-		}
-
 	}
 
 	/**
@@ -194,7 +168,6 @@ public class RuntimeExperiment
 		geppettoModel = null;
 		geppettoManager = null;
 	}
-
 
 	/**
 	 * @return
@@ -455,7 +428,7 @@ public class RuntimeExperiment
 			{
 				FindParameterSpecificationNodeVisitor findParameterVisitor = new FindParameterSpecificationNodeVisitor(path);
 				geppettoModel.apply(findParameterVisitor);
-				ParameterValue p = findParameterVisitor.getParameterNode();
+				ParameterSpecificationNode p = findParameterVisitor.getParameterNode();
 				if(p != null)
 				{
 					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(p.getEntityInstancePath(), p.getAspectInstancePath(), p.getLocalInstancePath());

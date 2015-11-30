@@ -73,7 +73,6 @@ import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.values.Pointer;
-import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -295,9 +294,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					// note that some simulators might perform more than one step at the time (i.e. NEURON
 					// so the status will be STEPPING until they are all completed)
 
-					FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(instancePath);
-					runtimeExperiment.getRuntimeTree().apply(findAspectNodeVisitor);
-					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, findAspectNodeVisitor.getAspectNode());
+					//IT FIXME pointer needs to be created same as it happens inside RuntimeExperiment, probably we need a utility function
+					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, pointer);
 					simulatorRunThread.start();
 					simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
 				}
@@ -414,7 +412,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	@Override
 	public void endOfSteps(Pointer pointer, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
-		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(aspectNode.getInstancePath());
+		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(pointer.getInstancePath());
 
 		if(!DataManagerHelper.getDataManager().isDefault())
 		{
@@ -430,9 +428,9 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						case GEPPETTO_RECORDING:
 						{
 							String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
-							String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName);
+							String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), pointer.getInstancePath(), fileName);
 							S3Manager.getInstance().saveFileToS3(result, newPath);
-							IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(aspectNode);
+							IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
 							IPersistedData recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
 							ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, recording, ResultsFormat.GEPPETTO_RECORDING);
 							experiment.addSimulationResult(simulationResults);
@@ -447,16 +445,16 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				}
 
 				String fileName = "rawRecording.zip";
-				Zipper zipper = new Zipper(PathConfiguration.createExperimentTmpPath(Scope.RUN, project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName));
+				Zipper zipper = new Zipper(PathConfiguration.createExperimentTmpPath(Scope.RUN, project.getId(), experiment.getId(), pointer.getInstancePath(), fileName));
 
 				for(File raw : rawToZip)
 				{
 					zipper.addToZip(raw.toURI().toURL());
 				}
 				Path zipped = zipper.processAddedFilesAndZip();
-				String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), aspectNode.getInstancePath(), fileName);
+				String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), pointer.getInstancePath(), fileName);
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
-				IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(aspectNode);
+				IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
 				IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
 				ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, rawResults, ResultsFormat.RAW);
 				experiment.addSimulationResult(simulationResults);
@@ -479,11 +477,10 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	@Override
 	public void stepped(Pointer pointer) throws GeppettoExecutionException
 	{
-		String instancePath = aspect.getInstancePath();
+		String instancePath = pointer.getInstancePath();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 		simulatorRuntime.incrementProcessedSteps();
 		simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
-		// TODO What else?
 	}
 
 }

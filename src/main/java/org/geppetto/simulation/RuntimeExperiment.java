@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,7 +52,9 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IParameter;
 import org.geppetto.core.data.model.ISimulationResult;
+import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.data.model.ResultsFormat;
+import org.geppetto.core.features.ISetParameterFeature;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.manager.SharedLibraryManager;
@@ -62,25 +63,23 @@ import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.RecordingModel;
-import org.geppetto.core.model.typesystem.visitor.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.DropboxUploadService;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
+import org.geppetto.model.GeppettoFactory;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.GeppettoModelState;
 import org.geppetto.model.VariableValue;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.values.Pointer;
+import org.geppetto.model.values.Quantity;
 import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
-import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
-import org.geppetto.simulation.visitor.FindModelTreeVisitor;
-import org.geppetto.simulation.visitor.FindParameterSpecificationNodeVisitor;
 import org.geppetto.simulation.visitor.ImportTypesVisitor;
-import org.geppetto.simulation.visitor.SetParametersVisitor;
 
 public class RuntimeExperiment
 {
@@ -90,6 +89,8 @@ public class RuntimeExperiment
 	private Map<String, IModel> instancePathToIModelMap = new HashMap<>();
 
 	private GeppettoModel geppettoModel;
+
+	private GeppettoModelState geppettoModelState;
 
 	private IExperiment experiment;
 
@@ -102,6 +103,8 @@ public class RuntimeExperiment
 		this.experiment = experiment;
 		geppettoManager = runtimeProject.getGeppettoManager();
 		geppettoModel = runtimeProject.getGeppettoModel();
+		// every experiment has a state
+		geppettoModelState = GeppettoFactory.eINSTANCE.createGeppettoModelState();
 		init();
 	}
 
@@ -122,7 +125,7 @@ public class RuntimeExperiment
 			// import the types defined in the geppetto model using the model interpreters
 			ImportTypesVisitor runtimeTreeVisitor = new ImportTypesVisitor(modelInterpreters, commonLibraryAccess);
 			GeppettoModelTraversal.apply(geppettoModel, runtimeTreeVisitor);
-			
+
 			// let's set the parameters if they exist
 			for(IAspectConfiguration ac : experiment.getAspectConfigurations())
 			{
@@ -150,17 +153,64 @@ public class RuntimeExperiment
 	}
 
 	/**
-	 * @param watchedVariables
+	 * @param recordedVariables
 	 * @throws GeppettoExecutionException
 	 * @throws GeppettoInitializationException
 	 */
-	public void setWatchedVariables(List<String> watchedVariables)
+	public void setWatchedVariables(List<String> recordedVariables)
 	{
 		logger.info("Setting watched variables in simulation tree");
 
-		// Update the RunTimeTreeModel
-		SetWatchedVariablesVisitor setWatchedVariablesVisitor = new SetWatchedVariablesVisitor(experiment, watchedVariables);
-		geppettoModel.apply(setWatchedVariablesVisitor);
+		for(String recordedVariable : recordedVariables)
+		{
+			Pointer pointer = getPointer(recordedVariable);
+			IAspectConfiguration aspectConfiguration = getAspectConfiguration(pointer);
+
+			// first let's update the model state
+			VariableValue variableValue = null;
+			for(VariableValue vv : geppettoModelState.getRecordedVariables())
+			{
+				if(vv.getPointer().equals(pointer)) // IT FIXME implement equals or add utility method
+				{
+					variableValue = vv;
+					break;
+				}
+			}
+			if(variableValue != null)
+			{
+				// it already existed, we remove it, it means we are stop watching it
+				// Matteo: I don't like this but not changing it
+				geppettoModelState.getRecordedVariables().remove(variableValue);
+
+				// now let's update the DB
+				IInstancePath instancePath = null;
+				for(IInstancePath variable : aspectConfiguration.getWatchedVariables())
+				{
+					if(variable.getInstancePath().equals(recordedVariable))
+					{
+						instancePath = variable;
+						break;
+					}
+				}
+				if(instancePath != null)
+				{
+					aspectConfiguration.getWatchedVariables().remove(instancePath);
+				}
+			}
+			else
+			{
+				// we add it
+				variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
+				variableValue.setPointer(pointer);
+				geppettoModelState.getRecordedVariables().add(variableValue);
+
+				// now let's update the DB
+				IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
+				DataManagerHelper.getDataManager().addWatchedVariable(aspectConfiguration, instancePath);
+			}
+
+		}
+
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 
 	}
@@ -176,7 +226,6 @@ public class RuntimeExperiment
 		geppettoManager = null;
 	}
 
-
 	/**
 	 * @param instancePath
 	 * @return
@@ -186,7 +235,7 @@ public class RuntimeExperiment
 	{
 		logger.info("Downloading Model for " + instancePath + " in format " + format);
 
-		// find model interpreter 
+		// find model interpreter
 		Pointer pointer = getPointer(instancePath);
 		IModelInterpreter modelInterpreter = modelInterpreters.get(getGeppettoLibrary(pointer));
 		ModelFormat modelFormat = format;
@@ -199,7 +248,7 @@ public class RuntimeExperiment
 
 		try
 		{
-			return modelInterpreter.downloadModel(getPointer(instancePath), modelFormat, getAspectConfiguration(experiment, instancePath));
+			return modelInterpreter.downloadModel(getPointer(instancePath), modelFormat, getAspectConfiguration(pointer));
 		}
 		catch(ModelInterpreterException e)
 		{
@@ -291,41 +340,8 @@ public class RuntimeExperiment
 					{
 						logger.info("Reading results for " + watchedVariable.getInstancePath());
 
-						// Retrieve aspect node for current watched variable
-						FindAspectNodeVisitor findAspectNodeVisitor = new FindAspectNodeVisitor(watchedVariable.getEntityInstancePath() + "."
-								+ watchedVariable.getAspect().substring(0, watchedVariable.getAspect().indexOf(".")));
-						geppettoModel.apply(findAspectNodeVisitor);
-						AspectNode aspect = findAspectNodeVisitor.getAspectNode();
-						aspect.setModified(true);
-						aspect.getParentEntity().setModified(true);
-
-						// Create variable node in Aspect tree
-						AspectTreeType treeType = watchedVariable.getAspect().contains(AspectTreeType.SIMULATION_TREE.toString()) ? AspectTreeType.SIMULATION_TREE : AspectTreeType.VISUALIZATION_TREE;
-
-						// We first need to populate the simulation tree for the given aspect
-						// NOTE: it would seem that commenting this line out makes no difference - remove?
-						String instancePath = aspect.getInstancePath();
-						populateSimulationTree(instancePath);
-
-						AspectSubTreeNode simulationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.SIMULATION_TREE);
-						AspectSubTreeNode visualizationTree = (AspectSubTreeNode) aspect.getSubTree(AspectTreeType.VISUALIZATION_TREE);
-
-						recordingReader.readRecording(watchedVariable, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree, true);
-
-						String aspectPath = watchedVariable.getEntityInstancePath() + "."
-								+ watchedVariable.getAspect().replace("." + AspectTreeType.SIMULATION_TREE.toString(), "").replace("." + AspectTreeType.VISUALIZATION_TREE.toString(), "");
-
-						// map results to the appropriate tree
-						loadedResults.put(aspectPath, treeType == AspectTreeType.SIMULATION_TREE ? simulationTree : visualizationTree);
-
-						if(treeType == AspectTreeType.SIMULATION_TREE)
-						{
-							simulationTree.setModified(true);
-						}
-						else
-						{
-							visualizationTree.setModified(true);
-						}
+						// we add to the model state every variable that was recorded
+						recordingReader.readRecording(watchedVariable, geppettoModelState, true);
 
 						logger.info("Finished reading results for " + watchedVariable.getInstancePath());
 					}
@@ -333,7 +349,7 @@ public class RuntimeExperiment
 				}
 			}
 		}
-		return loadedResults;
+		return geppettoModelState.getRecordedVariables();
 	}
 
 	/**
@@ -341,9 +357,11 @@ public class RuntimeExperiment
 	 * @param instancePath
 	 * @return
 	 */
-	private IAspectConfiguration getAspectConfiguration(IExperiment experiment, String instancePath)
+	private IAspectConfiguration getAspectConfiguration(Pointer pointer)
 	{
 		// Check if it is a subAspect Instance Path and extract the base one
+		String instancePath=pointer.getInstancePath();
+		//IT FIXME This algorithm is not valid anymore
 		String[] instancePathSplit = instancePath.split("\\.");
 		if(instancePathSplit.length > 2)
 		{
@@ -357,72 +375,12 @@ public class RuntimeExperiment
 				return aspectConfig;
 			}
 		}
+		// IT FIXME Moved from SetWatchedVariablesVisitor
+		// if an aspect configuration doesn't already exist we create it
+		IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer);
+		ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
+		found = DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
 		return null;
-	}
-
-	/**
-	 * Creates variables to store in simulation tree
-	 * 
-	 * @param variables
-	 * @param tree
-	 */
-	public void createVariables(IInstancePath variable, AspectSubTreeNode tree)
-	{
-		String path = "/" + variable.getInstancePath().replace(tree.getInstancePath() + ".", "");
-		path = path.replace(".", "/");
-
-		path = path.replaceFirst("/", "");
-		StringTokenizer tokenizer = new StringTokenizer(path, "/");
-		ACompositeValue node = tree;
-		while(tokenizer.hasMoreElements())
-		{
-			String current = tokenizer.nextToken();
-			boolean found = false;
-			for(ANode child : node.getChildren())
-			{
-				if(child.getId().equals(current))
-				{
-					if(child instanceof ACompositeValue)
-					{
-						node = (ACompositeValue) child;
-					}
-
-					found = true;
-					break;
-				}
-			}
-			if(found)
-			{
-				continue;
-			}
-			else
-			{
-				if(tokenizer.hasMoreElements())
-				{
-					// not a leaf, create a composite state node
-					ACompositeValue newNode = new CompositeValue(current);
-					node.addChild(newNode);
-					node = newNode;
-				}
-				else
-				{
-					// it's a leaf node
-					if(tree.getType() == AspectTreeType.SIMULATION_TREE)
-					{
-						// for now leaf nodes in the Sim tree can only be variable nodes
-						VariableValue newNode = new VariableValue(current);
-						newNode.setWatched(true);
-						node.addChild(newNode);
-					}
-					else if(tree.getType() == AspectTreeType.VISUALIZATION_TREE)
-					{
-						// for now leaf nodes in the Viz tree can only be skeleton animation nodes
-						SkeletonAnimationValue newNode = new SkeletonAnimationValue(current);
-						node.addChild(newNode);
-					}
-				}
-			}
-		}
 	}
 
 	/**
@@ -449,46 +407,73 @@ public class RuntimeExperiment
 	 */
 	public List<VariableValue> setModelParameters(Map<String, String> parameters) throws GeppettoExecutionException
 	{
-		SetParametersVisitor parameterVisitor = new SetParametersVisitor(parameters, modelAspectPath);
-		IAspectConfiguration config = this.getAspectConfiguration(experiment, modelAspectPath);
-		for(String path : parameters.keySet())
+		for(String parameter : parameters.keySet())
 		{
-			IParameter existingParameter = null;
-			for(IParameter p : config.getModelParameter())
+			Pointer pointer = getPointer(parameter);
+			IModelInterpreter modelInterpreter = modelInterpreters.get(getGeppettoLibrary(pointer));
+
+			if(!modelInterpreter.isSupported(GeppettoFeature.SET_PARAMETERS_FEATURE))
 			{
-				if(p.getVariable().getInstancePath().equals(path))
+				throw new GeppettoExecutionException("The model interprter for the parameter " + parameter + " does not support the setParameter Feature");
+
+			}
+			Map<String, String> parameterValue = new HashMap<String, String>();
+			parameterValue.put(parameter, parameters.get(parameter));
+
+			Quantity value = ValuesFactory.eINSTANCE.createQuantity();
+			value.setValue(Double.valueOf(parameters.get(parameter)));
+			VariableValue variableValue = null;
+			// let's look if the same parameter has already been set, in that case we update the model
+			for(VariableValue vv : geppettoModelState.getSetParameters())
+			{
+				if(vv.getPointer().equals(pointer))// IT FIXME implement equals or add utility method
 				{
-					existingParameter = p;
-					break;
+					variableValue = vv;
 				}
 			}
-			if(existingParameter != null)
+			// it didn't exist, we create it
+			if(variableValue == null)
 			{
-				existingParameter.setValue(parameters.get(path));
+				variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
+				variableValue.setPointer(pointer);
+				geppettoModelState.getSetParameters().add(variableValue);
 			}
-			else
+			variableValue.setValue(value);
+
+			try
 			{
-				FindParameterSpecificationNodeVisitor findParameterVisitor = new FindParameterSpecificationNodeVisitor(path);
-				geppettoModel.apply(findParameterVisitor);
-				ParameterSpecificationNode p = findParameterVisitor.getParameterNode();
-				if(p != null)
+				((ISetParameterFeature) modelInterpreter.getFeature(GeppettoFeature.SET_PARAMETERS_FEATURE)).setParameter(variableValue);
+			}
+			catch(ModelInterpreterException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
+
+			IAspectConfiguration config = getAspectConfiguration(pointer);
+			for(String path : parameters.keySet())
+			{
+				IParameter existingParameter = null;
+				for(IParameter p : config.getModelParameter())
 				{
-					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(p.getEntityInstancePath(), p.getAspectInstancePath(), p.getLocalInstancePath());
-					config.addModelParameter(DataManagerHelper.getDataManager().newParameter(instancePath, parameters.get(path)));
+					if(p.getVariable().getInstancePath().equals(path))
+					{
+						existingParameter = p;
+						break;
+					}
+				}
+				if(existingParameter != null)
+				{
+					existingParameter.setValue(parameters.get(path));
 				}
 				else
 				{
-					throw new GeppettoExecutionException("Cannot find parameter " + path + "in the runtime tree.");
+					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
+					config.addModelParameter(DataManagerHelper.getDataManager().newParameter(instancePath, parameters.get(path)));
 				}
 			}
 		}
-		geppettoModel.apply(parameterVisitor);
-		parameterVisitor.postProcessVisit();
-		FindModelTreeVisitor findParameterVisitor = new FindModelTreeVisitor(modelAspectPath + ".ModelTree");
-		geppettoModel.apply(findParameterVisitor);
 
-		return findParameterVisitor.getModelTreeNode();
-
+		return geppettoModelState.getSetParameters();
 	}
 
 	/**

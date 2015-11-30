@@ -43,18 +43,11 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.emfjson.jackson.resource.JsonResourceFactory;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.DataManagerHelper;
-import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IInstancePath;
@@ -64,31 +57,35 @@ import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.manager.SharedLibraryManager;
+import org.geppetto.core.model.GeppettoCommonLibraryAccess;
 import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.RecordingModel;
 import org.geppetto.core.model.typesystem.visitor.SetWatchedVariablesVisitor;
 import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.services.ModelFormat;
+import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
+import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
-import org.geppetto.model.GeppettoPackage;
-import org.geppetto.model.LibraryManager;
+import org.geppetto.model.GeppettoModelState;
+import org.geppetto.model.VariableValue;
 import org.geppetto.model.util.GeppettoModelTraversal;
-import org.geppetto.simulation.visitor.ImportTypesVisitor;
+import org.geppetto.model.values.Pointer;
+import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
-import org.geppetto.simulation.visitor.DownloadModelVisitor;
 import org.geppetto.simulation.visitor.FindAspectNodeVisitor;
 import org.geppetto.simulation.visitor.FindModelTreeVisitor;
 import org.geppetto.simulation.visitor.FindParameterSpecificationNodeVisitor;
+import org.geppetto.simulation.visitor.ImportTypesVisitor;
 import org.geppetto.simulation.visitor.SetParametersVisitor;
-import org.geppetto.simulation.visitor.SupportedOutputsVisitor;
 
 public class RuntimeExperiment
 {
 
-	private Map<String, IModelInterpreter> modelInterpreters = new HashMap<String, IModelInterpreter>();
+	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters = new HashMap<GeppettoLibrary, IModelInterpreter>();
 
 	private Map<String, IModel> instancePathToIModelMap = new HashMap<>();
 
@@ -115,15 +112,25 @@ public class RuntimeExperiment
 
 			// load Geppetto common library
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
+			GeppettoCommonLibraryAccess commonLibraryAccess = new GeppettoCommonLibraryAccess(geppettoModel);
 
 			// create model interpreters
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, experiment.getParentProject().getId(),
 					geppettoManager.getScope());
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
 
-			// import the types defined in the geppetot model using the model interpreters
-			ImportTypesVisitor runtimeTreeVisitor = new ImportTypesVisitor(modelInterpreters);
+			// import the types defined in the geppetto model using the model interpreters
+			ImportTypesVisitor runtimeTreeVisitor = new ImportTypesVisitor(modelInterpreters, commonLibraryAccess);
 			GeppettoModelTraversal.apply(geppettoModel, runtimeTreeVisitor);
+			
+			// let's set the parameters if they exist
+			for(IAspectConfiguration ac : experiment.getAspectConfigurations())
+			{
+				if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
+				{
+					setModelParameters(ac.getModelParameter());
+				}
+			}
 		}
 		catch(Exception e)
 		{
@@ -137,7 +144,7 @@ public class RuntimeExperiment
 		return instancePathToIModelMap;
 	}
 
-	public Map<String, IModelInterpreter> getModelInterpreters()
+	public Map<GeppettoLibrary, IModelInterpreter> getModelInterpreters()
 	{
 		return modelInterpreters;
 	}
@@ -169,12 +176,55 @@ public class RuntimeExperiment
 		geppettoManager = null;
 	}
 
+
 	/**
+	 * @param instancePath
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	public File downloadModel(String instancePath, ModelFormat format) throws GeppettoExecutionException
+	{
+		logger.info("Downloading Model for " + instancePath + " in format " + format);
+
+		// find model interpreter 
+		Pointer pointer = getPointer(instancePath);
+		IModelInterpreter modelInterpreter = modelInterpreters.get(getGeppettoLibrary(pointer));
+		ModelFormat modelFormat = format;
+		if(format == null)
+		{
+			// FIXME: We are assuming there is only one format
+			List<ModelFormat> supportedOutputs = ServicesRegistry.getModelInterpreterServiceFormats(modelInterpreter);
+			modelFormat = supportedOutputs.get(0);
+		}
+
+		try
+		{
+			return modelInterpreter.downloadModel(getPointer(instancePath), modelFormat, getAspectConfiguration(experiment, instancePath));
+		}
+		catch(ModelInterpreterException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+	}
+
+	/**
+	 * @param pointer
+	 * @return the library to which the type pointed by a given pointer belongs to
+	 */
+	private GeppettoLibrary getGeppettoLibrary(Pointer pointer)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * @param instancePath
 	 * @return
 	 */
-	public Root getRuntimeTree()
+	private Pointer getPointer(String instancePath)
 	{
-		return geppettoModel;
+		Pointer pointer = ValuesFactory.eINSTANCE.createPointer();
+		return pointer;
 	}
 
 	/**
@@ -182,37 +232,29 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public File downloadModel(String aspectInstancePath, ModelFormat format) throws GeppettoExecutionException
+	public List<ModelFormat> supportedOuputs(String instancePath) throws GeppettoExecutionException
 	{
-		logger.info("Downloading Model for " + aspectInstancePath + " in format " + format);
+		logger.info("Getting supported outputs for " + instancePath);
 
-		DownloadModelVisitor downloadModelVistor = new DownloadModelVisitor(aspectInstancePath, format, getAspectConfiguration(experiment, aspectInstancePath));
-		geppettoModel.apply(downloadModelVistor);
-		downloadModelVistor.postProcessVisit();
-		return downloadModelVistor.getModelFile();
-	}
+		Pointer pointer = getPointer(instancePath);
+		IModelInterpreter modelInterpreter = modelInterpreters.get(getGeppettoLibrary(pointer));
 
-	/**
-	 * @param aspectInstancePath
-	 * @return
-	 * @throws GeppettoExecutionException
-	 */
-	public List<ModelFormat> supportedOuputs(String aspectInstancePath) throws GeppettoExecutionException
-	{
-		logger.info("Getting supported outputs for " + aspectInstancePath);
-		SupportedOutputsVisitor supportedOutputsModelVisitor = new SupportedOutputsVisitor(aspectInstancePath);
-		geppettoModel.apply(supportedOutputsModelVisitor);
-		supportedOutputsModelVisitor.postProcessVisit();
-		return supportedOutputsModelVisitor.getSupportedOutputs();
+		try
+		{
+			return modelInterpreter.getSupportedOutputs(pointer);
+		}
+		catch(ModelInterpreterException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
 	}
 
 	/**
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public Map<String, AspectSubTreeNode> updateRuntimeTreesWithResults() throws GeppettoExecutionException
+	public List<VariableValue> getRecordedVariables() throws GeppettoExecutionException
 	{
-		Map<String, AspectSubTreeNode> loadedResults = new HashMap<String, AspectSubTreeNode>();
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))
@@ -389,14 +431,14 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	private AspectSubTreeNode setModelParameters(String instancePath, List<? extends IParameter> modelParameter) throws GeppettoExecutionException
+	private List<VariableValue> setModelParameters(List<? extends IParameter> modelParameter) throws GeppettoExecutionException
 	{
 		Map<String, String> parameters = new HashMap<String, String>();
 		for(IParameter p : modelParameter)
 		{
 			parameters.put(p.getVariable().getInstancePath(), p.getValue());
 		}
-		return setModelParameters(instancePath, parameters);
+		return setModelParameters(parameters);
 	}
 
 	/**
@@ -405,7 +447,7 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public AspectSubTreeNode setModelParameters(String modelAspectPath, Map<String, String> parameters) throws GeppettoExecutionException
+	public List<VariableValue> setModelParameters(Map<String, String> parameters) throws GeppettoExecutionException
 	{
 		SetParametersVisitor parameterVisitor = new SetParametersVisitor(parameters, modelAspectPath);
 		IAspectConfiguration config = this.getAspectConfiguration(experiment, modelAspectPath);
@@ -476,6 +518,12 @@ public class RuntimeExperiment
 				}
 			}
 		}
+	}
+
+	public GeppettoModelState getModelState()
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

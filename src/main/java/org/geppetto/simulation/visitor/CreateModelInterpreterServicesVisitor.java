@@ -40,6 +40,8 @@ import org.geppetto.core.manager.Scope;
 import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.services.ServiceCreator;
+import org.geppetto.model.GeppettoLibrary;
+import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.util.TypesSwitch;
 
@@ -53,11 +55,11 @@ import org.geppetto.model.types.util.TypesSwitch;
 public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 {
 
-	private Map<String, IModelInterpreter> models;
+	private Map<GeppettoLibrary, IModelInterpreter> models;
 	private Scope scope;
 	private long projectId;
 
-	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> models, long projectId, Scope scope)
+	public CreateModelInterpreterServicesVisitor(Map<GeppettoLibrary, IModelInterpreter> models, long projectId, Scope scope)
 	{
 		super();
 		this.scope = scope;
@@ -72,7 +74,16 @@ public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 			AModelInterpreter modelInterpreter = (AModelInterpreter) ServiceCreator.getNewServiceInstance(type.getModelInterpreterId());
 			modelInterpreter.setProjectId(projectId);
 			modelInterpreter.setScope(scope);
-			models.put(type.getPath(), modelInterpreter);
+			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
+			{
+				// this import type is inside a library
+				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
+				models.put(library, modelInterpreter);
+			}
+			else
+			{
+				return new GeppettoExecutionException("Anonymous types at the root level initially not supported");
+			}
 		}
 		catch(GeppettoInitializationException e)
 		{

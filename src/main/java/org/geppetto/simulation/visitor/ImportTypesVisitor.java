@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.model.GeppettoCommonLibraryAccess;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.utilities.URLReader;
@@ -55,20 +56,22 @@ import org.geppetto.model.variables.VariablesPackage;
 public class ImportTypesVisitor extends TypesSwitch<Object>
 {
 
-	private Map<String, IModelInterpreter> modelInterpreters;
+	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
+	private GeppettoCommonLibraryAccess commonLibraryAccess;
 
 	@Override
 	public Object caseImportType(ImportType type)
 	{
 		try
 		{
-			IModelInterpreter modelInterpreter = modelInterpreters.get(type.getModelInterpreterId());
+
 			Type importedType = null;
 			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
 			{
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
-				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library);
+				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
+				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library, commonLibraryAccess);
 				library.getTypes().remove(type);
 				library.getTypes().add(importedType);
 			}
@@ -95,12 +98,14 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 	/**
 	 * @param modelInterpreters
+	 * @param commonLibraryAccess 
 	 * @param libraryManager
 	 */
-	public ImportTypesVisitor(Map<String, IModelInterpreter> modelInterpreters)
+	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoCommonLibraryAccess commonLibraryAccess)
 	{
 		super();
 		this.modelInterpreters = modelInterpreters;
+		this.commonLibraryAccess=commonLibraryAccess;
 
 	}
 

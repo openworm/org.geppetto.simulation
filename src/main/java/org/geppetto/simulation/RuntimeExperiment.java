@@ -360,27 +360,26 @@ public class RuntimeExperiment
 	private IAspectConfiguration getAspectConfiguration(Pointer pointer)
 	{
 		// Check if it is a subAspect Instance Path and extract the base one
-		String instancePath=pointer.getInstancePath();
+		String instancePathString=pointer.getInstancePath();
 		//IT FIXME This algorithm is not valid anymore
-		String[] instancePathSplit = instancePath.split("\\.");
+		String[] instancePathSplit = instancePathString.split("\\.");
 		if(instancePathSplit.length > 2)
 		{
-			instancePath = instancePathSplit[0] + "." + instancePathSplit[2];
+			instancePathString = instancePathSplit[0] + "." + instancePathSplit[2];
 		}
 
 		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
 		{
-			if(aspectConfig.getAspect().getInstancePath().equals(instancePath))
+			if(aspectConfig.getAspect().getInstancePath().equals(instancePathString))
 			{
 				return aspectConfig;
 			}
 		}
 		// IT FIXME Moved from SetWatchedVariablesVisitor
 		// if an aspect configuration doesn't already exist we create it
-		IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer);
-		ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
-		found = DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
-		return null;
+		IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
+		ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l); 
+		return DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
 	}
 
 	/**

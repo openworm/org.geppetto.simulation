@@ -36,33 +36,36 @@ import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
-import org.geppetto.core.model.geppettomodel.Aspect;
-import org.geppetto.core.model.geppettomodel.visitor.BaseVisitor;
-import org.geppetto.core.model.geppettomodel.visitor.TraversingVisitor;
-import org.geppetto.core.model.typesystem.visitor.DepthFirstTraverserImportsFirst;
+import org.geppetto.model.types.Type;
+import org.geppetto.model.util.PointerUtility;
+import org.geppetto.model.variables.Variable;
+import org.geppetto.model.variables.util.VariablesSwitch;
 
 /**
  * @author matteocantarelli
  *
  */
-public class PopulateExperimentVisitor extends TraversingVisitor
+public class PopulateExperimentVisitor extends VariablesSwitch<Object>
 {
 
 	private IExperiment experiment;
 
 	public PopulateExperimentVisitor(IExperiment experiment)
 	{
-		super(new DepthFirstTraverserImportsFirst(), new BaseVisitor());
 		this.experiment=experiment;
 	}
 
 	@Override
-	public void visit(Aspect aBean)
+	public Object caseVariable(Variable variable)
 	{
-		super.visit(aBean);
-		IInstancePath instancePath=DataManagerHelper.getDataManager().newInstancePath(aBean.getParentEntity().getInstancePath(),aBean.getId(),"");
-		ISimulatorConfiguration simulatorConfiguration=DataManagerHelper.getDataManager().newSimulatorConfiguration("","",0l,0l);
-		DataManagerHelper.getDataManager().newAspectConfiguration(experiment,instancePath,simulatorConfiguration);
+		for(Type type:variable.getTypes())
+		{
+			IInstancePath instancePath=DataManagerHelper.getDataManager().newInstancePath(PointerUtility.getInstancePath(variable, type));
+			ISimulatorConfiguration simulatorConfiguration=DataManagerHelper.getDataManager().newSimulatorConfiguration("","",0l,0l);
+			DataManagerHelper.getDataManager().newAspectConfiguration(experiment,instancePath,simulatorConfiguration);
+		}
+		return super.caseVariable(variable);
 	}
+
 
 }

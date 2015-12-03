@@ -59,7 +59,6 @@ import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoCommonLibraryAccess;
-import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.RecordingModel;
@@ -86,8 +85,6 @@ public class RuntimeExperiment
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters = new HashMap<GeppettoLibrary, IModelInterpreter>();
 
-	private Map<String, IModel> instancePathToIModelMap = new HashMap<>();
-
 	private GeppettoModel geppettoModel;
 
 	private GeppettoModelState geppettoModelState;
@@ -112,7 +109,7 @@ public class RuntimeExperiment
 	{
 		try
 		{
-
+			//IT FIXME Move to Runtime Project
 			// load Geppetto common library
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
 			GeppettoCommonLibraryAccess commonLibraryAccess = new GeppettoCommonLibraryAccess(geppettoModel);
@@ -140,11 +137,6 @@ public class RuntimeExperiment
 			throw new GeppettoExecutionException(e);
 		}
 
-	}
-
-	public Map<String, IModel> getInstancePathToIModelMap()
-	{
-		return instancePathToIModelMap;
 	}
 
 	public Map<GeppettoLibrary, IModelInterpreter> getModelInterpreters()
@@ -221,7 +213,6 @@ public class RuntimeExperiment
 	public void release()
 	{
 		modelInterpreters.clear();
-		instancePathToIModelMap.clear();
 		geppettoModel = null;
 		geppettoManager = null;
 	}

@@ -66,9 +66,16 @@ public class RuntimeProject
 
 	private IGeppettoManager geppettoManager;
 
+	private IGeppettoProject geppettoProject;
+
 	public GeppettoModel getGeppettoModel()
 	{
 		return geppettoModel;
+	}
+
+	public IGeppettoProject getGeppettoProject()
+	{
+		return geppettoProject;
 	}
 
 	/**
@@ -80,6 +87,7 @@ public class RuntimeProject
 	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
 	{
 		this.geppettoManager = geppettoManager;
+		this.geppettoProject = project;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 
 		try
@@ -192,10 +200,12 @@ public class RuntimeProject
 	public void populateNewExperiment(IExperiment experiment)
 	{
 		PopulateExperimentVisitor populateExperimentVisitor = new PopulateExperimentVisitor(experiment);
-		geppettoModel.accept(populateExperimentVisitor);
-
+		populateExperimentVisitor.doSwitch(geppettoModel);
 	}
 
+	/**
+	 * @return
+	 */
 	public IGeppettoManager getGeppettoManager()
 	{
 		return geppettoManager;

@@ -53,7 +53,6 @@ import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
-import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulationResult;
@@ -72,6 +71,7 @@ import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.utilities.Zipper;
+import org.geppetto.model.util.PointerUtility;
 import org.geppetto.model.values.Pointer;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -105,9 +105,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	private String timeStepUnit;
 
-	private RuntimeExperiment runtimeExperiment;
-
-	private IGeppettoProject project;
+	private RuntimeProject runtimeProject;
 
 	/**
 	 * @param experiment
@@ -116,12 +114,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @param geppettoCallbackListener
 	 * @param listener
 	 */
-	public ExperimentRunThread(IExperiment experiment, RuntimeExperiment runtimeExperiment, IGeppettoProject project, IExperimentListener listener)
+	public ExperimentRunThread(IExperiment experiment, RuntimeProject runtimeProject, IExperimentListener listener)
 	{
 		this.experiment = experiment;
-		this.runtimeExperiment = runtimeExperiment;
+		this.runtimeProject = runtimeProject;
 		this.listener = listener;
-		this.project = project;
 	}
 
 	/**
@@ -136,6 +133,10 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
 			String simulatorId = simConfig.getSimulatorId();
 			String instancePath = aspectConfig.getAspect().getInstancePath();
+			Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
+
+			// We are taking the domain model for the last element of the pointer
+			IModel model = (IModel) pointer.getElements().get(pointer.getElements().size() - 1).getType().getDomainModel();
 
 			if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
 			{
@@ -144,31 +145,25 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				conversionService.setProjectId(experiment.getParentProject().getId());
 				conversionServices.put(instancePath, conversionService);
 			}
-			ASimulator simulator=(ASimulator) ServiceCreator.getNewServiceInstance(simulatorId);
+			ASimulator simulator = (ASimulator) ServiceCreator.getNewServiceInstance(simulatorId);
 			simulator.setProjectId(experiment.getParentProject().getId());
 			simulatorServices.put(instancePath, simulator);
 			simulatorRuntimes.put(instancePath, new SimulatorRuntime());
 
 			try
 			{
-
-				// retrieve models from runtime experiment
-				IModel model = this.runtimeExperiment.getInstancePathToIModelMap().get(instancePath);
-				List<IModel> models = new ArrayList<IModel>();
-				models.add(model);
-
 				// get conversion service
 				IConversion conversionService = null;
 				if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
 				{
 					conversionService = this.conversionServices.get(simConfig.getConversionServiceId());
 				}
-				IModelInterpreter modelService = runtimeExperiment.getModelInterpreters().get(instancePath);
+				IModelInterpreter modelService = runtimeProject.getRuntimeExperiment(experiment).getModelInterpreters().get(instancePath);
 
 				// TODO: Extract formats from model interpreters from within here somehow
 				List<ModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);
 				List<ModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
-				List<IModel> iModelsConverted = new ArrayList<IModel>();
+				IModel iModelConverted = null;
 
 				if(conversionService != null)
 				{
@@ -184,13 +179,13 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					// Try to convert until a input-output format combination works
 					for(ModelFormat inputFormat : supportedInputFormats)
 					{
-						if(iModelsConverted.size() == 0)
+						if(iModelConverted == null)
 						{
 							for(ModelFormat outputFormat : supportedOutputFormats)
 							{
 								try
 								{
-									iModelsConverted.add(conversionService.convert(models.get(0), inputFormat, outputFormat, aspectConfig));
+									iModelConverted = conversionService.convert(model, inputFormat, outputFormat, aspectConfig);
 									break;
 								}
 								catch(ConversionException e)
@@ -210,19 +205,19 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 						for(Map.Entry<ConversionServiceKey, List<IConversion>> entry : conversionServices.entrySet())
 						{
-							if(iModelsConverted.size() == 0)
+							if(iModelConverted == null)
 							{
 								// FIXME: Assuming we will only have one conversion service
 								ConversionServiceKey conversionServiceKey = entry.getKey();
-								for(ModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(models.get(0), conversionServiceKey.getInputModelFormat()))
+								for(ModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(model, conversionServiceKey.getInputModelFormat()))
 								{
 									// Verify supported outputs for this model
 									if(supportedModelFormat.equals(conversionServiceKey.getOutputModelFormat()))
 									{
-										((AConversion)entry.getValue().get(0)).setScope(Scope.RUN);
-										((AConversion)entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());
-										iModelsConverted.add(entry.getValue().get(0)
-												.convert(models.get(0), conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig));
+										((AConversion) entry.getValue().get(0)).setScope(Scope.RUN);
+										((AConversion) entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());
+										iModelConverted = entry.getValue().get(0)
+												.convert(model, conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig);
 										break;
 									}
 								}
@@ -237,13 +232,13 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 					long start = System.currentTimeMillis();
 
-					if(iModelsConverted.size() == 0)
+					if(iModelConverted == null)
 					{
-						simulator.initialize(models, this);
+						simulator.initialize(model, aspectConfig, this);
 					}
 					else
 					{
-						simulator.initialize(iModelsConverted, this);
+						simulator.initialize(iModelConverted, aspectConfig, this);
 					}
 					long end = System.currentTimeMillis();
 					logger.info("Finished initializing simulator, took " + (end - start) + " ms ");
@@ -284,6 +279,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			{
 
 				String instancePath = aspectConfig.getAspect().getInstancePath();
+				Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
 				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 				ISimulator simulator = simulatorServices.get(instancePath);
 
@@ -294,8 +290,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					// note that some simulators might perform more than one step at the time (i.e. NEURON
 					// so the status will be STEPPING until they are all completed)
 
-					//IT FIXME pointer needs to be created same as it happens inside RuntimeExperiment, probably we need a utility function
-					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator, aspectConfig, pointer);
+					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator);
 					simulatorRunThread.start();
 					simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
 				}
@@ -325,7 +320,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		// and when done, notify about it
 		try
 		{
-			listener.experimentRunDone(this, experiment, project);
+			listener.experimentRunDone(this, experiment, runtimeProject);
 
 		}
 		catch(GeppettoExecutionException e)
@@ -370,8 +365,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		}
 		return true;
 	}
-
-
 
 	/**
 	 * @throws GeppettoExecutionException
@@ -428,7 +421,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						case GEPPETTO_RECORDING:
 						{
 							String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
-							String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), pointer.getInstancePath(), fileName);
+							String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), pointer.getInstancePath(), fileName);
 							S3Manager.getInstance().saveFileToS3(result, newPath);
 							IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
 							IPersistedData recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
@@ -445,14 +438,14 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				}
 
 				String fileName = "rawRecording.zip";
-				Zipper zipper = new Zipper(PathConfiguration.createExperimentTmpPath(Scope.RUN, project.getId(), experiment.getId(), pointer.getInstancePath(), fileName));
+				Zipper zipper = new Zipper(PathConfiguration.createExperimentTmpPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), pointer.getInstancePath(), fileName));
 
 				for(File raw : rawToZip)
 				{
 					zipper.addToZip(raw.toURI().toURL());
 				}
 				Path zipped = zipper.processAddedFilesAndZip();
-				String newPath = PathConfiguration.getExperimentPath(Scope.RUN, project.getId(), experiment.getId(), pointer.getInstancePath(), fileName);
+				String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), pointer.getInstancePath(), fileName);
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
 				IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
 				IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);

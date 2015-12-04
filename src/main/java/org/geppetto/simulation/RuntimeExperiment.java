@@ -68,10 +68,10 @@ import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
+import org.geppetto.model.ExperimentState;
 import org.geppetto.model.GeppettoFactory;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
-import org.geppetto.model.GeppettoModelState;
 import org.geppetto.model.VariableValue;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.values.Pointer;
@@ -87,7 +87,7 @@ public class RuntimeExperiment
 
 	private GeppettoModel geppettoModel;
 
-	private GeppettoModelState geppettoModelState;
+	private ExperimentState experimentState;
 
 	private IExperiment experiment;
 
@@ -101,7 +101,7 @@ public class RuntimeExperiment
 		geppettoManager = runtimeProject.getGeppettoManager();
 		geppettoModel = runtimeProject.getGeppettoModel();
 		// every experiment has a state
-		geppettoModelState = GeppettoFactory.eINSTANCE.createGeppettoModelState();
+		experimentState = GeppettoFactory.eINSTANCE.createExperimentState();
 		init();
 	}
 
@@ -160,7 +160,7 @@ public class RuntimeExperiment
 
 			// first let's update the model state
 			VariableValue variableValue = null;
-			for(VariableValue vv : geppettoModelState.getRecordedVariables())
+			for(VariableValue vv : experimentState.getRecordedVariables())
 			{
 				if(vv.getPointer().equals(pointer)) // IT FIXME implement equals or add utility method
 				{
@@ -172,7 +172,7 @@ public class RuntimeExperiment
 			{
 				// it already existed, we remove it, it means we are stop watching it
 				// Matteo: I don't like this but not changing it
-				geppettoModelState.getRecordedVariables().remove(variableValue);
+				experimentState.getRecordedVariables().remove(variableValue);
 
 				// now let's update the DB
 				IInstancePath instancePath = null;
@@ -194,7 +194,7 @@ public class RuntimeExperiment
 				// we add it
 				variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
 				variableValue.setPointer(pointer);
-				geppettoModelState.getRecordedVariables().add(variableValue);
+				experimentState.getRecordedVariables().add(variableValue);
 
 				// now let's update the DB
 				IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
@@ -293,7 +293,7 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public List<VariableValue> getRecordedVariables() throws GeppettoExecutionException
+	public ExperimentState getRecordedVariables() throws GeppettoExecutionException
 	{
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
@@ -332,7 +332,7 @@ public class RuntimeExperiment
 						logger.info("Reading results for " + watchedVariable.getInstancePath());
 
 						// we add to the model state every variable that was recorded
-						recordingReader.readRecording(watchedVariable, geppettoModelState, true);
+						recordingReader.readRecording(watchedVariable, experimentState, true);
 
 						logger.info("Finished reading results for " + watchedVariable.getInstancePath());
 					}
@@ -340,7 +340,7 @@ public class RuntimeExperiment
 				}
 			}
 		}
-		return geppettoModelState.getRecordedVariables();
+		return experimentState;
 	}
 
 	/**
@@ -379,7 +379,7 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	private List<VariableValue> setModelParameters(List<? extends IParameter> modelParameter) throws GeppettoExecutionException
+	private ExperimentState setModelParameters(List<? extends IParameter> modelParameter) throws GeppettoExecutionException
 	{
 		Map<String, String> parameters = new HashMap<String, String>();
 		for(IParameter p : modelParameter)
@@ -395,7 +395,7 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public List<VariableValue> setModelParameters(Map<String, String> parameters) throws GeppettoExecutionException
+	public ExperimentState setModelParameters(Map<String, String> parameters) throws GeppettoExecutionException
 	{
 		for(String parameter : parameters.keySet())
 		{
@@ -414,7 +414,7 @@ public class RuntimeExperiment
 			value.setValue(Double.valueOf(parameters.get(parameter)));
 			VariableValue variableValue = null;
 			// let's look if the same parameter has already been set, in that case we update the model
-			for(VariableValue vv : geppettoModelState.getSetParameters())
+			for(VariableValue vv : experimentState.getSetParameters())
 			{
 				if(vv.getPointer().equals(pointer))// IT FIXME implement equals or add utility method
 				{
@@ -426,7 +426,7 @@ public class RuntimeExperiment
 			{
 				variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
 				variableValue.setPointer(pointer);
-				geppettoModelState.getSetParameters().add(variableValue);
+				experimentState.getSetParameters().add(variableValue);
 			}
 			variableValue.setValue(value);
 
@@ -463,7 +463,7 @@ public class RuntimeExperiment
 			}
 		}
 
-		return geppettoModelState.getSetParameters();
+		return experimentState;
 	}
 
 	/**
@@ -495,7 +495,7 @@ public class RuntimeExperiment
 		}
 	}
 
-	public GeppettoModelState getModelState()
+	public ExperimentState getModelState()
 	{
 		// TODO Auto-generated method stub
 		return null;

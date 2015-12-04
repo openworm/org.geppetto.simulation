@@ -71,6 +71,7 @@ import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.utilities.Zipper;
+import org.geppetto.model.ExperimentState;
 import org.geppetto.model.util.PointerUtility;
 import org.geppetto.model.values.Pointer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -216,8 +217,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 									{
 										((AConversion) entry.getValue().get(0)).setScope(Scope.RUN);
 										((AConversion) entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());
-										iModelConverted = entry.getValue().get(0)
-												.convert(model, conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig);
+										iModelConverted = entry.getValue().get(0).convert(model, conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig);
 										break;
 									}
 								}
@@ -231,14 +231,14 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				{
 
 					long start = System.currentTimeMillis();
-
+					ExperimentState experimentState = runtimeProject.getRuntimeExperiment(experiment).getExperimentState();
 					if(iModelConverted == null)
 					{
-						simulator.initialize(model, aspectConfig, this);
+						simulator.initialize(model, aspectConfig, experimentState, this);
 					}
 					else
 					{
-						simulator.initialize(iModelConverted, aspectConfig, this);
+						simulator.initialize(iModelConverted, aspectConfig, experimentState, this);
 					}
 					long end = System.currentTimeMillis();
 					logger.info("Finished initializing simulator, took " + (end - start) + " ms ");

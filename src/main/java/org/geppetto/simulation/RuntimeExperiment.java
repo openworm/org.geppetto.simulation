@@ -495,7 +495,7 @@ public class RuntimeExperiment
 		}
 	}
 
-	public ExperimentState getModelState()
+	public ExperimentState getExperimentState()
 	{
 		// TODO Auto-generated method stub
 		return null;

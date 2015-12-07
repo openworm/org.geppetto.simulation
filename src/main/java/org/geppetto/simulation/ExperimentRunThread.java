@@ -60,10 +60,8 @@ import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.data.model.PersistedDataType;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.manager.Scope;
-import org.geppetto.core.model.IModel;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.s3.S3Manager;
-import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
@@ -71,7 +69,9 @@ import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.utilities.Zipper;
+import org.geppetto.model.DomainModel;
 import org.geppetto.model.ExperimentState;
+import org.geppetto.model.ModelFormat;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.PointerUtility;
 import org.geppetto.model.values.Pointer;
@@ -136,7 +136,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
 
 				// We are taking the domain model for the last element of the pointer
-				IModel model = (IModel) pointer.getElements().get(pointer.getElements().size() - 1).getType().getDomainModel();
+				DomainModel model = PointerUtility.getType(pointer).getDomainModel();
 
 				if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
 				{
@@ -161,7 +161,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				// TODO: Extract formats from model interpreters from within here somehow
 				List<ModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);
 				List<ModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
-				IModel iModelConverted = null;
+				DomainModel iConvertedModel = null;
 
 				if(conversionService != null)
 				{
@@ -177,13 +177,13 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					// Try to convert until a input-output format combination works
 					for(ModelFormat inputFormat : supportedInputFormats)
 					{
-						if(iModelConverted == null)
+						if(iConvertedModel == null)
 						{
 							for(ModelFormat outputFormat : supportedOutputFormats)
 							{
 								try
 								{
-									iModelConverted = conversionService.convert(model, inputFormat, outputFormat, aspectConfig);
+									iConvertedModel = conversionService.convert(model, outputFormat, aspectConfig);
 									break;
 								}
 								catch(ConversionException e)
@@ -203,18 +203,18 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 						for(Map.Entry<ConversionServiceKey, List<IConversion>> entry : conversionServices.entrySet())
 						{
-							if(iModelConverted == null)
+							if(iConvertedModel == null)
 							{
 								// FIXME: Assuming we will only have one conversion service
 								ConversionServiceKey conversionServiceKey = entry.getKey();
-								for(ModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(model, conversionServiceKey.getInputModelFormat()))
+								for(ModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(model))
 								{
 									// Verify supported outputs for this model
 									if(supportedModelFormat.equals(conversionServiceKey.getOutputModelFormat()))
 									{
 										((AConversion) entry.getValue().get(0)).setScope(Scope.RUN);
 										((AConversion) entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());
-										iModelConverted = entry.getValue().get(0).convert(model, conversionServiceKey.getInputModelFormat(), conversionServiceKey.getOutputModelFormat(), aspectConfig);
+										iConvertedModel = entry.getValue().get(0).convert(model, conversionServiceKey.getOutputModelFormat(), aspectConfig);
 										break;
 									}
 								}
@@ -229,13 +229,13 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 					long start = System.currentTimeMillis();
 					ExperimentState experimentState = runtimeProject.getRuntimeExperiment(experiment).getExperimentState();
-					if(iModelConverted == null)
+					if(iConvertedModel == null)
 					{
 						simulator.initialize(model, aspectConfig, experimentState, this);
 					}
 					else
 					{
-						simulator.initialize(iModelConverted, aspectConfig, experimentState, this);
+						simulator.initialize(iConvertedModel, aspectConfig, experimentState, this);
 					}
 					long end = System.currentTimeMillis();
 					logger.info("Finished initializing simulator, took " + (end - start) + " ms ");

@@ -57,15 +57,15 @@ import org.geppetto.core.features.ISetParameterFeature;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.RecordingModel;
+import org.geppetto.core.model.Recording;
 import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.services.GeppettoFeature;
-import org.geppetto.core.services.ModelFormat;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.ExperimentState;
 import org.geppetto.model.GeppettoFactory;
+import org.geppetto.model.ModelFormat;
 import org.geppetto.model.VariableValue;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.PointerUtility;
@@ -259,7 +259,7 @@ public class RuntimeExperiment
 					throw new GeppettoExecutionException(e);
 				}
 
-				RecordingReader recordingReader = new RecordingReader(new RecordingModel(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
+				RecordingReader recordingReader = new RecordingReader(new Recording(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
 
 				// get all aspect configurations
 				List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();

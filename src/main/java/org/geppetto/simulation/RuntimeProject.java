@@ -245,7 +245,16 @@ public class RuntimeProject
 	 */
 	public IModelInterpreter getModelInterpreter(Pointer pointer)
 	{
-		return modelInterpreters.get(PointerUtility.getGeppettoLibrary(pointer));
+		return getModelInterpreter(PointerUtility.getGeppettoLibrary(pointer));
+	}
+
+	/**
+	 * @param library
+	 * @return
+	 */
+	public IModelInterpreter getModelInterpreter(GeppettoLibrary library)
+	{
+		return modelInterpreters.get(library);
 	}
 
 }

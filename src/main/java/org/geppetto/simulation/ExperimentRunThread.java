@@ -102,10 +102,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	private IExperimentListener listener;
 
-	private double runtime;
-
-	private String timeStepUnit;
-
 	private RuntimeProject runtimeProject;
 
 	/**

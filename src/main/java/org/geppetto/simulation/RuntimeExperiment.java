@@ -404,7 +404,7 @@ public class RuntimeExperiment
 
 			if(!modelInterpreter.isSupported(GeppettoFeature.SET_PARAMETERS_FEATURE))
 			{
-				throw new GeppettoExecutionException("The model interprter for the parameter " + parameter + " does not support the setParameter Feature");
+				throw new GeppettoExecutionException("The model interpreter for the parameter " + parameter + " does not support the setParameter Feature");
 
 			}
 			Map<String, String> parameterValue = new HashMap<String, String>();

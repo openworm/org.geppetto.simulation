@@ -42,7 +42,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
@@ -55,10 +54,7 @@ import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.features.ISetParameterFeature;
-import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
-import org.geppetto.core.manager.SharedLibraryManager;
-import org.geppetto.core.model.GeppettoCommonLibraryAccess;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.RecordingModel;
@@ -70,36 +66,27 @@ import org.geppetto.core.simulator.RecordingReader;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.ExperimentState;
 import org.geppetto.model.GeppettoFactory;
-import org.geppetto.model.GeppettoLibrary;
-import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.VariableValue;
-import org.geppetto.model.util.GeppettoModelTraversal;
+import org.geppetto.model.util.PointerUtility;
 import org.geppetto.model.values.Pointer;
 import org.geppetto.model.values.Quantity;
 import org.geppetto.model.values.ValuesFactory;
-import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
-import org.geppetto.simulation.visitor.ImportTypesVisitor;
 
 public class RuntimeExperiment
 {
-
-	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters = new HashMap<GeppettoLibrary, IModelInterpreter>();
-
-	private GeppettoModel geppettoModel;
 
 	private ExperimentState experimentState;
 
 	private IExperiment experiment;
 
-	private IGeppettoManager geppettoManager;
+	private RuntimeProject runtimeProject;
 
 	private static Log logger = LogFactory.getLog(RuntimeExperiment.class);
 
 	public RuntimeExperiment(RuntimeProject runtimeProject, IExperiment experiment) throws GeppettoExecutionException
 	{
 		this.experiment = experiment;
-		geppettoManager = runtimeProject.getGeppettoManager();
-		geppettoModel = runtimeProject.getGeppettoModel();
+		this.runtimeProject=runtimeProject;
 		// every experiment has a state
 		experimentState = GeppettoFactory.eINSTANCE.createExperimentState();
 		init();
@@ -107,42 +94,18 @@ public class RuntimeExperiment
 
 	private void init() throws GeppettoExecutionException
 	{
-		try
+		// let's set the parameters if they exist
+		for(IAspectConfiguration ac : experiment.getAspectConfigurations())
 		{
-			//IT FIXME Move to Runtime Project
-			// load Geppetto common library
-			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
-			GeppettoCommonLibraryAccess commonLibraryAccess = new GeppettoCommonLibraryAccess(geppettoModel);
-
-			// create model interpreters
-			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, experiment.getParentProject().getId(),
-					geppettoManager.getScope());
-			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
-
-			// import the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor runtimeTreeVisitor = new ImportTypesVisitor(modelInterpreters, commonLibraryAccess);
-			GeppettoModelTraversal.apply(geppettoModel, runtimeTreeVisitor);
-
-			// let's set the parameters if they exist
-			for(IAspectConfiguration ac : experiment.getAspectConfigurations())
+			if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
 			{
-				if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
-				{
-					setModelParameters(ac.getModelParameter());
-				}
+				setModelParameters(ac.getModelParameter());
 			}
 		}
-		catch(Exception e)
-		{
-			throw new GeppettoExecutionException(e);
-		}
 
 	}
 
-	public Map<GeppettoLibrary, IModelInterpreter> getModelInterpreters()
-	{
-		return modelInterpreters;
-	}
+
 
 	/**
 	 * @param recordedVariables
@@ -155,7 +118,7 @@ public class RuntimeExperiment
 
 		for(String recordedVariable : recordedVariables)
 		{
-			Pointer pointer = getPointer(recordedVariable);
+			Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(),recordedVariable);
 			IAspectConfiguration aspectConfiguration = getAspectConfiguration(pointer);
 
 			// first let's update the model state
@@ -212,9 +175,7 @@ public class RuntimeExperiment
 	 */
 	public void release()
 	{
-		modelInterpreters.clear();
-		geppettoModel = null;
-		geppettoManager = null;
+		//IT FIXME Release ExperimentState
 	}
 
 	/**
@@ -227,8 +188,8 @@ public class RuntimeExperiment
 		logger.info("Downloading Model for " + instancePath + " in format " + format);
 
 		// find model interpreter
-		Pointer pointer = getPointer(instancePath);
-		IModelInterpreter modelInterpreter = modelInterpreters.get(getGeppettoLibrary(pointer));
+		Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(),instancePath);
+		IModelInterpreter modelInterpreter = runtimeProject.getModelInterpreter(pointer);
 		ModelFormat modelFormat = format;
 		if(format == null)
 		{
@@ -239,7 +200,7 @@ public class RuntimeExperiment
 
 		try
 		{
-			return modelInterpreter.downloadModel(getPointer(instancePath), modelFormat, getAspectConfiguration(pointer));
+			return modelInterpreter.downloadModel(pointer, modelFormat, getAspectConfiguration(pointer));
 		}
 		catch(ModelInterpreterException e)
 		{
@@ -247,25 +208,9 @@ public class RuntimeExperiment
 		}
 	}
 
-	/**
-	 * @param pointer
-	 * @return the library to which the type pointed by a given pointer belongs to
-	 */
-	private GeppettoLibrary getGeppettoLibrary(Pointer pointer)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	/**
-	 * @param instancePath
-	 * @return
-	 */
-	private Pointer getPointer(String instancePath)
-	{
-		Pointer pointer = ValuesFactory.eINSTANCE.createPointer();
-		return pointer;
-	}
+
+
 
 	/**
 	 * @param aspectInstancePath
@@ -276,8 +221,8 @@ public class RuntimeExperiment
 	{
 		logger.info("Getting supported outputs for " + instancePath);
 
-		Pointer pointer = getPointer(instancePath);
-		IModelInterpreter modelInterpreter = modelInterpreters.get(getGeppettoLibrary(pointer));
+		Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(),instancePath);
+		IModelInterpreter modelInterpreter = runtimeProject.getModelInterpreter(pointer);
 
 		try
 		{
@@ -399,8 +344,8 @@ public class RuntimeExperiment
 	{
 		for(String parameter : parameters.keySet())
 		{
-			Pointer pointer = getPointer(parameter);
-			IModelInterpreter modelInterpreter = modelInterpreters.get(getGeppettoLibrary(pointer));
+			Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(),parameter);
+			IModelInterpreter modelInterpreter = runtimeProject.getModelInterpreter(pointer);
 
 			if(!modelInterpreter.isSupported(GeppettoFeature.SET_PARAMETERS_FEATURE))
 			{

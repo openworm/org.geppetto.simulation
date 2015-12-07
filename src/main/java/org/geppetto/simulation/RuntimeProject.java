@@ -37,6 +37,7 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
@@ -44,8 +45,18 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.manager.IGeppettoManager;
+import org.geppetto.core.manager.SharedLibraryManager;
+import org.geppetto.core.model.GeppettoCommonLibraryAccess;
+import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.utilities.URLReader;
+import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.util.GeppettoModelTraversal;
+import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.model.util.PointerUtility;
+import org.geppetto.model.values.Pointer;
+import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
+import org.geppetto.simulation.visitor.ImportTypesVisitor;
 import org.geppetto.simulation.visitor.PopulateExperimentVisitor;
 
 /**
@@ -59,6 +70,8 @@ public class RuntimeProject
 {
 
 	private IExperiment activeExperiment;
+	
+	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters = new HashMap<GeppettoLibrary, IModelInterpreter>();
 
 	private Map<IExperiment, RuntimeExperiment> experimentRuntime = new HashMap<IExperiment, RuntimeExperiment>();
 
@@ -92,9 +105,24 @@ public class RuntimeProject
 
 		try
 		{
+			//reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
+			
+			//loading the Geppetto common library, we create a clone of what's loaded in the shared common library
+			//since every geppetto model will have his
+			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
+			GeppettoCommonLibraryAccess commonLibraryAccess = new GeppettoCommonLibraryAccess(geppettoModel);
+
+			// create model interpreters
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(),
+					geppettoManager.getScope());
+			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
+
+			//importing the types defined in the geppetto model using the model interpreters
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, commonLibraryAccess);
+			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 		}
-		catch(IOException e)
+		catch(IOException | GeppettoVisitingException e)
 		{
 			throw new GeppettoInitializationException(e);
 		}
@@ -209,6 +237,15 @@ public class RuntimeProject
 	public IGeppettoManager getGeppettoManager()
 	{
 		return geppettoManager;
+	}
+
+	/**
+	 * @param pointer
+	 * @return
+	 */
+	public IModelInterpreter getModelInterpreter(Pointer pointer)
+	{
+		return modelInterpreters.get(PointerUtility.getGeppettoLibrary(pointer));
 	}
 
 }

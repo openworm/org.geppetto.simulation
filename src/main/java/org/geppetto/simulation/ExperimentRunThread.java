@@ -159,7 +159,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				{
 					conversionService = this.conversionServices.get(simConfig.getConversionServiceId());
 				}
-				IModelInterpreter modelService = runtimeProject.getRuntimeExperiment(experiment).getModelInterpreters().get(instancePath);
+				IModelInterpreter modelService = runtimeProject.getModelInterpreter(pointer);
 
 				// TODO: Extract formats from model interpreters from within here somehow
 				List<ModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);

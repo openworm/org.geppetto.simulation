@@ -46,7 +46,7 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.SharedLibraryManager;
-import org.geppetto.core.model.GeppettoCommonLibraryAccess;
+import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
@@ -111,7 +111,7 @@ public class RuntimeProject
 			//loading the Geppetto common library, we create a clone of what's loaded in the shared common library
 			//since every geppetto model will have his
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
-			GeppettoCommonLibraryAccess commonLibraryAccess = new GeppettoCommonLibraryAccess(geppettoModel);
+			GeppettoModelAccess commonLibraryAccess = new GeppettoModelAccess(geppettoModel);
 
 			// create model interpreters
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(),

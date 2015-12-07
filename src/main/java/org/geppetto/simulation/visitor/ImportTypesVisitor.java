@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.model.GeppettoCommonLibraryAccess;
+import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.utilities.URLReader;
@@ -57,7 +57,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 {
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
-	private GeppettoCommonLibraryAccess commonLibraryAccess;
+	private GeppettoModelAccess commonLibraryAccess;
 
 	@Override
 	public Object caseImportType(ImportType type)
@@ -101,7 +101,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	 * @param commonLibraryAccess 
 	 * @param libraryManager
 	 */
-	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoCommonLibraryAccess commonLibraryAccess)
+	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess)
 	{
 		super();
 		this.modelInterpreters = modelInterpreters;

@@ -72,6 +72,7 @@ import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.ExperimentState;
+import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.PointerUtility;
 import org.geppetto.model.values.Pointer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,31 +125,31 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 */
 	private void init(IExperiment experiment) throws GeppettoInitializationException
 	{
-		List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
-		for(IAspectConfiguration aspectConfig : aspectConfigs)
+		try
 		{
-			ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
-			String simulatorId = simConfig.getSimulatorId();
-			String instancePath = aspectConfig.getAspect().getInstancePath();
-			Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
-
-			// We are taking the domain model for the last element of the pointer
-			IModel model = (IModel) pointer.getElements().get(pointer.getElements().size() - 1).getType().getDomainModel();
-
-			if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
+			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
+			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
-				AConversion conversionService = (AConversion) ServiceCreator.getNewServiceInstance(simConfig.getConversionServiceId());
-				conversionService.setScope(Scope.RUN);
-				conversionService.setProjectId(experiment.getParentProject().getId());
-				conversionServices.put(instancePath, conversionService);
-			}
-			ASimulator simulator = (ASimulator) ServiceCreator.getNewServiceInstance(simulatorId);
-			simulator.setProjectId(experiment.getParentProject().getId());
-			simulatorServices.put(instancePath, simulator);
-			simulatorRuntimes.put(instancePath, new SimulatorRuntime());
+				ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
+				String simulatorId = simConfig.getSimulatorId();
+				String instancePath = aspectConfig.getAspect().getInstancePath();
+				Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
 
-			try
-			{
+				// We are taking the domain model for the last element of the pointer
+				IModel model = (IModel) pointer.getElements().get(pointer.getElements().size() - 1).getType().getDomainModel();
+
+				if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
+				{
+					AConversion conversionService = (AConversion) ServiceCreator.getNewServiceInstance(simConfig.getConversionServiceId());
+					conversionService.setScope(Scope.RUN);
+					conversionService.setProjectId(experiment.getParentProject().getId());
+					conversionServices.put(instancePath, conversionService);
+				}
+				ASimulator simulator = (ASimulator) ServiceCreator.getNewServiceInstance(simulatorId);
+				simulator.setProjectId(experiment.getParentProject().getId());
+				simulatorServices.put(instancePath, simulator);
+				simulatorRuntimes.put(instancePath, new SimulatorRuntime());
+
 				// get conversion service
 				IConversion conversionService = null;
 				if(simConfig.getConversionServiceId() != null && !simConfig.getConversionServiceId().isEmpty())
@@ -243,11 +244,12 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				{
 					throw new GeppettoInitializationException("A simulator for " + instancePath + " already exists, something did not get cleared");
 				}
+
 			}
-			catch(Exception e)
-			{
-				throw new GeppettoInitializationException(e);
-			}
+		}
+		catch(Exception e)
+		{
+			throw new GeppettoInitializationException(e);
 		}
 	}
 
@@ -261,55 +263,56 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		try
 		{
 			init(experiment);
+
+			while(experiment.getStatus().equals(ExperimentStatus.RUNNING))
+			{
+
+				List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
+
+				for(IAspectConfiguration aspectConfig : aspectConfigs)
+				{
+
+					String instancePath = aspectConfig.getAspect().getInstancePath();
+					Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
+					SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
+					ISimulator simulator = simulatorServices.get(instancePath);
+
+					// if it's still stepping or completed we don't step again
+					if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING) && !simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
+					{
+						// we advance the simulation for this simulator only if we are not already stepping
+						// note that some simulators might perform more than one step at the time (i.e. NEURON
+						// so the status will be STEPPING until they are all completed)
+
+						SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator);
+						simulatorRunThread.start();
+						simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
+					}
+
+				}
+
+				if(checkAllSimulatorsAreDone())
+				{
+					experiment.setStatus(ExperimentStatus.COMPLETED);
+					DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+					logger.info("All simulators are done, experiment " + experiment.getId() + " was completed.");
+					break;
+				}
+			}
 		}
-		catch(GeppettoInitializationException e)
+		catch(GeppettoInitializationException | GeppettoModelException e)
 		{
 			simulationError();
 			logger.error(e);
 		}
-		while(experiment.getStatus().equals(ExperimentStatus.RUNNING))
+		try
 		{
-			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
-
-			for(IAspectConfiguration aspectConfig : aspectConfigs)
-			{
-
-				String instancePath = aspectConfig.getAspect().getInstancePath();
-				Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
-				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-				ISimulator simulator = simulatorServices.get(instancePath);
-
-				// if it's still stepping or completed we don't step again
-				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.STEPPING) && !simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
-				{
-					// we advance the simulation for this simulator only if we are not already stepping
-					// note that some simulators might perform more than one step at the time (i.e. NEURON
-					// so the status will be STEPPING until they are all completed)
-
-					SimulatorRunThread simulatorRunThread = new SimulatorRunThread(experiment, simulator);
-					simulatorRunThread.start();
-					simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPING);
-				}
-
-			}
-
-			if(checkAllSimulatorsAreDone())
-			{
-				experiment.setStatus(ExperimentStatus.COMPLETED);
-				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
-				logger.info("All simulators are done, experiment " + experiment.getId() + " was completed.");
-				break;
-			}
-
-			try
-			{
-				Thread.sleep(500);
-			}
-			catch(InterruptedException e)
-			{
-				simulationError();
-				throw new RuntimeException(e);
-			}
+			Thread.sleep(500);
+		}
+		catch(InterruptedException e)
+		{
+			simulationError();
+			throw new RuntimeException(e);
 
 		}
 

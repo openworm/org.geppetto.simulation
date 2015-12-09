@@ -35,7 +35,6 @@ package org.geppetto.simulation.visitor;
 import java.io.IOException;
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
@@ -45,6 +44,8 @@ import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.util.TypesSwitch;
+import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesPackage;
 
 /**
@@ -71,7 +72,11 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
-				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library, commonLibraryAccess);
+				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getId(), library, commonLibraryAccess);
+				for(Variable v:type.getReferencedVariables())
+				{
+					v.getTypes().add(importedType);
+				}
 				library.getTypes().remove(type);
 				library.getTypes().add(importedType);
 			}
@@ -81,17 +86,17 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				// importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library);
 				// ((Variable) type.eContainer()).getAnonymousTypes().remove(type);
 				// ((Variable) type.eContainer()).getAnonymousTypes().add(importedType);
-				return new GeppettoExecutionException("Anonymous types at the root level initially not supported");
+				return new GeppettoVisitingException("Anonymous types at the root level initially not supported");
 			}
 
 		}
 		catch(IOException e)
 		{
-			return new GeppettoExecutionException(e);
+			return new GeppettoVisitingException(e);
 		}
 		catch(ModelInterpreterException e)
 		{
-			return e;
+			return new GeppettoVisitingException(e);
 		}
 		return super.caseImportType(type);
 	}

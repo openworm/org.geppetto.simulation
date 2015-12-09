@@ -448,8 +448,7 @@ public class RuntimeExperiment
 
 	public ExperimentState getExperimentState()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return experimentState;
 	}
 
 }

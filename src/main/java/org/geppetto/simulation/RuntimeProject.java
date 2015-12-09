@@ -122,7 +122,7 @@ public class RuntimeProject
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, commonLibraryAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 		}
-		catch(IOException | GeppettoVisitingException e)
+		catch(IOException | GeppettoVisitingException  e)
 		{
 			throw new GeppettoInitializationException(e);
 		}

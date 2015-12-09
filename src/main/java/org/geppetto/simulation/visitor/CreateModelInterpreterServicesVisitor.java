@@ -44,6 +44,7 @@ import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.util.TypesSwitch;
+import org.geppetto.model.util.GeppettoVisitingException;
 
 /**
  * This visitor discovers and instantiates the services for each model interpreter. A thread is used to instantiate the services so that a new instance of the services is created at each time (the
@@ -64,6 +65,7 @@ public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 		super();
 		this.scope = scope;
 		this.projectId = projectId;
+		this.models=models;
 	}
 
 	@Override
@@ -87,7 +89,7 @@ public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 		}
 		catch(GeppettoInitializationException e)
 		{
-			return new GeppettoExecutionException(e);
+			return new GeppettoVisitingException(e);
 		}
 
 		return super.caseImportType(type);

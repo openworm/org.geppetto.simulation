@@ -54,12 +54,13 @@ import org.geppetto.model.GeppettoPackage;
 public class GeppettoModelReader
 {
 	
-	{
+	static{
 		GeppettoPackage.eINSTANCE.eClass();
 		Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
 		Map<String, Object> m = reg.getExtensionToFactoryMap();
 		m.put("xmi", new XMIResourceFactoryImpl()); // sets the factory for the XMI type
 		m.put("json", new JsonResourceFactory()); // sets the factory for the JSON type
+		GeppettoPackage.Registry.INSTANCE.put(GeppettoPackage.eNS_URI, GeppettoPackage.eINSTANCE); 
 	}
 	
 	public static GeppettoModel readGeppettoModel(URL url) throws GeppettoInitializationException

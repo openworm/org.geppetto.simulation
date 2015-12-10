@@ -33,6 +33,8 @@
 package org.geppetto.simulation.visitor;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.geppetto.core.model.GeppettoModelAccess;
@@ -73,8 +75,10 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
 				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getId(), library, commonLibraryAccess);
-				for(Variable v:type.getReferencedVariables())
+				List<Variable> referencedVars=new ArrayList<Variable>(type.getReferencedVariables());
+				for(Variable v:referencedVars)
 				{
+					v.getTypes().remove(type);
 					v.getTypes().add(importedType);
 				}
 				library.getTypes().remove(type);

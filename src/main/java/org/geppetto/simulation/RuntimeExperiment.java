@@ -130,7 +130,7 @@ public class RuntimeExperiment
 				VariableValue variableValue = null;
 				for(VariableValue vv : experimentState.getRecordedVariables())
 				{
-					if(vv.getPointer().equals(pointer)) // IT FIXME implement equals or add utility method
+					if(PointerUtility.equals(vv.getPointer(),pointer))
 					{
 						variableValue = vv;
 						break;
@@ -185,7 +185,9 @@ public class RuntimeExperiment
 	 */
 	public void release()
 	{
-		// IT FIXME Release ExperimentState
+		experimentState.getRecordedVariables().clear();
+		experimentState.getSetParameters().clear();
+		experimentState=null;
 	}
 
 	/**
@@ -368,7 +370,7 @@ public class RuntimeExperiment
 				// let's look if the same parameter has already been set, in that case we update the model
 				for(VariableValue vv : experimentState.getSetParameters())
 				{
-					if(vv.getPointer().equals(pointer))// IT FIXME implement equals or add utility method
+					if(PointerUtility.equals(vv.getPointer(),pointer))
 					{
 						variableValue = vv;
 					}

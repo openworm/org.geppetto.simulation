@@ -35,7 +35,6 @@ package org.geppetto.simulation;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,12 +45,12 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
 import org.geppetto.core.data.DataManagerHelper;
+import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IParameter;
 import org.geppetto.core.data.model.ISimulationResult;
-import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.features.ISetParameterFeature;
 import org.geppetto.core.manager.Scope;
@@ -95,30 +94,46 @@ public class RuntimeExperiment
 
 	private void init() throws GeppettoExecutionException
 	{
-		// let's set the parameters if they exist
-		for(IAspectConfiguration ac : experiment.getAspectConfigurations())
+		try
 		{
-			if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
+			// let's set the parameters if they exist
+			for(IAspectConfiguration ac : experiment.getAspectConfigurations())
 			{
-				setModelParameters(ac.getModelParameter());
-			}
-		}
+				if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
+				{
+					setModelParameters(ac.getModelParameter());
+				}
+				if(ac.getWatchedVariables() != null && !ac.getWatchedVariables().isEmpty())
+				{
+					for(IInstancePath instancePath : ac.getWatchedVariables())
+					{
+						VariableValue variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
+						variableValue.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath.getInstancePath()));
+						experimentState.getRecordedVariables().add(variableValue);
+					}
+				}
 
+			}
+			VariableValue time = GeppettoFactory.eINSTANCE.createVariableValue();
+			time.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), "time(StateVariable)"));
+			experimentState.getRecordedVariables().add(time);
+		}
+		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
 	}
 
 	/**
 	 * @param recordedVariables
-	 * @throws GeppettoModelException 
+	 * @return
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoInitializationException
 	 */
-	public void setWatchedVariables(List<String> recordedVariables) throws GeppettoModelException
+	private ExperimentState doSetWatchedVariables(List<String> recordedVariables) throws GeppettoExecutionException
 	{
-
+		logger.info("Setting watched variables in simulation tree");
 		try
 		{
-			logger.info("Setting watched variables in simulation tree");
-
 			for(String recordedVariable : recordedVariables)
 			{
 
@@ -130,7 +145,7 @@ public class RuntimeExperiment
 				VariableValue variableValue = null;
 				for(VariableValue vv : experimentState.getRecordedVariables())
 				{
-					if(PointerUtility.equals(vv.getPointer(),pointer))
+					if(PointerUtility.equals(vv.getPointer(), pointer))
 					{
 						variableValue = vv;
 						break;
@@ -175,9 +190,24 @@ public class RuntimeExperiment
 		}
 		catch(GeppettoModelException e)
 		{
-			throw new GeppettoModelException(e);
+			throw new GeppettoExecutionException(e);
 		}
+		return experimentState;
+	}
 
+	/**
+	 * @param recordedVariables
+	 * @throws GeppettoModelException
+	 * @throws GeppettoExecutionException
+	 * @throws GeppettoInitializationException
+	 */
+	public ExperimentState setWatchedVariables(List<String> recordedVariables) throws GeppettoExecutionException
+	{
+		if(!experiment.getStatus().equals(ExperimentStatus.DESIGN))
+		{
+			throw new GeppettoExecutionException("Cannot set what variables to record for an experiment not in DESIGN");
+		}
+		return doSetWatchedVariables(recordedVariables);
 	}
 
 	/**
@@ -187,7 +217,7 @@ public class RuntimeExperiment
 	{
 		experimentState.getRecordedVariables().clear();
 		experimentState.getSetParameters().clear();
-		experimentState=null;
+		experimentState = null;
 	}
 
 	/**
@@ -245,52 +275,53 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public ExperimentState getRecordedVariables() throws GeppettoExecutionException
+	public ExperimentState getRecordedVariables(List<String> filter) throws GeppettoExecutionException
 	{
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))
 			{
-				URL url;
-				try
+				RecordingReader recordingReader = null;
+				// after reading values out from recording, amp to the correct aspect given the watched variable
+				for(VariableValue watchedVariableValue : experimentState.getRecordedVariables())
 				{
-					url = URLReader.getURL(result.getResult().getUrl());
-				}
-				catch(IOException e)
-				{
-					throw new GeppettoExecutionException(e);
-				}
-
-				RecordingReader recordingReader = new RecordingReader(new Recording(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
-
-				// get all aspect configurations
-				List<IAspectConfiguration> aspectConfigs = (List<IAspectConfiguration>) experiment.getAspectConfigurations();
-
-				// get all watched variables from all aspect configurations
-				List<IInstancePath> watchedVariables = new ArrayList<IInstancePath>();
-				for(IAspectConfiguration aspectConfig : aspectConfigs)
-				{
-					for(IInstancePath ip : aspectConfig.getWatchedVariables())
+					boolean removed=false;
+					String watchedVariable = watchedVariableValue.getPointer().getInstancePath();
+					if(filter != null)
 					{
-						watchedVariables.add(ip);
+						if(!filter.contains(watchedVariable) && !watchedVariable.equals("time(StateVariable)"))
+						{
+							watchedVariableValue.setValue(null);
+							removed=true;
+						}
 					}
-				}
-
-				if(watchedVariables.size() > 0)
-				{
-					// after reading values out from recording, amp to the correct aspect given the watched variable
-					for(IInstancePath watchedVariable : watchedVariables)
+					if(!removed && watchedVariableValue.getValue() == null)
 					{
-						logger.info("Reading results for " + watchedVariable.getInstancePath());
+						if(recordingReader == null)
+						{
+							URL url;
+							try
+							{
+								url = URLReader.getURL(result.getResult().getUrl());
+							}
+							catch(IOException e)
+							{
+								throw new GeppettoExecutionException(e);
+							}
+
+							recordingReader = new RecordingReader(new Recording(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
+						}
+						logger.info("Reading results for " + watchedVariable);
 
 						// we add to the model state every variable that was recorded
 						recordingReader.readRecording(watchedVariable, experimentState, true);
 
-						logger.info("Finished reading results for " + watchedVariable.getInstancePath());
+						logger.info("Finished reading results for " + watchedVariable);
 					}
-
 				}
+
 			}
+
 		}
 		return experimentState;
 	}
@@ -299,30 +330,20 @@ public class RuntimeExperiment
 	 * @param experiment
 	 * @param instancePath
 	 * @return
+	 * @throws GeppettoExecutionException
 	 */
-	private IAspectConfiguration getAspectConfiguration(Pointer pointer)
+	private IAspectConfiguration getAspectConfiguration(Pointer pointer) throws GeppettoModelException
 	{
-		// Check if it is a subAspect Instance Path and extract the base one
 		String instancePathString = pointer.getInstancePath();
-		// IT FIXME This algorithm is not valid anymore
-		String[] instancePathSplit = instancePathString.split("\\.");
-		if(instancePathSplit.length > 2)
-		{
-			instancePathString = instancePathSplit[0] + "." + instancePathSplit[2];
-		}
 
 		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
 		{
-			if(aspectConfig.getAspect().getInstancePath().equals(instancePathString))
+			if(instancePathString.startsWith(aspectConfig.getAspect().getInstancePath()))
 			{
 				return aspectConfig;
 			}
 		}
-		// IT FIXME Moved from SetWatchedVariablesVisitor
-		// if an aspect configuration doesn't already exist we create it
-		IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
-		ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
-		return DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
+		throw new GeppettoModelException("Cannot find an aspect configuration for the pointer " + pointer.getInstancePath());
 	}
 
 	/**
@@ -338,7 +359,7 @@ public class RuntimeExperiment
 		{
 			parameters.put(p.getVariable().getInstancePath(), p.getValue());
 		}
-		return setModelParameters(parameters);
+		return doSetModelParameters(parameters);
 	}
 
 	/**
@@ -348,6 +369,20 @@ public class RuntimeExperiment
 	 * @throws GeppettoExecutionException
 	 */
 	public ExperimentState setModelParameters(Map<String, String> parameters) throws GeppettoExecutionException
+	{
+		if(!experiment.getStatus().equals(ExperimentStatus.DESIGN))
+		{
+			throw new GeppettoExecutionException("Cannot set the value of parameters for an experiment not in DESIGN");
+		}
+		return doSetModelParameters(parameters);
+	}
+
+	/**
+	 * @param parameters
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	private ExperimentState doSetModelParameters(Map<String, String> parameters) throws GeppettoExecutionException
 	{
 		for(String parameter : parameters.keySet())
 		{
@@ -370,7 +405,7 @@ public class RuntimeExperiment
 				// let's look if the same parameter has already been set, in that case we update the model
 				for(VariableValue vv : experimentState.getSetParameters())
 				{
-					if(PointerUtility.equals(vv.getPointer(),pointer))
+					if(PointerUtility.equals(vv.getPointer(), pointer))
 					{
 						variableValue = vv;
 					}

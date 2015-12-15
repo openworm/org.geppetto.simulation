@@ -68,6 +68,7 @@ import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.DomainModel;
 import org.geppetto.model.ExperimentState;
@@ -161,6 +162,14 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				// TODO: Extract formats from model interpreters from within here somehow
 				List<ModelFormat> inputFormats = ServicesRegistry.getModelInterpreterServiceFormats(modelService);
 				List<ModelFormat> outputFormats = ServicesRegistry.getSimulatorServiceFormats(simulator);
+				if(inputFormats == null || inputFormats.isEmpty())
+				{
+					throw new GeppettoInitializationException("No supported formats for the model interpreter " + modelService.getName());
+				}
+				if(outputFormats == null || outputFormats.isEmpty())
+				{
+					throw new GeppettoInitializationException("No supported formats for the simulator " + simulator.getName());
+				}
 				DomainModel iConvertedModel = null;
 
 				if(conversionService != null)
@@ -402,77 +411,73 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#endOfSteps(java.lang.String)
 	 */
 	@Override
-	public void endOfSteps(Pointer pointer, Map<File, ResultsFormat> results) throws GeppettoExecutionException
+	public void endOfSteps(IAspectConfiguration aspectConfiguration, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
-		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(pointer.getInstancePath());
+		String instancePath = aspectConfiguration.getAspect().getInstancePath();
+		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 
-		if(!DataManagerHelper.getDataManager().isDefault())
+		try
 		{
-			try
-			{
-				List<File> rawToZip = new ArrayList<File>();
+			List<File> rawToZip = new ArrayList<File>();
 
-				// where we store the results in S3
-				for(File result : results.keySet())
+			// where we store the results in S3
+			for(File result : results.keySet())
+			{
+				switch(results.get(result))
 				{
-					switch(results.get(result))
+					case GEPPETTO_RECORDING:
 					{
-						case GEPPETTO_RECORDING:
+						String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
+						String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName);
+						IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(instancePath);
+						IPersistedData recording;
+						if(!DataManagerHelper.getDataManager().isDefault())
 						{
-							String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
-							String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), pointer.getInstancePath(), fileName);
 							S3Manager.getInstance().saveFileToS3(result, newPath);
-							IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
-							IPersistedData recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
-							ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, recording, ResultsFormat.GEPPETTO_RECORDING);
-							experiment.addSimulationResult(simulationResults);
-							break;
+							recording = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
 						}
-						case RAW:
+						else
 						{
-							rawToZip.add(result);
-							break;
+							recording = DataManagerHelper.getDataManager().newPersistedData(result.toURI().toURL(), PersistedDataType.RECORDING);
 						}
+						ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, recording, ResultsFormat.GEPPETTO_RECORDING);
+						experiment.addSimulationResult(simulationResults);
+						break;
+					}
+					case RAW:
+					{
+						rawToZip.add(result);
+						break;
 					}
 				}
-
-				String fileName = "rawRecording.zip";
-				Zipper zipper = new Zipper(PathConfiguration.createExperimentTmpPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), pointer.getInstancePath(), fileName));
-
-				for(File raw : rawToZip)
-				{
-					zipper.addToZip(raw.toURI().toURL());
-				}
-				Path zipped = zipper.processAddedFilesAndZip();
-				String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), pointer.getInstancePath(), fileName);
-				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
-				IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
-				IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
-				ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, rawResults, ResultsFormat.RAW);
-				experiment.addSimulationResult(simulationResults);
-
-				DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
 			}
-			catch(IOException e)
+
+			String fileName = "rawRecording.zip";
+			Zipper zipper = new Zipper(PathConfiguration.createExperimentTmpPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName));
+
+			for(File raw : rawToZip)
 			{
-				throw new GeppettoExecutionException(e);
+				zipper.addToZip(raw.toURI().toURL());
 			}
-		}
-		simulatorRuntime.setStatus(SimulatorRuntimeStatus.DONE);
-	}
+			Path zipped = zipper.processAddedFilesAndZip();
+			String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName);
+			if(!DataManagerHelper.getDataManager().isDefault())
+			{
+				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
+			}
+			IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(instancePath);
+			IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
+			ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, rawResults, ResultsFormat.RAW);
+			experiment.addSimulationResult(simulationResults);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.simulation.ISimulatorCallbackListener#stateTreeUpdated()
-	 */
-	@Override
-	public void stepped(Pointer pointer) throws GeppettoExecutionException
-	{
-		String instancePath = pointer.getInstancePath();
-		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-		simulatorRuntime.incrementProcessedSteps();
-		simulatorRuntime.setStatus(SimulatorRuntimeStatus.STEPPED);
+			DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+		}
+		catch(IOException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+
+		simulatorRuntime.setStatus(SimulatorRuntimeStatus.DONE);
 	}
 
 }

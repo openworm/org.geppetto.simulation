@@ -43,7 +43,9 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
+import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IPersistedData;
+import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
@@ -51,13 +53,16 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.types.Type;
+import org.geppetto.model.types.TypesPackage;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.util.PointerUtility;
 import org.geppetto.model.values.Pointer;
+import org.geppetto.model.variables.Variable;
+import org.geppetto.model.variables.VariablesFactory;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.ImportTypesVisitor;
-import org.geppetto.simulation.visitor.PopulateExperimentVisitor;
 
 /**
  * The Runtime project holds the runtime state for an open project.
@@ -70,7 +75,7 @@ public class RuntimeProject
 {
 
 	private IExperiment activeExperiment;
-	
+
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters = new HashMap<GeppettoLibrary, IModelInterpreter>();
 
 	private Map<IExperiment, RuntimeExperiment> experimentRuntime = new HashMap<IExperiment, RuntimeExperiment>();
@@ -80,16 +85,6 @@ public class RuntimeProject
 	private IGeppettoManager geppettoManager;
 
 	private IGeppettoProject geppettoProject;
-
-	public GeppettoModel getGeppettoModel()
-	{
-		return geppettoModel;
-	}
-
-	public IGeppettoProject getGeppettoProject()
-	{
-		return geppettoProject;
-	}
 
 	/**
 	 * @param project
@@ -105,24 +100,30 @@ public class RuntimeProject
 
 		try
 		{
-			//reading and parsing the model
+			// reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
-			
-			//loading the Geppetto common library, we create a clone of what's loaded in the shared common library
-			//since every geppetto model will have his
+
+			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
+			// since every geppetto model will have his
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
-			GeppettoModelAccess commonLibraryAccess = new GeppettoModelAccess(geppettoModel);
+			GeppettoModelAccess geppettoModelAccess = new GeppettoModelAccess(geppettoModel);
 
 			// create model interpreters
-			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(),
-					geppettoManager.getScope());
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
 
-			//importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, commonLibraryAccess);
+			// importing the types defined in the geppetto model using the model interpreters
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
+
+			// create time (puhrrrrr)
+			Variable time = VariablesFactory.eINSTANCE.createVariable();
+			time.setId("time");
+			time.setName("time");
+			time.getTypes().add(geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			geppettoModel.getVariables().add(time);
 		}
-		catch(IOException | GeppettoVisitingException  e)
+		catch(IOException | GeppettoVisitingException e)
 		{
 			throw new GeppettoInitializationException(e);
 		}
@@ -198,7 +199,7 @@ public class RuntimeProject
 				if(experiment.getParentProject().getActiveExperimentId() == -1 || !(experiment.getId() == experiment.getParentProject().getActiveExperimentId()))
 				{
 					experiment.getParentProject().setActiveExperimentId(experiment.getId());
-					DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+					DataManagerHelper.getDataManager().saveEntity(geppettoProject);
 				}
 			}
 		}
@@ -224,11 +225,23 @@ public class RuntimeProject
 
 	/**
 	 * @param experiment
+	 * @throws GeppettoVisitingException
 	 */
-	public void populateNewExperiment(IExperiment experiment)
+	public void populateNewExperiment(IExperiment experiment) throws GeppettoVisitingException
 	{
-		PopulateExperimentVisitor populateExperimentVisitor = new PopulateExperimentVisitor(experiment);
-		populateExperimentVisitor.doSwitch(geppettoModel);
+		// Create one aspect configuration for each variable in the root
+		for(Variable variable : geppettoModel.getVariables())
+		{
+			if(!variable.getId().equals("time"))
+			{
+				for(Type type : variable.getTypes())
+				{
+					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(PointerUtility.getInstancePath(variable, type));
+					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
+					DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
+				}
+			}
+		}
 	}
 
 	/**
@@ -255,6 +268,22 @@ public class RuntimeProject
 	public IModelInterpreter getModelInterpreter(GeppettoLibrary library)
 	{
 		return modelInterpreters.get(library);
+	}
+
+	/**
+	 * @return
+	 */
+	public GeppettoModel getGeppettoModel()
+	{
+		return geppettoModel;
+	}
+
+	/**
+	 * @return
+	 */
+	public IGeppettoProject getGeppettoProject()
+	{
+		return geppettoProject;
 	}
 
 }

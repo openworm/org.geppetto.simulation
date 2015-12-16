@@ -30,46 +30,38 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.test;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
+import java.util.Date;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 
 /**
  * @author matteocantarelli
- * 
+ *
  */
-public class CustomSerializer extends StdSerializer<Double>
+public class TestUtilities
 {
-	public CustomSerializer(Class<Double> t)
-	{
-		super(t);
-	}
 
-	@Override
-	public void serialize(Double value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException
+	/**
+	 * @return
+	 */
+	public static Gson getGson()
 	{
-
-		if(null == value)
+		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Date.class, new JsonDeserializer<Date>()
 		{
-			// write the word 'null' if there's no value available
-			jgen.writeNull();
-		}
-		else if(value.equals(Double.NaN))
-		{
-			jgen.writeNumber(Double.NaN);
-		}
-		else
-		{
-			final String pattern = "#.##";
-			final DecimalFormat myFormatter = new DecimalFormat(pattern);
-			final String output = myFormatter.format(value).replace(",", ".");
-			jgen.writeNumber(output);
-		}
+			@Override
+			public Date deserialize(JsonElement json, java.lang.reflect.Type typeOfT, JsonDeserializationContext context) throws JsonParseException
+			{
+				return new Date(json.getAsJsonPrimitive().getAsLong());
+			}
+		});
+		return builder.create();
 	}
 }

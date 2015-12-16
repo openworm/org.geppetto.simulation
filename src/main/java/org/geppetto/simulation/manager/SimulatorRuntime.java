@@ -31,7 +31,9 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
 
-package org.geppetto.simulation;
+package org.geppetto.simulation.manager;
+
+import org.geppetto.simulation.SimulatorRuntimeStatus;
 
 /**
  * @author matteocantarelli

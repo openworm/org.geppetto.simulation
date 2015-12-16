@@ -34,6 +34,8 @@ package org.geppetto.simulation;
 
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.simulation.manager.ExperimentRunThread;
+import org.geppetto.simulation.manager.RuntimeProject;
 
 public interface IExperimentListener
 {

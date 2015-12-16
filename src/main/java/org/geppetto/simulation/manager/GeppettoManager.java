@@ -30,7 +30,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.manager;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,8 +66,6 @@ import org.geppetto.model.ExperimentState;
 import org.geppetto.model.ModelFormat;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
-import org.geppetto.simulation.manager.ExperimentRunManager;
-import org.geppetto.simulation.manager.RuntimeProject;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;

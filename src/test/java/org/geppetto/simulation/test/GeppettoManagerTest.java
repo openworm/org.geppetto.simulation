@@ -63,8 +63,8 @@ import org.geppetto.model.VariableValue;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.values.Quantity;
 import org.geppetto.model.values.TimeSeries;
-import org.geppetto.simulation.GeppettoManager;
 import org.geppetto.simulation.manager.ExperimentRunManager;
+import org.geppetto.simulation.manager.GeppettoManager;
 import org.geppetto.simulation.manager.RuntimeProject;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -122,7 +122,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#setUser(org.geppetto.core.data.model.IUser)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#setUser(org.geppetto.core.data.model.IUser)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -133,7 +133,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#getUser()}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#getUser()}.
 	 */
 	@Test
 	public void testGetUser()
@@ -143,7 +143,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#loadProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#loadProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws IOException
 	 * @throws GeppettoExecutionException
@@ -160,7 +160,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#getRuntimeProject(org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#getRuntimeProject(org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -189,7 +189,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -212,7 +212,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 */
 	@Test
 	public void testCheckExperimentsStatus()
@@ -224,7 +224,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -240,7 +240,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -255,7 +255,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#newExperiment(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#newExperiment(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -272,7 +272,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -289,7 +289,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -309,7 +309,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -325,7 +325,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -371,7 +371,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -386,7 +386,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 */
 	@Test
 	public void testCheckExperimentsStatusAgain()
@@ -398,7 +398,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 * @throws InterruptedException
@@ -416,7 +416,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 */
 	@Test
 	public void testCheckExperimentsStatusAgain2()
@@ -428,7 +428,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#cancelExperimentRun(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#cancelExperimentRun(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -439,7 +439,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 */
 	@Test
 	public void testCheckExperimentsStatusAgain3()
@@ -451,7 +451,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 * @throws InterruptedException
@@ -470,7 +470,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 */
 	@Test
 	public void testCheckExperimentsStatusAgain4()
@@ -482,7 +482,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#playExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#playExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 * @throws IOException
@@ -557,7 +557,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#linkDropBoxAccount(java.lang.String)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#linkDropBoxAccount(java.lang.String)}.
 	 * 
 	 * @throws Exception
 	 */
@@ -570,7 +570,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#uploadModelToDropBox(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject, org.geppetto.model.ModelFormat)}
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#uploadModelToDropBox(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject, org.geppetto.model.ModelFormat)}
 	 * .
 	 * 
 	 * @throws Exception
@@ -582,7 +582,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#uploadResultsToDropBox(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject, org.geppetto.core.data.model.ResultsFormat)}
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#uploadResultsToDropBox(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject, org.geppetto.core.data.model.ResultsFormat)}
 	 * .
 	 * 
 	 * @throws GeppettoExecutionException
@@ -594,7 +594,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#unlinkDropBoxAccount(java.lang.String)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#unlinkDropBoxAccount(java.lang.String)}.
 	 * 
 	 * @throws Exception
 	 */
@@ -605,7 +605,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#downloadModel(java.lang.String, org.geppetto.model.ModelFormat, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#downloadModel(java.lang.String, org.geppetto.model.ModelFormat, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}
 	 * .
 	 * 
 	 * @throws GeppettoExecutionException
@@ -620,7 +620,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#downloadResults(java.lang.String, org.geppetto.core.data.model.ResultsFormat, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#downloadResults(java.lang.String, org.geppetto.core.data.model.ResultsFormat, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}
 	 * .
 	 * 
 	 * @throws GeppettoExecutionException
@@ -639,7 +639,7 @@ public class GeppettoManagerTest
 
 	/**
 	 * Test method for
-	 * {@link org.geppetto.simulation.GeppettoManager#getSupportedOuputs(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * {@link org.geppetto.simulation.manager.GeppettoManager#getSupportedOuputs(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * @throws GeppettoExecutionException 
 	 */
 	@Test
@@ -651,7 +651,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#getScope()}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#getScope()}.
 	 */
 	@Test
 	public void testGetScope()
@@ -660,7 +660,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#deleteExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#deleteExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -672,7 +672,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 */
 	@Test
 	public void testCheckExperimentsStatusAgain5()
@@ -683,7 +683,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#closeProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#closeProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */
@@ -697,7 +697,7 @@ public class GeppettoManagerTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.GeppettoManager#deleteProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#deleteProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 */

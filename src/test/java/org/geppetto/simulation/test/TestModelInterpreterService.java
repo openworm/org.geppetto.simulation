@@ -116,7 +116,6 @@ public class TestModelInterpreterService extends AModelInterpreter
 			case DYNAMIC_VISUALTREE_FEATURE:
 				return false;
 			case SET_PARAMETERS_FEATURE:
-			case VARIABLE_WATCH_FEATURE:
 				return true;
 		}
 		return false;

@@ -68,7 +68,6 @@ import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
-import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.DomainModel;
 import org.geppetto.model.ExperimentState;

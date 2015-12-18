@@ -92,7 +92,7 @@
     ],
     "geppettoModel": {
         "id": 9,
-        "url": "/test/GeppettoModel.xmi",
+        "url": "/test/GeppettoManagerTestModel.xmi",
         "type": "GEPPETTO_PROJECT"
     }
 }

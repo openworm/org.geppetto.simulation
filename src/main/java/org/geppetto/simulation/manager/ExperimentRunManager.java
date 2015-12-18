@@ -73,18 +73,19 @@ public class ExperimentRunManager implements IExperimentListener
 
 	private Timer timer;
 
-	private static ExperimentRunManager instance;
+	private static ExperimentRunManager instance=null;
 
-	static
-	{
-		instance = new ExperimentRunManager();
-	}
+
 
 	/**
 	 * @return
 	 */
 	public static ExperimentRunManager getInstance()
 	{
+		if(instance==null)
+		{
+			instance = new ExperimentRunManager();
+		}
 		return instance;
 	}
 

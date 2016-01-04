@@ -89,6 +89,7 @@ public class RuntimeExperiment
 		this.runtimeProject = runtimeProject;
 		// every experiment has a state
 		experimentState = GeppettoFactory.eINSTANCE.createExperimentState();
+		experimentState.setExperimentId(experiment.getId());
 		init();
 	}
 

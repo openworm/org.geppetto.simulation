@@ -284,6 +284,7 @@ public class GeppettoManagerTest
 	{
 		ExperimentState experimentState = manager.loadExperiment("1", geppettoProject.getExperiments().get(1));
 		Assert.assertNotNull(experimentState);
+		Assert.assertEquals(1,experimentState.getExperimentId());
 		List<VariableValue> parameters = experimentState.getSetParameters();
 		List<VariableValue> recordedVariables = experimentState.getRecordedVariables();
 		Assert.assertEquals(0, parameters.size());

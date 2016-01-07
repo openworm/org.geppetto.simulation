@@ -32,13 +32,12 @@
  *******************************************************************************/
 package org.geppetto.simulation.test;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,6 @@ import org.geppetto.model.ModelFormat;
 import org.geppetto.model.VariableValue;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.values.Quantity;
-import org.geppetto.model.values.TimeSeries;
 import org.geppetto.simulation.manager.ExperimentRunManager;
 import org.geppetto.simulation.manager.GeppettoManager;
 import org.geppetto.simulation.manager.RuntimeProject;
@@ -91,16 +89,17 @@ import org.springframework.web.context.support.GenericWebApplicationContext;
  *
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class GeppettoManagerTest
+public class NoAccessGeppettoManagerTest
 {
 
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
+	private static ArrayList<UserPrivileges> privileges;
+	private static IExperiment existingExperiment;
 	private static GeppettoManager manager = new GeppettoManager(Scope.CONNECTION);
 	private static IGeppettoProject geppettoProject;
 	private static RuntimeProject runtimeProject;
-	private static IExperiment addedExperiment;
 
 	/**
 	 * @throws java.lang.Exception
@@ -137,24 +136,27 @@ public class GeppettoManagerTest
 	public void test01SetUser() throws GeppettoExecutionException
 	{
 		long value = 1000l * 1000 * 1000;
-		List<UserPrivileges> privileges = new ArrayList<UserPrivileges>();
-		privileges.add(UserPrivileges.READ_PROJECT);
-		privileges.add(UserPrivileges.WRITE_PROJECT);
-		privileges.add(UserPrivileges.DOWNLOAD);
-		privileges.add(UserPrivileges.DROPBOX_INTEGRATION);
-		privileges.add(UserPrivileges.RUN_EXPERIMENT);
-		IUserGroup userGroup=DataManagerHelper.getDataManager().newUserGroup("unaccountableAristocrats", privileges, value, value * 2);
+		privileges = new ArrayList<UserPrivileges>();
+		IUserGroup userGroup=DataManagerHelper.getDataManager().newUserGroup("guest", privileges, value, value * 2);
 		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#getUser()}.
+	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#loadProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
+	 * 
+	 * @throws IOException
+	 * @throws GeppettoExecutionException
+	 * @throws GeppettoInitializationException
+	 * @throws GeppettoAccessException 
 	 */
 	@Test
-	public void test02GetUser()
+	public void test02LoadProjectNegative() throws IOException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
-		Assert.assertEquals("nonna", manager.getUser().getName());
-		Assert.assertEquals("passauord", manager.getUser().getPassword());
+		InputStreamReader inputStreamReader=new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
+		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+		exception.expect(GeppettoAccessException.class);
+		manager.loadProject("1", geppettoProject);
+
 	}
 
 	/**
@@ -168,12 +170,14 @@ public class GeppettoManagerTest
 	@Test
 	public void test03LoadProject() throws IOException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
-		InputStreamReader inputStreamReader=new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
+		
+		InputStreamReader inputStreamReader=new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+		privileges.add(UserPrivileges.READ_PROJECT);
 		manager.loadProject("1", geppettoProject);
 
 	}
-
+	
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#getRuntimeProject(org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
@@ -212,7 +216,8 @@ public class GeppettoManagerTest
 	@Test
 	public void test05LoadExperiment() throws GeppettoExecutionException, GeppettoAccessException
 	{
-		ExperimentState experimentState = manager.loadExperiment("1", geppettoProject.getExperiments().get(0));
+		existingExperiment=geppettoProject.getExperiments().get(0);
+		ExperimentState experimentState = manager.loadExperiment("1", existingExperiment);
 		Assert.assertNotNull(experimentState);
 		List<VariableValue> parameters = experimentState.getSetParameters();
 		List<VariableValue> recordedVariables = experimentState.getRecordedVariables();
@@ -250,7 +255,7 @@ public class GeppettoManagerTest
 	{
 		Map<String, String> parametersMap = new HashMap<String, String>();
 		parametersMap.put("testVar(testType).p2(Parameter)", "0.234");
-		exception.expect(GeppettoExecutionException.class);
+		exception.expect(GeppettoAccessException.class);
 		manager.setModelParameters(parametersMap, runtimeProject.getActiveExperiment(), geppettoProject);
 
 	}
@@ -268,7 +273,7 @@ public class GeppettoManagerTest
 		List<String> watchedVariables = new ArrayList<String>();
 		// the following line stops recording a
 		watchedVariables.add("testVar(testType).a(StateVariable)");
-		exception.expect(GeppettoExecutionException.class);
+		exception.expect(GeppettoAccessException.class);
 		manager.setWatchedVariables(watchedVariables, runtimeProject.getActiveExperiment(), geppettoProject);
 	}
 
@@ -282,31 +287,12 @@ public class GeppettoManagerTest
 	public void test09NewExperiment() throws GeppettoExecutionException, GeppettoAccessException
 	{
 		Assert.assertEquals(1, geppettoProject.getExperiments().size());
-		addedExperiment = manager.newExperiment("2", geppettoProject);
-		Assert.assertEquals(2, geppettoProject.getExperiments().size());
-		Assert.assertEquals(1, addedExperiment.getAspectConfigurations().size());
-		IAspectConfiguration ac = addedExperiment.getAspectConfigurations().get(0);
-		ac.getSimulatorConfiguration().setSimulatorId("testSimulator");
+		exception.expect(GeppettoAccessException.class);
+		manager.newExperiment("2", geppettoProject);
 
 	}
 
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
-	 * 
-	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
-	 */
-	@Test
-	public void test10LoadNewExperiment() throws GeppettoExecutionException, GeppettoAccessException
-	{
-		ExperimentState experimentState = manager.loadExperiment("1", geppettoProject.getExperiments().get(1));
-		Assert.assertNotNull(experimentState);
-		Assert.assertEquals(1,experimentState.getExperimentId());
-		List<VariableValue> parameters = experimentState.getSetParameters();
-		List<VariableValue> recordedVariables = experimentState.getRecordedVariables();
-		Assert.assertEquals(0, parameters.size());
-		Assert.assertEquals(1, recordedVariables.size()); // just time
-	}
+
 
 	/**
 	 * Test method for
@@ -320,6 +306,7 @@ public class GeppettoManagerTest
 	{
 		Map<String, String> parametersMap = new HashMap<String, String>();
 		parametersMap.put("testVar(testType).p2(Parameter)", "0.234");
+		exception.expect(GeppettoAccessException.class);
 		ExperimentState experimentState = manager.setModelParameters(parametersMap, runtimeProject.getActiveExperiment(), geppettoProject);
 		List<VariableValue> parameters = experimentState.getSetParameters();
 		Assert.assertEquals(1, parameters.size());
@@ -342,7 +329,7 @@ public class GeppettoManagerTest
 		Map<String, String> parametersMap = new HashMap<String, String>();
 		parametersMap.put("testVar(testType).p3(Parameter)", "0.234");
 		// p3 does not exist
-		exception.expect(GeppettoExecutionException.class);
+		exception.expect(GeppettoAccessException.class);
 		manager.setModelParameters(parametersMap, runtimeProject.getActiveExperiment(), geppettoProject);
 	}
 
@@ -359,68 +346,11 @@ public class GeppettoManagerTest
 		List<String> watchedVariables = new ArrayList<String>();
 		watchedVariables.add("testVar(testType).a(StateVariable)");
 		watchedVariables.add("testVar(testType).c(StateVariable)");
-		ExperimentState experimentState = manager.setWatchedVariables(watchedVariables, runtimeProject.getActiveExperiment(), geppettoProject);
-		List<VariableValue> recordedVariables = experimentState.getRecordedVariables();
-		Assert.assertEquals(3, recordedVariables.size()); // a+c+time
-		Assert.assertEquals(2, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size()); // no time inside aspectConfiguration
-		VariableValue c = recordedVariables.get(2);
-		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
-
-		// the following line stops recording a
-		List<String> watchedVariables2 = new ArrayList<String>();
-		watchedVariables2.add("testVar(testType).a(StateVariable)");
-		ExperimentState experimentState2 = manager.setWatchedVariables(watchedVariables2, runtimeProject.getActiveExperiment(), geppettoProject);
-		List<VariableValue> recordedVariables2 = experimentState2.getRecordedVariables();
-		Assert.assertEquals(2, recordedVariables2.size());
-		Assert.assertEquals(1, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
-		c = recordedVariables2.get(1);
-		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
-
-		// Let's add a again and b too
-		List<String> watchedVariables3 = new ArrayList<String>();
-		watchedVariables3.add("testVar(testType).a(StateVariable)");
-		watchedVariables3.add("testVar(testType).b(StateVariable)");
-		ExperimentState experimentState3 = manager.setWatchedVariables(watchedVariables3, runtimeProject.getActiveExperiment(), geppettoProject);
-		List<VariableValue> recordedVariables3 = experimentState3.getRecordedVariables();
-		Assert.assertEquals(4, recordedVariables3.size());
-		Assert.assertEquals(3, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
-		c = recordedVariables3.get(1);
-		VariableValue a = recordedVariables3.get(2);
-		VariableValue b = recordedVariables3.get(3);
-		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).a(StateVariable)", a.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).b(StateVariable)", b.getPointer().getInstancePath());
-
-	}
-
-	/**
-	 * Test method for
-	 * {@link org.geppetto.simulation.manager.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
-	 * 
-	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
-	 */
-	@Test
-	public void test14SetWatchedVariablesNegativeWrongVariable() throws GeppettoExecutionException, GeppettoAccessException
-	{
-		List<String> watchedVariables = new ArrayList<String>();
-		watchedVariables.add("testVar(testType).d(Parameter)");
-		// d does not exist
-		exception.expect(GeppettoExecutionException.class);
+		exception.expect(GeppettoAccessException.class);
 		manager.setWatchedVariables(watchedVariables, runtimeProject.getActiveExperiment(), geppettoProject);
+
 	}
 
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
-	 */
-	@Test
-	public void test15CheckExperimentsStatusAgain()
-	{
-		List<? extends IExperiment> status = manager.checkExperimentsStatus("1", geppettoProject);
-		Assert.assertEquals(2, status.size());
-		Assert.assertEquals(ExperimentStatus.COMPLETED, status.get(0).getStatus());
-		Assert.assertEquals(ExperimentStatus.DESIGN, status.get(1).getStatus());
-	}
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
@@ -432,80 +362,17 @@ public class GeppettoManagerTest
 	@Test
 	public void test16RunExperiment() throws GeppettoExecutionException, InterruptedException, GeppettoAccessException
 	{
-		Assert.assertEquals(1, addedExperiment.getAspectConfigurations().size());
-		IAspectConfiguration ac = addedExperiment.getAspectConfigurations().get(0);
+		Assert.assertEquals(1, existingExperiment.getAspectConfigurations().size());
+		IAspectConfiguration ac = existingExperiment.getAspectConfigurations().get(0);
 		Assert.assertEquals("testVar(testType)", ac.getAspect().getInstancePath());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
-		manager.runExperiment("1", addedExperiment);
-		Assert.assertEquals(3, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
+		exception.expect(GeppettoAccessException.class);
+		manager.runExperiment("1", existingExperiment);
+		Assert.assertEquals(3, existingExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 	}
 
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
-	 */
-	@Test
-	public void test17CheckExperimentsStatusAgain2()
-	{
-		List<? extends IExperiment> status = manager.checkExperimentsStatus("1", geppettoProject);
-		Assert.assertEquals(2, status.size());
-		Assert.assertEquals(ExperimentStatus.COMPLETED, status.get(0).getStatus());
-		Assert.assertEquals(ExperimentStatus.QUEUED, status.get(1).getStatus());
-	}
 
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#cancelExperimentRun(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
-	 * 
-	 * @throws GeppettoExecutionException
-	 */
-	@Test
-	public void test18CancelExperimentRun() throws GeppettoExecutionException
-	{
-		manager.cancelExperimentRun("1", addedExperiment);
-	}
 
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
-	 */
-	@Test
-	public void test19CheckExperimentsStatusAgain3()
-	{
-		List<? extends IExperiment> status = manager.checkExperimentsStatus("1", geppettoProject);
-		Assert.assertEquals(2, status.size());
-		Assert.assertEquals(ExperimentStatus.COMPLETED, status.get(0).getStatus());
-		Assert.assertEquals(ExperimentStatus.DESIGN, status.get(1).getStatus());
-	}
-
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
-	 * 
-	 * @throws GeppettoExecutionException
-	 * @throws InterruptedException
-	 * @throws GeppettoAccessException 
-	 */
-	@Test
-	public void test20RunExperimentAgain() throws GeppettoExecutionException, InterruptedException, GeppettoAccessException
-	{
-		Assert.assertNotNull(ExperimentRunManager.getInstance());
-		Assert.assertEquals(1, addedExperiment.getAspectConfigurations().size());
-		IAspectConfiguration ac = addedExperiment.getAspectConfigurations().get(0);
-		Assert.assertEquals("testVar(testType)", ac.getAspect().getInstancePath());
-		Assert.assertNotNull(ac.getSimulatorConfiguration());
-		manager.runExperiment("1", addedExperiment);
-		Assert.assertEquals(3, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
-		Thread.sleep(3000);
-	}
-
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
-	 */
-	@Test
-	public void test21CheckExperimentsStatusAgain4()
-	{
-		List<? extends IExperiment> status = manager.checkExperimentsStatus("1", geppettoProject);
-		Assert.assertEquals(2, status.size());
-		Assert.assertEquals(ExperimentStatus.COMPLETED, status.get(0).getStatus());
-		Assert.assertEquals(ExperimentStatus.COMPLETED, status.get(1).getStatus());
-	}
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#playExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
@@ -518,71 +385,12 @@ public class GeppettoManagerTest
 	@Test
 	public void test22PlayExperiment() throws GeppettoExecutionException, NumberFormatException, IOException, GeppettoAccessException
 	{
-		ExperimentState experimentState = manager.playExperiment("1", addedExperiment, null);
-		List<VariableValue> recorded = experimentState.getRecordedVariables();
-		Assert.assertEquals(4, recorded.size());
-		VariableValue time = recorded.get(0);
-		VariableValue c = recorded.get(1);
-		VariableValue a = recorded.get(2);
-		VariableValue b = recorded.get(3);
-		Assert.assertEquals("time(StateVariable)", time.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).a(StateVariable)", a.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).b(StateVariable)", b.getPointer().getInstancePath());
-		Assert.assertNotNull(time.getValue());
-		Assert.assertNotNull(c.getValue());
-		Assert.assertNotNull(a.getValue());
-		Assert.assertNotNull(b.getValue());
-
-		checkValues(b, 3);
-		checkValues(time, 0);
-		checkValues(a, 2);
-		checkValues(c, 1);
-
-		List<String> filter = new ArrayList<String>();
-		filter.add("testVar(testType).a(StateVariable)");
-		experimentState = manager.playExperiment("1", addedExperiment, filter);
-		Assert.assertEquals("time(StateVariable)", time.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).a(StateVariable)", a.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).b(StateVariable)", b.getPointer().getInstancePath());
-		
-		Assert.assertNotNull(time.getValue());
-		checkValues(time, 0);
-		Assert.assertNull(c.getValue());
-		Assert.assertNotNull(a.getValue());
-		checkValues(a, 2);
-		Assert.assertNull(b.getValue());
-
+		privileges.remove(0);
+		exception.expect(GeppettoAccessException.class);
+		manager.playExperiment("1", existingExperiment, null);
 	}
 
-	/**
-	 * @param variable
-	 * @param columnIndexInTheDATFile
-	 * @throws NumberFormatException
-	 * @throws IOException
-	 */
-	private void checkValues(VariableValue variable, int columnIndexInTheDATFile) throws NumberFormatException, IOException
-	{
-		// read DAT into a buffered reader
-		BufferedReader input = new BufferedReader(new FileReader("./src/test/resources/test/testResults.dat"));
-
-		ArrayList<Double> storedValues = new ArrayList<Double>();
-
-		// read rest of DAT file and extract values
-		while(input.read() != -1)
-		{
-			String line = input.readLine();
-			String[] columns = line.split("\\s+");
-			storedValues.add(Double.valueOf(columns[columnIndexInTheDATFile]));
-
-		}
-
-		Assert.assertArrayEquals(storedValues.toArray(), ((TimeSeries) variable.getValue()).getValue().toArray());
-
-		input.close();
-	}
-
+	
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#linkDropBoxAccount(java.lang.String)}.
 	 * 
@@ -592,6 +400,7 @@ public class GeppettoManagerTest
 	{
 		//Dropbox tests are commented out as they require the API token to work which should not go in the code
 		//Until someone finds a strategy...
+		exception.expect(GeppettoAccessException.class);
 		manager.linkDropBoxAccount("");
 	}
 
@@ -604,7 +413,8 @@ public class GeppettoManagerTest
 	 */
 	public void testUploadModelToDropBox() throws Exception
 	{
-		manager.uploadModelToDropBox("testVar(testType)", addedExperiment, geppettoProject, ServicesRegistry.getModelFormat("TEST_FORMAT"));
+		exception.expect(GeppettoAccessException.class);
+		manager.uploadModelToDropBox("testVar(testType)", existingExperiment, geppettoProject, ServicesRegistry.getModelFormat("TEST_FORMAT"));
 	}
 
 	/**
@@ -617,8 +427,9 @@ public class GeppettoManagerTest
 	 */
 	public void testUploadResultsToDropBox() throws GeppettoExecutionException, GeppettoAccessException
 	{
-		manager.uploadResultsToDropBox("testVar(testType)", addedExperiment, geppettoProject, ResultsFormat.GEPPETTO_RECORDING);
-		manager.uploadResultsToDropBox("testVar(testType)", addedExperiment, geppettoProject, ResultsFormat.RAW);
+		exception.expect(GeppettoAccessException.class);
+		manager.uploadResultsToDropBox("testVar(testType)", existingExperiment, geppettoProject, ResultsFormat.GEPPETTO_RECORDING);
+		manager.uploadResultsToDropBox("testVar(testType)", existingExperiment, geppettoProject, ResultsFormat.RAW);
 	}
 
 	/**
@@ -628,6 +439,7 @@ public class GeppettoManagerTest
 	 */
 	public void testUnlinkDropBoxAccount() throws Exception
 	{
+		exception.expect(GeppettoAccessException.class);
 		manager.unlinkDropBoxAccount("");
 	}
 
@@ -642,7 +454,8 @@ public class GeppettoManagerTest
 	@Test
 	public void test23DownloadModel() throws GeppettoExecutionException, GeppettoAccessException
 	{
-		File model=manager.downloadModel("testVar(testType)", ServicesRegistry.getModelFormat("TEST_FORMAT"), addedExperiment, geppettoProject);
+		exception.expect(GeppettoAccessException.class);
+		File model=manager.downloadModel("testVar(testType)", ServicesRegistry.getModelFormat("TEST_FORMAT"), existingExperiment, geppettoProject);
 		Assert.assertNotNull(model);
 		Assert.assertEquals("ModelFile",model.getName());
 	}
@@ -659,12 +472,8 @@ public class GeppettoManagerTest
 	@Test
 	public void test24DownloadResults() throws GeppettoExecutionException, IOException, GeppettoAccessException
 	{
-		URL geppettoRecording=manager.downloadResults("testVar(testType)", ResultsFormat.GEPPETTO_RECORDING, addedExperiment, geppettoProject);
-		Assert.assertTrue(geppettoRecording.getPath().endsWith("./src/test/resources/test/testResults.h5"));
-		geppettoRecording.openConnection().connect();
-		URL rawRecording=manager.downloadResults("testVar(testType)", ResultsFormat.RAW, addedExperiment, geppettoProject);
-		rawRecording.openConnection().connect();
-		Assert.assertTrue(rawRecording.getPath().endsWith("testVar(testType)/rawRecording.zip"));
+		exception.expect(GeppettoAccessException.class);
+		URL geppettoRecording=manager.downloadResults("testVar(testType)", ResultsFormat.GEPPETTO_RECORDING, existingExperiment, geppettoProject);
 	}
 
 	/**
@@ -676,19 +485,10 @@ public class GeppettoManagerTest
 	@Test
 	public void test25GetSupportedOuputs() throws GeppettoExecutionException, GeppettoAccessException
 	{
-		List<ModelFormat> formats=manager.getSupportedOuputs("testVar(testType)",  addedExperiment, geppettoProject);
-		Assert.assertEquals(1, formats.size());
-		Assert.assertEquals(ServicesRegistry.getModelFormat("TEST_FORMAT"), formats.get(0));
+		exception.expect(GeppettoAccessException.class);
+		List<ModelFormat> formats=manager.getSupportedOuputs("testVar(testType)",  existingExperiment, geppettoProject);
 	}
 
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#getScope()}.
-	 */
-	@Test
-	public void test26GetScope()
-	{
-		Assert.assertEquals(Scope.CONNECTION, manager.getScope());
-	}
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#deleteExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
@@ -699,20 +499,11 @@ public class GeppettoManagerTest
 	@Test
 	public void test27DeleteExperiment() throws GeppettoExecutionException, GeppettoAccessException
 	{
-		manager.deleteExperiment("1", addedExperiment);
+		exception.expect(GeppettoAccessException.class);
+		manager.deleteExperiment("1", existingExperiment);
 		Assert.assertEquals(1, geppettoProject.getExperiments().size());
 	}
 
-	/**
-	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#checkExperimentsStatus(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
-	 */
-	@Test
-	public void test28CheckExperimentsStatusAgain5()
-	{
-		List<? extends IExperiment> status = manager.checkExperimentsStatus("1", geppettoProject);
-		Assert.assertEquals(1, status.size());
-		Assert.assertEquals(ExperimentStatus.COMPLETED, status.get(0).getStatus());
-	}
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#closeProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
@@ -725,7 +516,7 @@ public class GeppettoManagerTest
 		manager.closeProject("1", geppettoProject);
 		Assert.assertNull(runtimeProject.getActiveExperiment());
 		exception.expect(NullPointerException.class);
-		Assert.assertNull(runtimeProject.getRuntimeExperiment(addedExperiment).getExperimentState());
+		Assert.assertNull(runtimeProject.getRuntimeExperiment(existingExperiment).getExperimentState());
 	}
 
 	/**
@@ -737,6 +528,7 @@ public class GeppettoManagerTest
 	@Test
 	public void test30DeleteProject() throws GeppettoExecutionException, GeppettoAccessException
 	{
+		exception.expect(GeppettoAccessException.class);
 		manager.deleteProject("1", geppettoProject);
 	}
 

@@ -52,6 +52,8 @@ import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
+import org.geppetto.core.data.model.IUserGroup;
+import org.geppetto.core.data.model.UserPrivileges;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.simulation.IExperimentListener;
 

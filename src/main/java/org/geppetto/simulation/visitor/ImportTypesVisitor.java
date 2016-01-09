@@ -61,7 +61,21 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
 	private GeppettoModelAccess commonLibraryAccess;
+	private List<ImportType> processed=new ArrayList<ImportType>();
 
+	/**
+	 * This method is used to remove the types that were replaced by real ones.
+	 * It needs to be done after the iteration or we mess the iterator.
+	 */
+	public void removeProcessedImportType()
+	{
+		for(ImportType type:processed)
+		{
+			((GeppettoLibrary)type.eContainer()).getTypes().remove(type);
+		}
+		processed.clear();
+	}
+	
 	@Override
 	public Object caseImportType(ImportType type)
 	{
@@ -81,7 +95,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 					v.getTypes().remove(type);
 					v.getTypes().add(importedType);
 				}
-				library.getTypes().remove(type);
+				processed.add(type);
 				library.getTypes().add(importedType);
 			}
 			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)

@@ -116,6 +116,7 @@ public class RuntimeProject
 			// importing the types defined in the geppetto model using the model interpreters
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
+			importTypesVisitor.removeProcessedImportType();
 
 			// create time (puhrrrrr)
 			Variable time = VariablesFactory.eINSTANCE.createVariable();

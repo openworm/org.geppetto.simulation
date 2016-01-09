@@ -37,6 +37,8 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
@@ -86,6 +88,8 @@ public class RuntimeProject
 	private IGeppettoManager geppettoManager;
 
 	private IGeppettoProject geppettoProject;
+	
+	private static Log logger = LogFactory.getLog(RuntimeProject.class);
 
 	/**
 	 * @param project
@@ -101,23 +105,26 @@ public class RuntimeProject
 
 		try
 		{
+			long start=System.currentTimeMillis();
 			// reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
-
+			
 			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
 			// since every geppetto model will have his
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
 			GeppettoModelAccess geppettoModelAccess = new GeppettoModelAccess(geppettoModel);
-
+			logger.info("Model reading took "+(System.currentTimeMillis()-start)+"ms");
 			// create model interpreters
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
-
+			start=System.currentTimeMillis();
+			
 			// importing the types defined in the geppetto model using the model interpreters
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			importTypesVisitor.removeProcessedImportType();
-
+			logger.info("Importing types took "+(System.currentTimeMillis()-start)+"ms");
+			
 			// create time (puhrrrrr)
 			Variable time = VariablesFactory.eINSTANCE.createVariable();
 			time.setId("time");

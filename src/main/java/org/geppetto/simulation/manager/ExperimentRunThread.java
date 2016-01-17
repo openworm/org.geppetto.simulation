@@ -313,6 +313,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		}
 		catch(GeppettoInitializationException | GeppettoModelException e)
 		{
+			//TODO How to make the error surface in some description? 
 			simulationError();
 			logger.error(e);
 		}

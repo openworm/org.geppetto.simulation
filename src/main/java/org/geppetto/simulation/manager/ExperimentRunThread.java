@@ -60,6 +60,7 @@ import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.data.model.PersistedDataType;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.manager.Scope;
+import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.ServiceCreator;
@@ -130,6 +131,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		try
 		{
+			GeppettoModelAccess modelAccess=new GeppettoModelAccess(runtimeProject.getGeppettoModel());
 			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
@@ -194,7 +196,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 							{
 								try
 								{
-									iConvertedModel = conversionService.convert(model, outputFormat, aspectConfig);
+									
+									iConvertedModel = conversionService.convert(model, outputFormat, aspectConfig, modelAccess);
 									break;
 								}
 								catch(ConversionException e)
@@ -225,7 +228,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 									{
 										((AConversion) entry.getValue().get(0)).setScope(Scope.RUN);
 										((AConversion) entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());
-										iConvertedModel = entry.getValue().get(0).convert(model, conversionServiceKey.getOutputModelFormat(), aspectConfig);
+										iConvertedModel = entry.getValue().get(0).convert(model, conversionServiceKey.getOutputModelFormat(), aspectConfig, modelAccess);
 										break;
 									}
 								}
@@ -242,11 +245,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					ExperimentState experimentState = runtimeProject.getRuntimeExperiment(experiment).getExperimentState();
 					if(iConvertedModel == null)
 					{
-						simulator.initialize(model, aspectConfig, experimentState, this);
+						simulator.initialize(model, aspectConfig, experimentState, this, modelAccess);
 					}
 					else
 					{
-						simulator.initialize(iConvertedModel, aspectConfig, experimentState, this);
+						simulator.initialize(iConvertedModel, aspectConfig, experimentState, this, modelAccess);
 					}
 					long end = System.currentTimeMillis();
 					logger.info("Finished initializing simulator, took " + (end - start) + " ms ");

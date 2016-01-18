@@ -43,6 +43,7 @@ import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.ResultsFormat;
+import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.recordings.ConvertDATToRecording;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
@@ -60,13 +61,14 @@ public class TestSimulatorService extends ASimulator
 {
 
 	@Override
-	public void initialize(DomainModel model, IAspectConfiguration aspectConfiguration, ExperimentState experimentState, ISimulatorCallbackListener listener) throws GeppettoInitializationException,
+	public void initialize(DomainModel model, IAspectConfiguration aspectConfiguration, ExperimentState experimentState, ISimulatorCallbackListener listener, GeppettoModelAccess modelAccess) throws GeppettoInitializationException,
 			GeppettoExecutionException
 	{
-		super.initialize(model, aspectConfiguration, experimentState, listener);
+		super.initialize(model, aspectConfiguration, experimentState, listener,modelAccess);
 		Assert.assertNotNull(aspectConfiguration);
 		Assert.assertNotNull(experimentState);
 		Assert.assertNotNull(listener);
+		Assert.assertNotNull(modelAccess);
 	}
 
 	/*

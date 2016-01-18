@@ -80,7 +80,7 @@ public class TestSimulatorService extends ASimulator
 	public void simulate() throws GeppettoExecutionException
 	{
 		Map<File, ResultsFormat> results = new HashMap<File, ResultsFormat>();
-		ConvertDATToRecording converter=new ConvertDATToRecording("./src/test/resources/test/testResults.h5");
+		ConvertDATToRecording converter=new ConvertDATToRecording("./src/test/resources/test/testResults.h5", this.geppettoModelAccess);
 		String[] variables={
 				"time(StateVariable)",
 				"testVar(testType).c(StateVariable)",

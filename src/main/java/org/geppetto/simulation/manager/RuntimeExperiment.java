@@ -167,6 +167,11 @@ public class RuntimeExperiment
 							instancePath = variable;
 							break;
 						}
+						if(PointerUtility.getPathWithoutTypes(variable.getInstancePath()).equals(recordedVariable))
+						{
+							instancePath = variable;
+							break;
+						}
 					}
 					if(instancePath != null)
 					{
@@ -181,7 +186,7 @@ public class RuntimeExperiment
 					experimentState.getRecordedVariables().add(variableValue);
 
 					// now let's update the DB
-					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
+					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(recordedVariable);
 					DataManagerHelper.getDataManager().addWatchedVariable(aspectConfiguration, instancePath);
 				}
 

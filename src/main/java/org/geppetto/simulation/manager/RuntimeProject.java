@@ -60,7 +60,10 @@ import org.geppetto.model.types.TypesPackage;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.util.PointerUtility;
+import org.geppetto.model.values.PhysicalQuantity;
 import org.geppetto.model.values.Pointer;
+import org.geppetto.model.values.Unit;
+import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
 import org.geppetto.simulation.GeppettoModelReader;
@@ -130,6 +133,11 @@ public class RuntimeProject
 			time.setId("time");
 			time.setName("time");
 			time.getTypes().add(geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			PhysicalQuantity initialValue=ValuesFactory.eINSTANCE.createPhysicalQuantity();
+			Unit seconds = ValuesFactory.eINSTANCE.createUnit();
+			seconds.setUnit("s");
+			initialValue.setUnit(seconds);
+			time.getInitialValues().put(geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE), initialValue);
 			geppettoModel.getVariables().add(time);
 		}
 		catch(IOException | GeppettoVisitingException e)

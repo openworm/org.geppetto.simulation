@@ -33,23 +33,19 @@
 
 package org.geppetto.simulation;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Map;
 
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
-import org.geppetto.core.beans.PathConfiguration;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.emfjson.jackson.resource.JsonResourceFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
-import org.geppetto.core.model.geppettomodel.GeppettoModel;
-import org.xml.sax.SAXException;
+import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.GeppettoPackage;
 
 /**
  * @author jesus@metacell.us
@@ -57,98 +53,33 @@ import org.xml.sax.SAXException;
  */
 public class GeppettoModelReader
 {
+	
+	static{
+		GeppettoPackage.eINSTANCE.eClass();
+		Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
+		Map<String, Object> m = reg.getExtensionToFactoryMap();
+		m.put("xmi", new XMIResourceFactoryImpl()); // sets the factory for the XMI type
+		m.put("json", new JsonResourceFactory()); // sets the factory for the JSON type
+		GeppettoPackage.Registry.INSTANCE.put(GeppettoPackage.eNS_URI, GeppettoPackage.eINSTANCE); 
+	}
+	
 	public static GeppettoModel readGeppettoModel(URL url) throws GeppettoInitializationException
 	{
 
-		GeppettoModel sim = null;
+		GeppettoModel geppettoModel = null;
 		try
 		{
-			Unmarshaller unmarshaller = JAXBContext.newInstance(GeppettoModel.class).createUnmarshaller();
-			unmarshaller.setSchema(parseSchema(PathConfiguration.getModelSchemaURL()));
-			sim = (GeppettoModel) unmarshaller.unmarshal(url);
+			ResourceSet resSet = new ResourceSetImpl();
+			Resource resource = resSet.getResource(URI.createURI(url.toURI().toString()), true);
+			geppettoModel = (GeppettoModel) resource.getContents().get(0);
 		}
-		catch(JAXBException e)
+
+		catch(URISyntaxException e)
 		{
 			throw new GeppettoInitializationException("Unable to unmarshall simulation with url: " + url.toString(), e);
 		}
 
-		return sim;
+		return geppettoModel;
 	}
 
-	/**
-	 * Takes a JSON object with simulation information and creates a Simulation out of it.
-	 * 
-	 * @param geppettoModel
-	 * @return
-	 * @throws GeppettoInitializationException
-	 */
-	public static GeppettoModel readGeppettoModel(String geppettoModel) throws GeppettoInitializationException
-	{
-
-		GeppettoModel sim = null;
-
-		StringReader reader = new StringReader(geppettoModel);
-		try
-		{
-			Unmarshaller unmarshaller = JAXBContext.newInstance(GeppettoModel.class).createUnmarshaller();
-			unmarshaller.setSchema(parseSchema(PathConfiguration.getModelSchemaURL()));
-			sim = (GeppettoModel) unmarshaller.unmarshal(reader);
-		}
-		catch(JAXBException e)
-		{
-			throw new GeppettoInitializationException("Unable to unmarshall simulation", e);
-		}
-
-		return sim;
-	}
-
-	/**
-	 * @param schema
-	 * @return
-	 * @throws GeppettoInitializationException
-	 */
-	public static Schema parseSchema(URL schema) throws GeppettoInitializationException
-	{
-		Schema parsedSchema = null;
-		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-		try
-		{
-			parsedSchema = sf.newSchema(schema);
-		}
-		catch(SAXException e)
-		{
-			throw new GeppettoInitializationException("Unable to generate schema");
-		}
-		return parsedSchema;
-	}
-
-	/**
-	 * Takes a URL for simulation file and creates a json object out of it with the simulation information.
-	 * 
-	 * @param url
-	 * @return
-	 * @throws GeppettoInitializationException
-	 */
-	public static String writeGeppettoModel(URL url) throws GeppettoInitializationException
-	{
-		String line = null;
-		StringBuilder sb = new StringBuilder();
-
-		try
-		{
-
-			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-
-			while((line = br.readLine()) != null)
-			{
-				sb.append(line.trim());
-			}
-		}
-		catch(IOException e)
-		{
-			throw new GeppettoInitializationException("Error while attempting to read simulation's configuration");
-		}
-
-		return sb.toString();
-	}
 }

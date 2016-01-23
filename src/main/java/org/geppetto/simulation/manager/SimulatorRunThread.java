@@ -30,43 +30,49 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation.visitor;
+package org.geppetto.simulation.manager;
 
-import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
+import org.geppetto.core.common.GeppettoExecutionException;
+import org.geppetto.core.data.model.ExperimentStatus;
+import org.geppetto.core.data.model.IExperiment;
+import org.geppetto.core.simulator.ISimulator;
 
 /**
+ * This class helps incapsulating the execution of a simulator in a separate thread
+ * 
  * @author matteocantarelli
  *
  */
-public class FindAspectNodeVisitor extends RuntimeTreeVisitor 
+public class SimulatorRunThread extends Thread
 {
 
-	private String instancePath;
-	
-	private AspectNode aspectNode=null;
+	private ISimulator simulator;
+	private IExperiment experiment;
 
-	public FindAspectNodeVisitor(String instancePath)
+	public SimulatorRunThread(IExperiment experiment, ISimulator simulator)
 	{
-		super();
-		this.instancePath = instancePath;
+		this.experiment = experiment;
+		this.simulator = simulator;
 	}
 
-	public AspectNode getAspectNode()
-	{
-		return aspectNode;
-	}
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
 	@Override
-	public boolean inAspectNode(AspectNode node)
+	public void run()
 	{
-		if(node.getInstancePath().equals(instancePath))
+		try
 		{
-			aspectNode=node;
-			doStopVisiting();
+			simulator.simulate();
 		}
-		return false;
-	}
+		catch(GeppettoExecutionException e)
+		{
+			experiment.setStatus(ExperimentStatus.ERROR);
+			throw new RuntimeException(e);
+		}
 
+	}
 
 }

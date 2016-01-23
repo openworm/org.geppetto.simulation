@@ -30,69 +30,96 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation.visitor;
 
-import java.util.List;
+package org.geppetto.simulation.manager;
 
-import org.geppetto.core.common.GeppettoExecutionException;
-import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.ModelInterpreterException;
-import org.geppetto.core.model.runtime.AspectNode;
-import org.geppetto.core.model.state.visitors.RuntimeTreeVisitor;
-import org.geppetto.core.services.ModelFormat;
+import org.geppetto.simulation.SimulatorRuntimeStatus;
 
 /**
- * Visitor used for retrieving model interpreter from aspect node's and sending call to interpreter asking for supported outputs formats
- * 
- * @author Adrian Quintana (adrian.perez@ucl.ac.uk)
+ * @author matteocantarelli
  *
  */
-public class SupportedOutputsVisitor extends RuntimeTreeVisitor
+public class SimulatorRuntime
 {
 
-	// The id of aspect we will be populating
-	private String _instancePath;
+	private SimulatorRuntimeStatus _status = SimulatorRuntimeStatus.IDLE;
 
-	private List<ModelFormat> _supportedOutputs;
+	// This is the number of steps this simulator has processed
+	private int _processedSteps = 0;
+	// This is the number of steps that were processed by this simulator and that have been
+	// sent to the client
+	private int _stepsConsumed = 0;
 
 	/**
-	 * @param simulationListener
-	 * @param instancePath
+	 * @param status
 	 */
-	public SupportedOutputsVisitor(String instancePath)
+	public void setStatus(SimulatorRuntimeStatus status)
 	{
-		this._instancePath = instancePath;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.state.visitors.DefaultStateVisitor#inCompositeStateNode(org.geppetto.core.model.state.CompositeStateNode)
-	 */
-	@Override
-	public boolean inAspectNode(AspectNode node)
-	{
-		if(this._instancePath.equals(node.getInstancePath()))
-		{
-			IModelInterpreter modelInterpreter = node.getModelInterpreter();
-			try
-			{
-				this._supportedOutputs = modelInterpreter.getSupportedOutputs(node);
-			}
-			catch(ModelInterpreterException e)
-			{
-				exception = new GeppettoExecutionException(e);
-			}
-		}
-
-		return super.inAspectNode(node);
+		_status = status;
 	}
 
 	/**
 	 * @return
 	 */
-	public List<ModelFormat> getSupportedOutputs()
+	public SimulatorRuntimeStatus getStatus()
 	{
-		return this._supportedOutputs;
+		return _status;
+	}
+
+	/**
+	 * @return
+	 */
+	public Integer getProcessedSteps()
+	{
+		return _processedSteps;
+	}
+
+	/**
+	 * @param processedSteps
+	 */
+	public void setProcessedSteps(int processedSteps)
+	{
+		_processedSteps = processedSteps;
+	}
+
+	/**
+	 * 
+	 */
+	public void incrementProcessedSteps()
+	{
+		_processedSteps++;
+	}
+
+	/**
+	 * @return the number of steps which have been processed but not yet consumed
+	 */
+	public int getNonConsumedSteps()
+	{
+		return _processedSteps - _stepsConsumed;
+	}
+
+	/**
+	 * @return
+	 */
+	public int getStepsConsumed()
+	{
+		return _stepsConsumed;
+	}
+
+	/**
+	 * 
+	 */
+	public void incrementStepsConsumed()
+	{
+		_stepsConsumed++;
+	}
+
+	/**
+	 * Revert the simulator to the initial conditions
+	 */
+	public void revertToInitialConditions()
+	{
+		_stepsConsumed = 0;
+		_processedSteps = 0;
 	}
 }

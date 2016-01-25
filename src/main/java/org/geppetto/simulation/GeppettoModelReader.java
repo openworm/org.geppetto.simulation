@@ -73,12 +73,11 @@ public class GeppettoModelReader
 			Resource resource = resSet.getResource(URI.createURI(url.toURI().toString()), true);
 			geppettoModel = (GeppettoModel) resource.getContents().get(0);
 		}
-
-		catch(URISyntaxException e)
+		catch(Exception e)
 		{
 			throw new GeppettoInitializationException("Unable to unmarshall simulation with url: " + url.toString(), e);
 		}
-
+		
 		return geppettoModel;
 	}
 

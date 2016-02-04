@@ -45,8 +45,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.manager.Scope;
+import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.utilities.URLReader;
@@ -71,7 +73,7 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 	private RuntimeProject runtimeProject;
 
 	/**
-	 * @param localGeppettoModelFile 
+	 * @param localGeppettoModelFile
 	 * @param runtimeProject
 	 * @param project
 	 */
@@ -79,39 +81,43 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 	{
 		this.runtimeProject = runtimeProject;
 		this.project = project;
-		this.localGeppettoModelFile=localGeppettoModelFile;
+		this.localGeppettoModelFile = localGeppettoModelFile;
 	}
 
 	@Override
 	public Object caseGeppettoLibrary(GeppettoLibrary library)
 	{
+
 		try
 		{
-			IModelInterpreter modelInterpreter = runtimeProject.getModelInterpreter(library);
-			List<URL> dependentModels = modelInterpreter.getDependentModels();
-			for(URL url : dependentModels)
+			if(!library.getId().equals(SharedLibraryManager.getSharedCommonLibrary().getId()))
 			{
-				// let's create a map for the new file paths
-				String fileName = url.getPath().substring(url.getPath().lastIndexOf("/")+1);
-				String newPath = "projects/"+Long.toString(project.getId()) + "/" + fileName;
-				replaceMap.put(url.toString(), newPath);
-			}
-			for(URL url : dependentModels)
-			{
-				Path localFile = Paths.get(URLReader.createLocalCopy(Scope.CONNECTION,project.getId(),url).toURI());
-				// let's replace every occurrence of the original URLs inside the file with their copy
-				replaceURLs(localFile, replaceMap);
-				//noew let's save the file in S3
-				S3Manager.getInstance().saveFileToS3(localFile.toFile(), replaceMap.get(url.toString()));
+				IModelInterpreter modelInterpreter = runtimeProject.getModelInterpreter(library);
+				List<URL> dependentModels = modelInterpreter.getDependentModels();
+				for(URL url : dependentModels)
+				{
+					// let's create a map for the new file paths
+					String fileName = url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
+					String newPath = "projects/" + Long.toString(project.getId()) + "/" + fileName;
+					replaceMap.put(url.toString(), newPath);
+				}
+				for(URL url : dependentModels)
+				{
+					Path localFile = Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, project.getId(), url).toURI());
+					// let's replace every occurrence of the original URLs inside the file with their copy
+					replaceURLs(localFile, replaceMap);
+					// noew let's save the file in S3
+					S3Manager.getInstance().saveFileToS3(localFile.toFile(), replaceMap.get(url.toString()));
+				}
 			}
 		}
-		catch(URISyntaxException | IOException e)
+		catch(URISyntaxException | IOException | GeppettoInitializationException e)
 		{
 			return new GeppettoVisitingException(e);
 		}
+
 		return super.caseGeppettoLibrary(library);
 	}
-
 
 	/**
 	 * This method replaces in the localFile all the occurrences of the old URLs with the new ones
@@ -132,9 +138,8 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 		Files.write(localFile, content.getBytes(charset));
 	}
 
-
 	public void processLocalGeppettoFile() throws IOException
 	{
-		replaceURLs(localGeppettoModelFile,replaceMap);
+		replaceURLs(localGeppettoModelFile, replaceMap);
 	}
 }

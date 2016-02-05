@@ -445,7 +445,7 @@ public class RuntimeExperiment
 					}
 					else
 					{
-						IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(pointer.getInstancePath());
+						IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(parameter);
 						config.addModelParameter(DataManagerHelper.getDataManager().newParameter(instancePath, parameters.get(path)));
 					}
 				}

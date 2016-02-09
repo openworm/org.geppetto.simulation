@@ -512,14 +512,14 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IRuntimeTreeManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public ExperimentState setWatchedVariables(List<String> watchedVariables, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException
+	public ExperimentState setWatchedVariables(List<String> watchedVariables, IExperiment experiment, IGeppettoProject project, boolean watch) throws GeppettoExecutionException, GeppettoAccessException
 	{
 		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))
 		{
 			throw new GeppettoAccessException("Insufficient access rights to set watched variables.");
 		}
 
-		ExperimentState experimentState = getRuntimeProject(project).getRuntimeExperiment(experiment).setWatchedVariables(watchedVariables);
+		ExperimentState experimentState = getRuntimeProject(project).getRuntimeExperiment(experiment).setWatchedVariables(watchedVariables, watch);
 		DataManagerHelper.getDataManager().saveEntity(project);
 		return experimentState;
 	}

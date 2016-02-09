@@ -130,7 +130,13 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	private ExperimentState doSetWatchedVariables(List<String> recordedVariables) throws GeppettoExecutionException
+	/**
+	 * @param recordedVariables
+	 * @param watch
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	private ExperimentState doSetWatchedVariables(List<String> recordedVariables, boolean watch) throws GeppettoExecutionException
 	{
 		logger.info("Setting watched variables in simulation tree");
 		try
@@ -152,42 +158,48 @@ public class RuntimeExperiment
 						break;
 					}
 				}
-				if(variableValue != null)
+				if(!watch)
 				{
-					// it already existed, we remove it, it means we are stop watching it
-					// Matteo: I don't like this but not changing it
-					experimentState.getRecordedVariables().remove(variableValue);
+					if(variableValue != null)
+					{
+						// it already existed, we remove it, it means we are stop watching it
+						// Matteo: I don't like this but not changing it
+						experimentState.getRecordedVariables().remove(variableValue);
 
-					// now let's update the DB
-					IInstancePath instancePath = null;
-					for(IInstancePath variable : aspectConfiguration.getWatchedVariables())
-					{
-						if(variable.getInstancePath().equals(recordedVariable))
+						// now let's update the DB
+						IInstancePath instancePath = null;
+						for(IInstancePath variable : aspectConfiguration.getWatchedVariables())
 						{
-							instancePath = variable;
-							break;
+							if(variable.getInstancePath().equals(recordedVariable))
+							{
+								instancePath = variable;
+								break;
+							}
+							if(PointerUtility.getPathWithoutTypes(variable.getInstancePath()).equals(recordedVariable))
+							{
+								instancePath = variable;
+								break;
+							}
 						}
-						if(PointerUtility.getPathWithoutTypes(variable.getInstancePath()).equals(recordedVariable))
+						if(instancePath != null)
 						{
-							instancePath = variable;
-							break;
+							aspectConfiguration.getWatchedVariables().remove(instancePath);
 						}
-					}
-					if(instancePath != null)
-					{
-						aspectConfiguration.getWatchedVariables().remove(instancePath);
 					}
 				}
 				else
 				{
-					// we add it
-					variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
-					variableValue.setPointer(pointer);
-					experimentState.getRecordedVariables().add(variableValue);
+					if(variableValue == null)
+					{
+						// we add it
+						variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
+						variableValue.setPointer(pointer);
+						experimentState.getRecordedVariables().add(variableValue);
 
-					// now let's update the DB
-					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(recordedVariable);
-					DataManagerHelper.getDataManager().addWatchedVariable(aspectConfiguration, instancePath);
+						// now let's update the DB
+						IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(recordedVariable);
+						DataManagerHelper.getDataManager().addWatchedVariable(aspectConfiguration, instancePath);
+					}
 				}
 
 			}
@@ -207,13 +219,13 @@ public class RuntimeExperiment
 	 * @throws GeppettoExecutionException
 	 * @throws GeppettoInitializationException
 	 */
-	public ExperimentState setWatchedVariables(List<String> recordedVariables) throws GeppettoExecutionException
+	public ExperimentState setWatchedVariables(List<String> recordedVariables, boolean watch) throws GeppettoExecutionException
 	{
 		if(!experiment.getStatus().equals(ExperimentStatus.DESIGN))
 		{
 			throw new GeppettoExecutionException("Cannot set what variables to record for an experiment not in DESIGN");
 		}
-		return doSetWatchedVariables(recordedVariables);
+		return doSetWatchedVariables(recordedVariables, watch);
 	}
 
 	/**
@@ -291,14 +303,14 @@ public class RuntimeExperiment
 				// after reading values out from recording, amp to the correct aspect given the watched variable
 				for(VariableValue watchedVariableValue : experimentState.getRecordedVariables())
 				{
-					boolean removed=false;
+					boolean removed = false;
 					String watchedVariable = watchedVariableValue.getPointer().getInstancePath();
 					if(filter != null)
 					{
 						if(!filter.contains(watchedVariable) && !watchedVariable.equals("time(StateVariable)"))
 						{
 							watchedVariableValue.setValue(null);
-							removed=true;
+							removed = true;
 						}
 					}
 					if(!removed && watchedVariableValue.getValue() == null)

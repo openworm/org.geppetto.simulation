@@ -137,7 +137,7 @@ public class NoAccessGeppettoManagerTest
 	{
 		long value = 1000l * 1000 * 1000;
 		privileges = new ArrayList<UserPrivileges>();
-		IUserGroup userGroup=DataManagerHelper.getDataManager().newUserGroup("guest", privileges, value, value * 2);
+		IUserGroup userGroup = DataManagerHelper.getDataManager().newUserGroup("guest", privileges, value, value * 2);
 		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));
 	}
 
@@ -147,12 +147,12 @@ public class NoAccessGeppettoManagerTest
 	 * @throws IOException
 	 * @throws GeppettoExecutionException
 	 * @throws GeppettoInitializationException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test02LoadProjectNegative() throws IOException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
-		InputStreamReader inputStreamReader=new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
+		InputStreamReader inputStreamReader = new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 		exception.expect(GeppettoAccessException.class);
 		manager.loadProject("1", geppettoProject);
@@ -165,19 +165,19 @@ public class NoAccessGeppettoManagerTest
 	 * @throws IOException
 	 * @throws GeppettoExecutionException
 	 * @throws GeppettoInitializationException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test03LoadProject() throws IOException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
-		
-		InputStreamReader inputStreamReader=new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
+
+		InputStreamReader inputStreamReader = new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 		privileges.add(UserPrivileges.READ_PROJECT);
 		manager.loadProject("1", geppettoProject);
 
 	}
-	
+
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#getRuntimeProject(org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
@@ -211,12 +211,12 @@ public class NoAccessGeppettoManagerTest
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#loadExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test05LoadExperiment() throws GeppettoExecutionException, GeppettoAccessException
 	{
-		existingExperiment=geppettoProject.getExperiments().get(0);
+		existingExperiment = geppettoProject.getExperiments().get(0);
 		ExperimentState experimentState = manager.loadExperiment("1", existingExperiment);
 		Assert.assertNotNull(experimentState);
 		List<VariableValue> parameters = experimentState.getSetParameters();
@@ -248,7 +248,7 @@ public class NoAccessGeppettoManagerTest
 	 * {@link org.geppetto.simulation.manager.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test07SetModelParametersNegativeNoDesign() throws GeppettoExecutionException, GeppettoAccessException
@@ -265,7 +265,7 @@ public class NoAccessGeppettoManagerTest
 	 * {@link org.geppetto.simulation.manager.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test08SetWatchedVariablesNegativeNoDesign() throws GeppettoExecutionException, GeppettoAccessException
@@ -274,14 +274,14 @@ public class NoAccessGeppettoManagerTest
 		// the following line stops recording a
 		watchedVariables.add("testVar(testType).a(StateVariable)");
 		exception.expect(GeppettoAccessException.class);
-		manager.setWatchedVariables(watchedVariables, runtimeProject.getActiveExperiment(), geppettoProject);
+		manager.setWatchedVariables(watchedVariables, runtimeProject.getActiveExperiment(), geppettoProject, false);
 	}
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#newExperiment(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test09NewExperiment() throws GeppettoExecutionException, GeppettoAccessException
@@ -292,14 +292,12 @@ public class NoAccessGeppettoManagerTest
 
 	}
 
-
-
 	/**
 	 * Test method for
 	 * {@link org.geppetto.simulation.manager.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test11SetModelParameters() throws GeppettoExecutionException, GeppettoAccessException
@@ -321,7 +319,7 @@ public class NoAccessGeppettoManagerTest
 	 * {@link org.geppetto.simulation.manager.GeppettoManager#setModelParameters(java.util.Map, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test12SetModelParametersNegativeWrongParameter() throws GeppettoExecutionException, GeppettoAccessException
@@ -338,7 +336,7 @@ public class NoAccessGeppettoManagerTest
 	 * {@link org.geppetto.simulation.manager.GeppettoManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test13SetWatchedVariables() throws GeppettoExecutionException, GeppettoAccessException
@@ -347,17 +345,16 @@ public class NoAccessGeppettoManagerTest
 		watchedVariables.add("testVar(testType).a(StateVariable)");
 		watchedVariables.add("testVar(testType).c(StateVariable)");
 		exception.expect(GeppettoAccessException.class);
-		manager.setWatchedVariables(watchedVariables, runtimeProject.getActiveExperiment(), geppettoProject);
+		manager.setWatchedVariables(watchedVariables, runtimeProject.getActiveExperiment(), geppettoProject, true);
 
 	}
-
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 * @throws InterruptedException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test16RunExperiment() throws GeppettoExecutionException, InterruptedException, GeppettoAccessException
@@ -371,16 +368,13 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertEquals(3, existingExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 	}
 
-
-
-
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#playExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
 	 * @throws IOException
 	 * @throws NumberFormatException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test22PlayExperiment() throws GeppettoExecutionException, NumberFormatException, IOException, GeppettoAccessException
@@ -390,7 +384,6 @@ public class NoAccessGeppettoManagerTest
 		manager.playExperiment("1", existingExperiment, null);
 	}
 
-	
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#linkDropBoxAccount(java.lang.String)}.
 	 * 
@@ -398,8 +391,8 @@ public class NoAccessGeppettoManagerTest
 	 */
 	public void testLinkDropBoxAccount() throws Exception
 	{
-		//Dropbox tests are commented out as they require the API token to work which should not go in the code
-		//Until someone finds a strategy...
+		// Dropbox tests are commented out as they require the API token to work which should not go in the code
+		// Until someone finds a strategy...
 		exception.expect(GeppettoAccessException.class);
 		manager.linkDropBoxAccount("");
 	}
@@ -423,7 +416,7 @@ public class NoAccessGeppettoManagerTest
 	 * .
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	public void testUploadResultsToDropBox() throws GeppettoExecutionException, GeppettoAccessException
 	{
@@ -449,15 +442,15 @@ public class NoAccessGeppettoManagerTest
 	 * .
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test23DownloadModel() throws GeppettoExecutionException, GeppettoAccessException
 	{
 		exception.expect(GeppettoAccessException.class);
-		File model=manager.downloadModel("testVar(testType)", ServicesRegistry.getModelFormat("TEST_FORMAT"), existingExperiment, geppettoProject);
+		File model = manager.downloadModel("testVar(testType)", ServicesRegistry.getModelFormat("TEST_FORMAT"), existingExperiment, geppettoProject);
 		Assert.assertNotNull(model);
-		Assert.assertEquals("ModelFile",model.getName());
+		Assert.assertEquals("ModelFile", model.getName());
 	}
 
 	/**
@@ -466,35 +459,35 @@ public class NoAccessGeppettoManagerTest
 	 * .
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws IOException 
-	 * @throws GeppettoAccessException 
+	 * @throws IOException
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test24DownloadResults() throws GeppettoExecutionException, IOException, GeppettoAccessException
 	{
 		exception.expect(GeppettoAccessException.class);
-		URL geppettoRecording=manager.downloadResults("testVar(testType)", ResultsFormat.GEPPETTO_RECORDING, existingExperiment, geppettoProject);
+		URL geppettoRecording = manager.downloadResults("testVar(testType)", ResultsFormat.GEPPETTO_RECORDING, existingExperiment, geppettoProject);
 	}
 
 	/**
 	 * Test method for
 	 * {@link org.geppetto.simulation.manager.GeppettoManager#getSupportedOuputs(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)}.
-	 * @throws GeppettoExecutionException 
-	 * @throws GeppettoAccessException 
+	 * 
+	 * @throws GeppettoExecutionException
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test25GetSupportedOuputs() throws GeppettoExecutionException, GeppettoAccessException
 	{
 		exception.expect(GeppettoAccessException.class);
-		List<ModelFormat> formats=manager.getSupportedOuputs("testVar(testType)",  existingExperiment, geppettoProject);
+		List<ModelFormat> formats = manager.getSupportedOuputs("testVar(testType)", existingExperiment, geppettoProject);
 	}
-
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#deleteExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test27DeleteExperiment() throws GeppettoExecutionException, GeppettoAccessException
@@ -503,7 +496,6 @@ public class NoAccessGeppettoManagerTest
 		manager.deleteExperiment("1", existingExperiment);
 		Assert.assertEquals(1, geppettoProject.getExperiments().size());
 	}
-
 
 	/**
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#closeProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
@@ -523,7 +515,7 @@ public class NoAccessGeppettoManagerTest
 	 * Test method for {@link org.geppetto.simulation.manager.GeppettoManager#deleteProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)}.
 	 * 
 	 * @throws GeppettoExecutionException
-	 * @throws GeppettoAccessException 
+	 * @throws GeppettoAccessException
 	 */
 	@Test
 	public void test30DeleteProject() throws GeppettoExecutionException, GeppettoAccessException

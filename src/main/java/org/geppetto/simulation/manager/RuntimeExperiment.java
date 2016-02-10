@@ -301,6 +301,22 @@ public class RuntimeExperiment
 			{
 				RecordingReader recordingReader = null;
 				// after reading values out from recording, amp to the correct aspect given the watched variable
+
+				if(recordingReader == null)
+				{
+					URL url;
+					try
+					{
+						url = URLReader.getURL(result.getResult().getUrl());
+					}
+					catch(IOException e)
+					{
+						throw new GeppettoExecutionException(e);
+					}
+
+					recordingReader = new RecordingReader(new Recording(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
+				}
+
 				for(VariableValue watchedVariableValue : experimentState.getRecordedVariables())
 				{
 					boolean removed = false;
@@ -315,28 +331,13 @@ public class RuntimeExperiment
 					}
 					if(!removed && watchedVariableValue.getValue() == null)
 					{
-						if(recordingReader == null)
-						{
-							URL url;
-							try
-							{
-								url = URLReader.getURL(result.getResult().getUrl());
-							}
-							catch(IOException e)
-							{
-								throw new GeppettoExecutionException(e);
-							}
-
-							recordingReader = new RecordingReader(new Recording(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
-						}
-						logger.info("Reading results for " + watchedVariable);
-
 						// we add to the model state every variable that was recorded
 						recordingReader.readRecording(watchedVariable, experimentState, true);
-
 						logger.info("Finished reading results for " + watchedVariable);
 					}
 				}
+
+				recordingReader.closeRecording();
 
 			}
 

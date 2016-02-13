@@ -361,7 +361,7 @@ public class NoAccessGeppettoManagerTest
 	{
 		Assert.assertEquals(1, existingExperiment.getAspectConfigurations().size());
 		IAspectConfiguration ac = existingExperiment.getAspectConfigurations().get(0);
-		Assert.assertEquals("testVar(testType)", ac.getAspect().getInstancePath());
+		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
 		exception.expect(GeppettoAccessException.class);
 		manager.runExperiment("1", existingExperiment);

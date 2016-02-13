@@ -572,7 +572,7 @@ public class GeppettoManager implements IGeppettoManager
 		logger.info("Downloading results for " + aspectPath + " in format " + resultsFormat.toString());
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getAspect().getInstancePath().equals(aspectPath))
+			if(result.getSimulatedInstance().equals(aspectPath))
 			{
 				if(result.getFormat().equals(resultsFormat))
 				{

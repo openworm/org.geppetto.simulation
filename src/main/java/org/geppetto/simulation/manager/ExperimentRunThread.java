@@ -53,7 +53,6 @@ import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
-import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
@@ -131,13 +130,13 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		try
 		{
-			GeppettoModelAccess modelAccess=new GeppettoModelAccess(runtimeProject.getGeppettoModel());
+			GeppettoModelAccess modelAccess = new GeppettoModelAccess(runtimeProject.getGeppettoModel());
 			List<? extends IAspectConfiguration> aspectConfigs = experiment.getAspectConfigurations();
 			for(IAspectConfiguration aspectConfig : aspectConfigs)
 			{
 				ISimulatorConfiguration simConfig = aspectConfig.getSimulatorConfiguration();
 				String simulatorId = simConfig.getSimulatorId();
-				String instancePath = aspectConfig.getAspect().getInstancePath();
+				String instancePath = aspectConfig.getInstance();
 				Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
 
 				// We are taking the domain model for the last element of the pointer
@@ -196,7 +195,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 							{
 								try
 								{
-									
+
 									iConvertedModel = conversionService.convert(model, outputFormat, aspectConfig, modelAccess);
 									break;
 								}
@@ -286,7 +285,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				for(IAspectConfiguration aspectConfig : aspectConfigs)
 				{
 
-					String instancePath = aspectConfig.getAspect().getInstancePath();
+					String instancePath = aspectConfig.getInstance();
 					Pointer pointer = PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath);
 					SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 					ISimulator simulator = simulatorServices.get(instancePath);
@@ -316,7 +315,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		}
 		catch(GeppettoInitializationException | GeppettoModelException e)
 		{
-			//TODO How to make the error surface in some description? 
+			// TODO How to make the error surface in some description?
 			simulationError();
 			logger.error(e);
 		}
@@ -364,7 +363,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		{
 			try
 			{
-				String instancePath = aspectConfig.getAspect().getInstancePath();
+				String instancePath = aspectConfig.getInstance();
 				SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 				if(!simulatorRuntime.getStatus().equals(SimulatorRuntimeStatus.DONE))
 				{
@@ -419,7 +418,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	@Override
 	public void endOfSteps(IAspectConfiguration aspectConfiguration, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
-		String instancePath = aspectConfiguration.getAspect().getInstancePath();
+		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 
 		try
@@ -435,7 +434,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					{
 						String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
 						String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName);
-						IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(instancePath);
 						IPersistedData recording;
 						if(!DataManagerHelper.getDataManager().isDefault())
 						{
@@ -446,7 +444,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						{
 							recording = DataManagerHelper.getDataManager().newPersistedData(result.toURI().toURL(), PersistedDataType.RECORDING);
 						}
-						ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, recording, ResultsFormat.GEPPETTO_RECORDING);
+						ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(instancePath, recording, ResultsFormat.GEPPETTO_RECORDING);
 						experiment.addSimulationResult(simulationResults);
 						break;
 					}
@@ -471,9 +469,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			{
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
 			}
-			IInstancePath aspect = DataManagerHelper.getDataManager().newInstancePath(instancePath);
 			IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
-			ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(aspect, rawResults, ResultsFormat.RAW);
+			ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(instancePath, rawResults, ResultsFormat.RAW);
 			experiment.addSimulationResult(simulationResults);
 
 			DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());

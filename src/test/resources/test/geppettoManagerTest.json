@@ -13,10 +13,7 @@
 		  	aspectConfigurations: [
 		    {
 		  		id:1,
-		  		aspect: {
-		            id: 1,
-		            instancePath: "testVar(testType)"
-		        },
+				instance:"testVar(testType)",
 		        simulatorConfiguration: {
 		          id: 1,
 		          simulatorId: "neuronSimulator",
@@ -25,33 +22,18 @@
 		          length: 0.3,
 		          parameters: {target: "network_ACnet2"}
 		        },
-		        watchedVariables:[
-			        {
-			            id: 1,
-			            instancePath: "testVar(testType).a(StateVariable)"
-			        },
-					{
-			            id: 1,
-			            instancePath: "testVar(testType).b(StateVariable)"
-			        }
+		        watchedVariables:["testVar(testType).a(StateVariable)",
+		        "testVar(testType).b(StateVariable)"
 		        ],
 		        modelParameters:[
 			        {
 			        	id: 1,
-			        	variable:
-				        {
-				            id: 1,
-				            instancePath: "testVar(testType).p1(Parameter)"
-				        },
+			        	variable:"testVar(testType).p1(Parameter)",
 				        value: 0.2
 			        },
 					{
 			        	id: 2,
-			        	variable:
-				        {
-				            id: 2,
-				            instancePath: "testVar(testType).p2(Parameter)"
-				        },
+			        	variable: "testVar(testType).p2(Parameter)",
 				        value: 0.4
 			        }
 		        ]
@@ -61,12 +43,7 @@
 		  	{
 		  		id:1,
 		  		format: "GEPPETTO_RECORDING",
-		  		aspect: {
-		            id: 1,
-		            entityInstancePath: "acnet2.baskets_12_0",
-		            aspect: "electrical",
-		            localInstancePath: ""
-		        },
+		  		simulatedInstnace:"acnet2.baskets_12_0",
 		        result: {
 		          id: 1,
 		          url: "/test/results.h5",
@@ -76,12 +53,7 @@
 		  	{
 		  		id:2,
 		  		format: "RAW",
-		  		aspect: {
-		            id: 1,
-		            entityInstancePath: "acnet2.baskets_12_0",
-		            aspect: "electrical",
-		            localInstancePath: ""
-		        },
+				simulatedInstnace:"acnet2.baskets_12_0",
 		        result: {
 		          id: 2,
 		          url: "/test/acnet2.electrical-rawRecording.zip",

@@ -45,7 +45,6 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
-import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.manager.IGeppettoManager;
@@ -91,7 +90,7 @@ public class RuntimeProject
 	private IGeppettoManager geppettoManager;
 
 	private IGeppettoProject geppettoProject;
-	
+
 	private static Log logger = LogFactory.getLog(RuntimeProject.class);
 
 	/**
@@ -108,32 +107,32 @@ public class RuntimeProject
 
 		try
 		{
-			long start=System.currentTimeMillis();
+			long start = System.currentTimeMillis();
 			// reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
-			
+
 			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
 			// since every geppetto model will have his
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
 			GeppettoModelAccess geppettoModelAccess = new GeppettoModelAccess(geppettoModel);
-			logger.info("Model reading took "+(System.currentTimeMillis()-start)+"ms");
+			logger.info("Model reading took " + (System.currentTimeMillis() - start) + "ms");
 			// create model interpreters
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
-			start=System.currentTimeMillis();
-			
+			start = System.currentTimeMillis();
+
 			// importing the types defined in the geppetto model using the model interpreters
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			importTypesVisitor.removeProcessedImportType();
-			logger.info("Importing types took "+(System.currentTimeMillis()-start)+"ms");
-			
+			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
+
 			// create time (puhrrrrr)
 			Variable time = VariablesFactory.eINSTANCE.createVariable();
 			time.setId("time");
 			time.setName("time");
 			time.getTypes().add(geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
-			PhysicalQuantity initialValue=ValuesFactory.eINSTANCE.createPhysicalQuantity();
+			PhysicalQuantity initialValue = ValuesFactory.eINSTANCE.createPhysicalQuantity();
 			Unit seconds = ValuesFactory.eINSTANCE.createUnit();
 			seconds.setUnit("s");
 			initialValue.setUnit(seconds);
@@ -253,7 +252,7 @@ public class RuntimeProject
 			{
 				for(Type type : variable.getTypes())
 				{
-					IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(PointerUtility.getInstancePath(variable, type));
+					String instancePath = PointerUtility.getInstancePath(variable, type);
 					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
 					DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
 				}

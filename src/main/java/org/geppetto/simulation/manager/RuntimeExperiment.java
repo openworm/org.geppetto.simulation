@@ -48,7 +48,6 @@ import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IAspectConfiguration;
 import org.geppetto.core.data.model.IExperiment;
-import org.geppetto.core.data.model.IInstancePath;
 import org.geppetto.core.data.model.IParameter;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.ResultsFormat;
@@ -106,10 +105,10 @@ public class RuntimeExperiment
 				}
 				if(ac.getWatchedVariables() != null && !ac.getWatchedVariables().isEmpty())
 				{
-					for(IInstancePath instancePath : ac.getWatchedVariables())
+					for(String instancePath : ac.getWatchedVariables())
 					{
 						VariableValue variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
-						variableValue.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath.getInstancePath()));
+						variableValue.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath));
 						experimentState.getRecordedVariables().add(variableValue);
 					}
 				}
@@ -167,15 +166,15 @@ public class RuntimeExperiment
 						experimentState.getRecordedVariables().remove(variableValue);
 
 						// now let's update the DB
-						IInstancePath instancePath = null;
-						for(IInstancePath variable : aspectConfiguration.getWatchedVariables())
+						String instancePath = null;
+						for(String variable : aspectConfiguration.getWatchedVariables())
 						{
-							if(variable.getInstancePath().equals(recordedVariable))
+							if(variable.equals(recordedVariable))
 							{
 								instancePath = variable;
 								break;
 							}
-							if(PointerUtility.getPathWithoutTypes(variable.getInstancePath()).equals(recordedVariable))
+							if(PointerUtility.getPathWithoutTypes(variable).equals(recordedVariable))
 							{
 								instancePath = variable;
 								break;
@@ -197,8 +196,7 @@ public class RuntimeExperiment
 						experimentState.getRecordedVariables().add(variableValue);
 
 						// now let's update the DB
-						IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(recordedVariable);
-						DataManagerHelper.getDataManager().addWatchedVariable(aspectConfiguration, instancePath);
+						DataManagerHelper.getDataManager().addWatchedVariable(aspectConfiguration, recordedVariable);
 					}
 				}
 
@@ -357,7 +355,7 @@ public class RuntimeExperiment
 
 		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
 		{
-			if(instancePathString.startsWith(aspectConfig.getAspect().getInstancePath()))
+			if(instancePathString.startsWith(aspectConfig.getInstance()))
 			{
 				return aspectConfig;
 			}
@@ -376,7 +374,7 @@ public class RuntimeExperiment
 		Map<String, String> parameters = new HashMap<String, String>();
 		for(IParameter p : modelParameter)
 		{
-			parameters.put(p.getVariable().getInstancePath(), p.getValue());
+			parameters.put(p.getVariable(), p.getValue());
 		}
 		return doSetModelParameters(parameters);
 	}
@@ -446,7 +444,7 @@ public class RuntimeExperiment
 					IParameter existingParameter = null;
 					for(IParameter p : config.getModelParameter())
 					{
-						if(p.getVariable().getInstancePath().equals(path))
+						if(p.getVariable().equals(path))
 						{
 							existingParameter = p;
 							break;
@@ -458,8 +456,7 @@ public class RuntimeExperiment
 					}
 					else
 					{
-						IInstancePath instancePath = DataManagerHelper.getDataManager().newInstancePath(parameter);
-						config.addModelParameter(DataManagerHelper.getDataManager().newParameter(instancePath, parameters.get(path)));
+						config.addModelParameter(DataManagerHelper.getDataManager().newParameter(parameter, parameters.get(path)));
 					}
 				}
 			}
@@ -483,7 +480,7 @@ public class RuntimeExperiment
 	{
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
-			if(result.getAspect().getInstancePath().equals(aspectID))
+			if(result.getSimulatedInstance().equals(aspectID))
 			{
 				if(result.getFormat().equals(format))
 				{

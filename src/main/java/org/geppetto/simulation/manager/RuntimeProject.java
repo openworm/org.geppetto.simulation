@@ -30,25 +30,44 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.simulation;
+package org.geppetto.simulation.manager;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
+import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.manager.IGeppettoManager;
-import org.geppetto.core.model.geppettomodel.GeppettoModel;
+import org.geppetto.core.manager.SharedLibraryManager;
+import org.geppetto.core.model.GeppettoModelAccess;
+import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.utilities.URLReader;
-import org.geppetto.simulation.visitor.InstancePathDecoratorVisitor;
-import org.geppetto.simulation.visitor.ParentsDecoratorVisitor;
-import org.geppetto.simulation.visitor.PopulateExperimentVisitor;
+import org.geppetto.model.GeppettoLibrary;
+import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.types.Type;
+import org.geppetto.model.types.TypesPackage;
+import org.geppetto.model.util.GeppettoModelTraversal;
+import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.model.util.PointerUtility;
+import org.geppetto.model.values.PhysicalQuantity;
+import org.geppetto.model.values.Pointer;
+import org.geppetto.model.values.Unit;
+import org.geppetto.model.values.ValuesFactory;
+import org.geppetto.model.variables.Variable;
+import org.geppetto.model.variables.VariablesFactory;
+import org.geppetto.simulation.GeppettoModelReader;
+import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
+import org.geppetto.simulation.visitor.ImportTypesVisitor;
 
 /**
  * The Runtime project holds the runtime state for an open project.
@@ -62,16 +81,17 @@ public class RuntimeProject
 
 	private IExperiment activeExperiment;
 
+	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters = new HashMap<GeppettoLibrary, IModelInterpreter>();
+
 	private Map<IExperiment, RuntimeExperiment> experimentRuntime = new HashMap<IExperiment, RuntimeExperiment>();
 
 	private GeppettoModel geppettoModel;
 
 	private IGeppettoManager geppettoManager;
 
-	public GeppettoModel getGeppettoModel()
-	{
-		return geppettoModel;
-	}
+	private IGeppettoProject geppettoProject;
+
+	private static Log logger = LogFactory.getLog(RuntimeProject.class);
 
 	/**
 	 * @param project
@@ -82,22 +102,47 @@ public class RuntimeProject
 	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
 	{
 		this.geppettoManager = geppettoManager;
+		this.geppettoProject = project;
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 
 		try
 		{
+			long start = System.currentTimeMillis();
+			// reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
+
+			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
+			// since every geppetto model will have his
+			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
+			GeppettoModelAccess geppettoModelAccess = new GeppettoModelAccess(geppettoModel);
+			logger.info("Model reading took " + (System.currentTimeMillis() - start) + "ms");
+			// create model interpreters
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(), geppettoManager.getScope());
+			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
+			start = System.currentTimeMillis();
+
+			// importing the types defined in the geppetto model using the model interpreters
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
+			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
+			importTypesVisitor.removeProcessedImportType();
+			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
+
+			// create time (puhrrrrr)
+			Variable time = VariablesFactory.eINSTANCE.createVariable();
+			time.setId("time");
+			time.setName("time");
+			time.getTypes().add(geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			PhysicalQuantity initialValue = ValuesFactory.eINSTANCE.createPhysicalQuantity();
+			Unit seconds = ValuesFactory.eINSTANCE.createUnit();
+			seconds.setUnit("s");
+			initialValue.setUnit(seconds);
+			time.getInitialValues().put(geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE), initialValue);
+			geppettoModel.getVariables().add(time);
 		}
-		catch(IOException e)
+		catch(IOException | GeppettoVisitingException e)
 		{
 			throw new GeppettoInitializationException(e);
 		}
-
-		// decorate Simulation model
-		InstancePathDecoratorVisitor instancePathdecoratorVisitor = new InstancePathDecoratorVisitor();
-		geppettoModel.accept(instancePathdecoratorVisitor);
-		ParentsDecoratorVisitor parentDecoratorVisitor = new ParentsDecoratorVisitor();
-		geppettoModel.accept(parentDecoratorVisitor);
 
 	}
 
@@ -170,7 +215,7 @@ public class RuntimeProject
 				if(experiment.getParentProject().getActiveExperimentId() == -1 || !(experiment.getId() == experiment.getParentProject().getActiveExperimentId()))
 				{
 					experiment.getParentProject().setActiveExperimentId(experiment.getId());
-					DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+					DataManagerHelper.getDataManager().saveEntity(geppettoProject);
 				}
 			}
 		}
@@ -196,17 +241,65 @@ public class RuntimeProject
 
 	/**
 	 * @param experiment
+	 * @throws GeppettoVisitingException
 	 */
-	public void populateNewExperiment(IExperiment experiment)
+	public void populateNewExperiment(IExperiment experiment) throws GeppettoVisitingException
 	{
-		PopulateExperimentVisitor populateExperimentVisitor = new PopulateExperimentVisitor(experiment);
-		geppettoModel.accept(populateExperimentVisitor);
-
+		// Create one aspect configuration for each variable in the root
+		for(Variable variable : geppettoModel.getVariables())
+		{
+			if(!variable.getId().equals("time"))
+			{
+				for(Type type : variable.getTypes())
+				{
+					String instancePath = PointerUtility.getInstancePath(variable, type);
+					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
+					DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
+				}
+			}
+		}
 	}
 
+	/**
+	 * @return
+	 */
 	public IGeppettoManager getGeppettoManager()
 	{
 		return geppettoManager;
+	}
+
+	/**
+	 * @param pointer
+	 * @return
+	 */
+	public IModelInterpreter getModelInterpreter(Pointer pointer)
+	{
+		return getModelInterpreter(PointerUtility.getGeppettoLibrary(pointer));
+	}
+
+	/**
+	 * @param library
+	 * @return
+	 */
+	public IModelInterpreter getModelInterpreter(GeppettoLibrary library)
+	{
+		return modelInterpreters.get(library);
+	}
+
+	/**
+	 * @return
+	 */
+	public GeppettoModel getGeppettoModel()
+	{
+		return geppettoModel;
+	}
+
+	/**
+	 * @return
+	 */
+	public IGeppettoProject getGeppettoProject()
+	{
+		return geppettoProject;
 	}
 
 }

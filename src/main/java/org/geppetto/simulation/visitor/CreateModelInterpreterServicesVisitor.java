@@ -39,54 +39,60 @@ import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModelInterpreter;
-import org.geppetto.core.model.geppettomodel.Model;
-import org.geppetto.core.model.state.visitors.GeppettoModelVisitor;
 import org.geppetto.core.services.ServiceCreator;
+import org.geppetto.model.GeppettoLibrary;
+import org.geppetto.model.GeppettoPackage;
+import org.geppetto.model.types.ImportType;
+import org.geppetto.model.types.util.TypesSwitch;
+import org.geppetto.model.util.GeppettoVisitingException;
 
 /**
- * This visitor discovers and instantiates the services for each model interpreter and simulator. A thread is used to instantiate the services so that a new instance of the services is created at each
- * time (the services use a ThreadScope).
+ * This visitor discovers and instantiates the services for each model interpreter. A thread is used to instantiate the services so that a new instance of the services is created at each time (the
+ * services use a ThreadScope).
  * 
  * @author matteocantarelli
  * 
  */
-public class CreateModelInterpreterServicesVisitor extends GeppettoModelVisitor
+public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 {
 
-	private Map<String, IModelInterpreter> models;
+	private Map<GeppettoLibrary, IModelInterpreter> models;
 	private Scope scope;
 	private long projectId;
 
-
-	public CreateModelInterpreterServicesVisitor(Map<String, IModelInterpreter> models, long projectId, Scope scope)
+	public CreateModelInterpreterServicesVisitor(Map<GeppettoLibrary, IModelInterpreter> models, long projectId, Scope scope)
 	{
 		super();
 		this.scope = scope;
-		this.projectId=projectId;
-		this.models = models;
+		this.projectId = projectId;
+		this.models=models;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.massfords.humantask.TraversingVisitor#visit(org.geppetto.simulation.model.Model)
-	 */
 	@Override
-	public void visit(Model model)
+	public Object caseImportType(ImportType type)
 	{
-		super.visit(model);
 		try
 		{
-			AModelInterpreter modelInterpreter=(AModelInterpreter) ServiceCreator.getNewServiceInstance(model.getModelInterpreterId());
+			AModelInterpreter modelInterpreter = (AModelInterpreter) ServiceCreator.getNewServiceInstance(type.getModelInterpreterId());
 			modelInterpreter.setProjectId(projectId);
 			modelInterpreter.setScope(scope);
-			models.put(model.getInstancePath(), modelInterpreter);
+			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
+			{
+				// this import type is inside a library
+				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
+				models.put(library, modelInterpreter);
+			}
+			else
+			{
+				return new GeppettoExecutionException("Anonymous types at the root level initially not supported");
+			}
 		}
 		catch(GeppettoInitializationException e)
 		{
-			exception=new GeppettoExecutionException(e);
+			return new GeppettoVisitingException(e);
 		}
+
+		return super.caseImportType(type);
 	}
-	
 
 }

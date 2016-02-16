@@ -35,34 +35,30 @@ package org.geppetto.simulation.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geppetto.core.model.geppettomodel.Model;
-import org.geppetto.core.model.geppettomodel.visitor.BaseVisitor;
-import org.geppetto.core.model.geppettomodel.visitor.TraversingVisitor;
-import org.geppetto.core.model.state.visitors.DepthFirstTraverserEntitiesFirst;
+import org.geppetto.model.types.ImportType;
+import org.geppetto.model.types.util.TypesSwitch;
 
 /**
  * @author matteocantarelli
  *
  */
-public class PopulateModelReferencesVisitor extends TraversingVisitor
+public class PopulateModelReferencesVisitor extends TypesSwitch<Object>
 {
 
 	private List<String> modelReferences = new ArrayList<String>();
 
-	public PopulateModelReferencesVisitor()
-	{
-		super(new DepthFirstTraverserEntitiesFirst(), new BaseVisitor());
-	}
 
 	@Override
-	public void visit(Model model)
+	public Object caseImportType(ImportType importType)
 	{
-		super.visit(model);
-		if(model.getReferenceURL() != null)
+		if(importType.getReferenceURL() != null)
 		{
-			modelReferences.add(model.getReferenceURL());
+			modelReferences.add(importType.getReferenceURL());
 		}
+		return super.caseType(importType);
 	}
+
+
 
 	public List<String> getModelReferences()
 	{

@@ -10,16 +10,5 @@
 							http://www.springframework.org/schema/aop 
        						http://www.springframework.org/schema/aop/spring-aop-3.1.xsd">
 
- 	<osgi:service id="SimulatorRecordingsExporter" ref="recordingsSimulator" interface="org.geppetto.core.simulator.ISimulator">
-	</osgi:service>
-	<bean id="recordingsSimulator" scope="prototype" class="org.geppetto.simulation.recording.RecordingsSimulator">
-	<aop:scoped-proxy proxy-target-class="false"/>
-	</bean>
-	<osgi:service id="RecordingsModelExporter" ref="recordingsModelInterpreter" interface="org.geppetto.core.model.IModelInterpreter">
-	</osgi:service>
-	<bean id="recordingsModelInterpreter" scope="prototype" class="org.geppetto.simulation.recording.RecordingsModelInterpreter">
-	<aop:scoped-proxy proxy-target-class="false"/>
-	</bean>
-	
 
 </beans>

@@ -50,6 +50,7 @@ import org.geppetto.core.data.model.ISimulatorConfiguration;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
+import org.geppetto.core.model.GeppettoModelReader;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
@@ -65,7 +66,6 @@ import org.geppetto.model.values.Unit;
 import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
-import org.geppetto.simulation.GeppettoModelReader;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.ImportTypesVisitor;
 

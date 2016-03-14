@@ -58,6 +58,7 @@ import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.data.model.UserPrivileges;
+import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.s3.S3Manager;
@@ -68,6 +69,7 @@ import org.geppetto.model.ExperimentState;
 import org.geppetto.model.ModelFormat;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.model.variables.Variable;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
@@ -653,5 +655,15 @@ public class GeppettoManager implements IGeppettoManager
 	public Scope getScope()
 	{
 		return scope;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDataSourceManager#fetchVariable(java.lang.String, java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public Variable fetchVariable(String dataSourceId, String variableId, IExperiment experiment, IGeppettoProject project) throws GeppettoDataSourceException
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

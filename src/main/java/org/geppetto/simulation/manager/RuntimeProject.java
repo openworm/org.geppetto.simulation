@@ -47,16 +47,21 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.datasources.GeppettoDataSourceException;
+import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.GeppettoModelReader;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.utilities.URLReader;
+import org.geppetto.model.DataSource;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesPackage;
+import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.util.PointerUtility;
@@ -87,9 +92,13 @@ public class RuntimeProject
 
 	private GeppettoModel geppettoModel;
 
+	private GeppettoModelAccess geppettoModelAccess;
+
 	private IGeppettoManager geppettoManager;
 
 	private IGeppettoProject geppettoProject;
+
+	private Map<String, IDataSourceService> dataSourceServices;
 
 	private static Log logger = LogFactory.getLog(RuntimeProject.class);
 
@@ -114,7 +123,7 @@ public class RuntimeProject
 			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
 			// since every geppetto model will have his
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
-			GeppettoModelAccess geppettoModelAccess = new GeppettoModelAccess(geppettoModel);
+			geppettoModelAccess = new GeppettoModelAccess(geppettoModel);
 			logger.info("Model reading took " + (System.currentTimeMillis() - start) + "ms");
 			// create model interpreters
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(), geppettoManager.getScope());
@@ -258,6 +267,58 @@ public class RuntimeProject
 				}
 			}
 		}
+	}
+
+	/**
+	 * @param dataSourceId
+	 * @param variableId
+	 * @return
+	 * @throws GeppettoModelException
+	 * @throws GeppettoDataSourceException
+	 */
+	public GeppettoModel fetchVariable(String dataSourceId, String variableId) throws GeppettoModelException, GeppettoDataSourceException
+	{
+		// the data source service has already been initialized with the GeppettoModelAccess
+		// the variable will be added to the GeppettoModel
+		IDataSourceService dataSourceService = getDataSourceService(dataSourceId);
+		dataSourceService.fetchVariable(variableId);
+		return geppettoModel;
+	}
+
+	/**
+	 * @param dataSourceId
+	 * @return
+	 * @throws GeppettoInitializationException
+	 * @throws GeppettoModelException
+	 */
+	private IDataSourceService getDataSourceService(String dataSourceId) throws GeppettoModelException
+	{
+		try
+		{
+			IDataSourceService dataSourceService = null;
+			if(!dataSourceServices.containsKey(dataSourceId))
+			{
+				for(DataSource dataSource : geppettoModel.getDataSources())
+				{
+					if(dataSource.getId().equals(dataSourceId))
+					{
+						dataSourceService = (IDataSourceService) ServiceCreator.getNewServiceInstance(dataSource.getDataSourceService());
+						dataSourceService.initialize(dataSource, geppettoModelAccess);
+						dataSourceServices.put(dataSourceId, dataSourceService);
+						break;
+					}
+				}
+				if(dataSourceService == null)
+				{
+					throw new GeppettoModelException("The datasource " + dataSourceId + " was not found");
+				}
+			}
+		}
+		catch(GeppettoInitializationException e)
+		{
+			throw new GeppettoModelException(e);
+		}
+		return dataSourceServices.get(dataSourceId);
 	}
 
 	/**

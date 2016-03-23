@@ -89,6 +89,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
 				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getId(), library, commonLibraryAccess);
+				//TODO User GeppettoModelAccess and Commands to perform this swapping
 				List<Variable> referencedVars=new ArrayList<Variable>(type.getReferencedVariables());
 				for(Variable v:referencedVars)
 				{

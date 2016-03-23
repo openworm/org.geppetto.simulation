@@ -228,14 +228,14 @@ public class ExperimentRunManager implements IExperimentListener
 	@Override
 	public void experimentRunDone(ExperimentRunThread experimentRun, IExperiment experiment, RuntimeProject project) throws GeppettoExecutionException
 	{
-		//if we are using the default data manager it means there is no persistence bundle
-		//if we are running an experiment in this scenarios it is because of a test rather
-		//than any real deployment. In test scenarios some flows like upload results to 
-		//S3 are not performed (due to security reason tokens are not committed) and therefore
-		//as a workaround we are not clearing after the temporary files in the tests so that
-		//we can use them to check that the simulation was properly executed.
-		//This is not ideal or particularly elegant but harmless at the same time until we
-		//can think of a better way.
+		// if we are using the default data manager it means there is no persistence bundle
+		// if we are running an experiment in this scenarios it is because of a test rather
+		// than any real deployment. In test scenarios some flows like upload results to
+		// S3 are not performed (due to security reason tokens are not committed) and therefore
+		// as a workaround we are not clearing after the temporary files in the tests so that
+		// we can use them to check that the simulation was properly executed.
+		// This is not ideal or particularly elegant but harmless at the same time until we
+		// can think of a better way.
 		if(!DataManagerHelper.getDataManager().isDefault())
 		{
 			experimentRun.release();

@@ -672,9 +672,8 @@ public class GeppettoManager implements IGeppettoManager
 	}
 
 	@Override
-	public GeppettoModel resolveImportType(String typePath, IExperiment experiment, IGeppettoProject geppettoProject)
+	public GeppettoModel resolveImportType(String typePath, IExperiment experiment, IGeppettoProject geppettoProject) throws GeppettoExecutionException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return getRuntimeProject(geppettoProject).resolveImportType(typePath);
 	}
 }

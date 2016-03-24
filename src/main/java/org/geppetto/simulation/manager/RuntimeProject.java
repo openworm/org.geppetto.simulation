@@ -112,6 +112,7 @@ public class RuntimeProject
 	{
 		this.geppettoManager = geppettoManager;
 		this.geppettoProject = project;
+		this.dataSourceServices = new HashMap<String, IDataSourceService>();
 		IPersistedData geppettoModelData = project.getGeppettoModel();
 
 		try

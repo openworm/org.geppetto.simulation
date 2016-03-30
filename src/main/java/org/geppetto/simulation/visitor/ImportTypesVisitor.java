@@ -62,7 +62,6 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
 	private GeppettoModelAccess commonLibraryAccess;
 	private List<ImportType> processed = new ArrayList<ImportType>();
-	private Type importTypeToResolve = null;
 
 	/**
 	 * This method is used to remove the types that were replaced by real ones. It needs to be done after the iteration or we mess the iterator.
@@ -78,31 +77,6 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 	@Override
 	public Object caseImportType(ImportType type)
-	{
-		// if import type is specified than that's the only type we want to resolve
-		if(importTypeToResolve != null)
-		{
-			if(importTypeToResolve.equals(type))
-			{
-				return resolve(type);
-			}
-			else
-			{
-				return super.caseImportType(type);
-			}
-		}
-		else
-		{
-			// otherwise it's all of them
-			return resolve(type);
-		}
-	}
-
-	/**
-	 * @param type
-	 * @return
-	 */
-	private Object resolve(ImportType type)
 	{
 		try
 		{
@@ -142,7 +116,6 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 			return new GeppettoVisitingException(e);
 		}
 		return super.caseImportType(type);
-
 	}
 
 	/**
@@ -156,17 +129,6 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 		this.modelInterpreters = modelInterpreters;
 		this.commonLibraryAccess = commonLibraryAccess;
 
-	}
-
-	/**
-	 * @param modelInterpreters
-	 * @param geppettoModelAccess
-	 * @param importTypeToResolve
-	 */
-	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess geppettoModelAccess, Type importTypeToResolve)
-	{
-		this(modelInterpreters, geppettoModelAccess);
-		this.importTypeToResolve = importTypeToResolve;
 	}
 
 }

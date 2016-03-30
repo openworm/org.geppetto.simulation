@@ -97,26 +97,29 @@ public class RuntimeExperiment
 		try
 		{
 			// let's set the parameters if they exist
-			for(IAspectConfiguration ac : experiment.getAspectConfigurations())
+			if(experiment.getAspectConfigurations() != null)
 			{
-				if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
+				for(IAspectConfiguration ac : experiment.getAspectConfigurations())
 				{
-					setModelParameters(ac.getModelParameter());
-				}
-				if(ac.getWatchedVariables() != null && !ac.getWatchedVariables().isEmpty())
-				{
-					for(String instancePath : ac.getWatchedVariables())
+					if(ac.getModelParameter() != null && !ac.getModelParameter().isEmpty())
 					{
-						VariableValue variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
-						variableValue.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath));
-						experimentState.getRecordedVariables().add(variableValue);
+						setModelParameters(ac.getModelParameter());
 					}
-				}
+					if(ac.getWatchedVariables() != null && !ac.getWatchedVariables().isEmpty())
+					{
+						for(String instancePath : ac.getWatchedVariables())
+						{
+							VariableValue variableValue = GeppettoFactory.eINSTANCE.createVariableValue();
+							variableValue.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), instancePath));
+							experimentState.getRecordedVariables().add(variableValue);
+						}
+					}
 
+				}
+				VariableValue time = GeppettoFactory.eINSTANCE.createVariableValue();
+				time.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), "time(StateVariable)"));
+				experimentState.getRecordedVariables().add(time);
 			}
-			VariableValue time = GeppettoFactory.eINSTANCE.createVariableValue();
-			time.setPointer(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), "time(StateVariable)"));
-			experimentState.getRecordedVariables().add(time);
 		}
 		catch(GeppettoModelException e)
 		{

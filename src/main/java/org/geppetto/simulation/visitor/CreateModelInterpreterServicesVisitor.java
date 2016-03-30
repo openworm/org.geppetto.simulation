@@ -65,7 +65,7 @@ public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 		super();
 		this.scope = scope;
 		this.projectId = projectId;
-		this.models=models;
+		this.models = models;
 	}
 
 	@Override
@@ -73,14 +73,17 @@ public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 	{
 		try
 		{
-			AModelInterpreter modelInterpreter = (AModelInterpreter) ServiceCreator.getNewServiceInstance(type.getModelInterpreterId());
-			modelInterpreter.setProjectId(projectId);
-			modelInterpreter.setScope(scope);
 			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
 			{
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
-				models.put(library, modelInterpreter);
+				if(!models.containsKey(library))
+				{
+					AModelInterpreter modelInterpreter = (AModelInterpreter) ServiceCreator.getNewServiceInstance(type.getModelInterpreterId());
+					modelInterpreter.setProjectId(projectId);
+					modelInterpreter.setScope(scope);
+					models.put(library, modelInterpreter);
+				}
 			}
 			else
 			{

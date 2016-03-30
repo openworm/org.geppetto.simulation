@@ -280,9 +280,14 @@ public class RuntimeProject
 		try
 		{
 			// let's find the importType
-			Type importType = PointerUtility.getType(PointerUtility.getPointer(geppettoModel, typePath));
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, importType);
+			Type importType = PointerUtility.getType(geppettoModel, typePath);
+
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
+			GeppettoModelTraversal.apply(importType, createServicesVisitor);
+
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(importType, importTypesVisitor);
+
 			importTypesVisitor.removeProcessedImportType();
 		}
 		catch(GeppettoVisitingException e)
@@ -338,7 +343,7 @@ public class RuntimeProject
 				}
 				if(dataSourceService == null)
 				{
-					throw new GeppettoModelException("The datasource " + dataSourceId + " was not found");
+					throw new GeppettoModelException("The datasource service for " + dataSourceId + " was not found");
 				}
 			}
 		}

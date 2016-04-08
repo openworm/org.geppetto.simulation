@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ASCII"?>
+<gep:GeppettoModel
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gep="https://raw.githubusercontent.com/openworm/org.geppetto.model/ontology/src/main/resources/geppettoModel.ecore">
+  <libraries
+      id="testLibrary"
+      name="testLibrary"/>
+  <dataSources
+      id="testDataSource"
+      name="testDataSource"
+      dataSourceService="testDataSourceService"
+      url="http://test"
+      dependenciesLibrary="//@libraries.0"
+      targetLibrary="//@libraries.0">
+    <libraryConfigurations
+        library="//@libraries.0"
+        modelInterpreterId="testModelInterpreterService"
+        format="test"/>
+    <fetchVariableQuery
+        xsi:type="gep:CompoundQuery"
+        description="">
+      <queryChain
+          xsi:type="gep:ProcessQuery"
+          label=""
+          queryProcessorId="testQueryProcessorService"/>
+    </fetchVariableQuery>
+  </dataSources>
+</gep:GeppettoModel>

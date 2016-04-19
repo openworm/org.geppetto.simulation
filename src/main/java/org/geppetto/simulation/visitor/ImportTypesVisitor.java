@@ -96,6 +96,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 					v.getTypes().add(importedType);
 				}
 				processed.add(type);
+				library.setSynched(false);
 				library.getTypes().add(importedType);
 			}
 			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)

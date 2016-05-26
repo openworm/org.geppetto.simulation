@@ -314,7 +314,7 @@ class ExperimentRunChecker extends TimerTask
 		}
 		catch(GeppettoExecutionException e)
 		{
-			throw new RuntimeException(e);
+			logger.error(e);
 		}
 	}
 }

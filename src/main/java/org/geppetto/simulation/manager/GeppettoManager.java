@@ -676,4 +676,10 @@ public class GeppettoManager implements IGeppettoManager
 	{
 		return getRuntimeProject(geppettoProject).resolveImportType(typePath);
 	}
+
+	@Override
+	public GeppettoModel resolveImportValue(String path, IExperiment experiment, IGeppettoProject geppettoProject)
+	{
+		return getRuntimeProject(geppettoProject).resolveImportValue(path);
+	}
 }

@@ -65,6 +65,7 @@ import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.util.PointerUtility;
+import org.geppetto.model.values.ImportValue;
 import org.geppetto.model.values.PhysicalQuantity;
 import org.geppetto.model.values.Pointer;
 import org.geppetto.model.values.Unit;
@@ -301,6 +302,41 @@ public class RuntimeProject
 
 		return geppettoModel;
 	}
+	
+	/**
+	 * @param path
+	 * @return
+	 */
+	public GeppettoModel resolveImportValue(String path)
+	{
+		try
+		{
+			// let's find the importValue
+			//TODO Nitesh: Figure out how to do this
+//			ImportValue importValue = PointerUtility.getType(geppettoModel, path);
+
+			//TODO Nitesh: Figure out a trategy to reuse the model interpreter that we already have, can we find it somehow?
+			//We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
+//			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
+//			GeppettoModelTraversal.apply(importType, createServicesVisitor);
+
+			//TODO Nitesh: Create the visitor
+//			ImportValueVisitor importValueVisitor = new ImportValueVisitor(modelInterpreters, geppettoModelAccess);
+//			GeppettoModelTraversal.apply(importType, importValueVisitor);
+//
+//			importValueVisitor.removeProcessedImportValues();
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+
+		return geppettoModel;
+	}
 
 	/**
 	 * @param dataSourceId
@@ -395,5 +431,7 @@ public class RuntimeProject
 	{
 		return geppettoProject;
 	}
+
+
 
 }

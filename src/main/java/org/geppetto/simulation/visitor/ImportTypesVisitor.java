@@ -61,21 +61,20 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
 	private GeppettoModelAccess commonLibraryAccess;
-	private List<ImportType> processed=new ArrayList<ImportType>();
+	private List<ImportType> processed = new ArrayList<ImportType>();
 
 	/**
-	 * This method is used to remove the types that were replaced by real ones.
-	 * It needs to be done after the iteration or we mess the iterator.
+	 * This method is used to remove the types that were replaced by real ones. It needs to be done after the iteration or we mess the iterator.
 	 */
 	public void removeProcessedImportType()
 	{
-		for(ImportType type:processed)
+		for(ImportType type : processed)
 		{
-			((GeppettoLibrary)type.eContainer()).getTypes().remove(type);
+			((GeppettoLibrary) type.eContainer()).getTypes().remove(type);
 		}
 		processed.clear();
 	}
-	
+
 	@Override
 	public Object caseImportType(ImportType type)
 	{
@@ -89,13 +88,15 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
 				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getId(), library, commonLibraryAccess);
-				List<Variable> referencedVars=new ArrayList<Variable>(type.getReferencedVariables());
-				for(Variable v:referencedVars)
+				// TODO User GeppettoModelAccess and Commands to perform this swapping
+				List<Variable> referencedVars = new ArrayList<Variable>(type.getReferencedVariables());
+				for(Variable v : referencedVars)
 				{
 					v.getTypes().remove(type);
 					v.getTypes().add(importedType);
 				}
 				processed.add(type);
+				library.setSynched(false);
 				library.getTypes().add(importedType);
 			}
 			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)
@@ -106,7 +107,6 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				// ((Variable) type.eContainer()).getAnonymousTypes().add(importedType);
 				return new GeppettoVisitingException("Anonymous types at the root level initially not supported");
 			}
-
 		}
 		catch(IOException e)
 		{
@@ -121,14 +121,14 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 	/**
 	 * @param modelInterpreters
-	 * @param commonLibraryAccess 
+	 * @param commonLibraryAccess
 	 * @param libraryManager
 	 */
 	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess)
 	{
 		super();
 		this.modelInterpreters = modelInterpreters;
-		this.commonLibraryAccess=commonLibraryAccess;
+		this.commonLibraryAccess = commonLibraryAccess;
 
 	}
 

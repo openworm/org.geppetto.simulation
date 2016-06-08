@@ -1,0 +1,19 @@
+{
+    "id": 5,
+    "name": "DataSource Test",
+    "activeExperimentId": 1,
+    "experiments": [
+	    {
+		  	id:1,      
+		  	name: "DataSource Test",
+		  	status: "COMPLETED",
+            "lastModified":"1436102517799"
+		 }
+	
+    ],
+    "geppettoModel": {
+        "id": 9,
+        "url": "/test/GeppettoModelDSTest.xmi",
+        "type": "GEPPETTO_PROJECT"
+    }
+}

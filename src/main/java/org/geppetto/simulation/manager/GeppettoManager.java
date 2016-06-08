@@ -58,6 +58,7 @@ import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.data.model.UserPrivileges;
+import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.s3.S3Manager;
@@ -65,7 +66,9 @@ import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.ExperimentState;
+import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.ModelFormat;
+import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
@@ -512,7 +515,8 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IRuntimeTreeManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public ExperimentState setWatchedVariables(List<String> watchedVariables, IExperiment experiment, IGeppettoProject project, boolean watch) throws GeppettoExecutionException, GeppettoAccessException
+	public ExperimentState setWatchedVariables(List<String> watchedVariables, IExperiment experiment, IGeppettoProject project, boolean watch) throws GeppettoExecutionException,
+			GeppettoAccessException
 	{
 		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))
 		{
@@ -653,5 +657,23 @@ public class GeppettoManager implements IGeppettoManager
 	public Scope getScope()
 	{
 		return scope;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.manager.IDataSourceManager#fetchVariable(java.lang.String, java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public GeppettoModel fetchVariable(String dataSourceId, String variableId, IExperiment experiment, IGeppettoProject project) throws GeppettoDataSourceException, GeppettoModelException,
+			GeppettoExecutionException
+	{
+		return getRuntimeProject(project).fetchVariable(dataSourceId, variableId);
+	}
+
+	@Override
+	public GeppettoModel resolveImportType(String typePath, IExperiment experiment, IGeppettoProject geppettoProject) throws GeppettoExecutionException
+	{
+		return getRuntimeProject(geppettoProject).resolveImportType(typePath);
 	}
 }

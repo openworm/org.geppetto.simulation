@@ -54,11 +54,13 @@ import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.GeppettoModelReader;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.DataSource;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesPackage;
 import org.geppetto.model.util.GeppettoModelException;
@@ -69,6 +71,7 @@ import org.geppetto.model.values.ImportValue;
 import org.geppetto.model.values.PhysicalQuantity;
 import org.geppetto.model.values.Pointer;
 import org.geppetto.model.values.Unit;
+import org.geppetto.model.values.Value;
 import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
@@ -302,35 +305,56 @@ public class RuntimeProject
 
 		return geppettoModel;
 	}
-	
+
 	/**
 	 * @param path
 	 * @return
+	 * @throws GeppettoExecutionException
 	 */
-	public GeppettoModel resolveImportValue(String path)
+	public GeppettoModel resolveImportValue(String path) throws GeppettoExecutionException
 	{
 		try
 		{
 			// let's find the importValue
-			//TODO Nitesh: Figure out how to do this
-//			ImportValue importValue = PointerUtility.getType(geppettoModel, path);
+			ImportValue importValue = PointerUtility.getValue(geppettoModel, path);
+			Pointer pointer = PointerUtility.getPointer(geppettoModel, path);
+			Type type = PointerUtility.getType(pointer);
 
-			//TODO Nitesh: Figure out a trategy to reuse the model interpreter that we already have, can we find it somehow?
-			//We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
-//			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
-//			GeppettoModelTraversal.apply(importType, createServicesVisitor);
+			// We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
+			GeppettoModelTraversal.apply(type, createServicesVisitor);
 
-			//TODO Nitesh: Create the visitor
-//			ImportValueVisitor importValueVisitor = new ImportValueVisitor(modelInterpreters, geppettoModelAccess);
-//			GeppettoModelTraversal.apply(importType, importValueVisitor);
-//
-//			importValueVisitor.removeProcessedImportValues();
+			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
+			{
+				// this import type is inside a library
+				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
+				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
+				Value importedValue = modelInterpreter.importValue(importValue);
+
+				if(importValue.eContainer() instanceof Type)
+				{
+					// it's the default value of a type
+					//TODO: You can leave this for now Nitesh as it won't be your case
+
+				}
+				else if(importValue.eContainer() instanceof Map)
+				{
+					// it's the initial value of a variable
+					((Map<Type, Value>) importedValue.eContainer()).put(type, importedValue);
+					PointerUtility.getVariable(pointer).setSynched(false);
+				}
+			}
+
 		}
 		catch(GeppettoVisitingException e)
 		{
 			throw new GeppettoExecutionException(e);
 		}
 		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		catch(ModelInterpreterException e)
 		{
 			throw new GeppettoExecutionException(e);
 		}
@@ -431,7 +455,5 @@ public class RuntimeProject
 	{
 		return geppettoProject;
 	}
-
-
 
 }

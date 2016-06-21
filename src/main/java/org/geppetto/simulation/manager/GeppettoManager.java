@@ -678,7 +678,7 @@ public class GeppettoManager implements IGeppettoManager
 	}
 
 	@Override
-	public GeppettoModel resolveImportValue(String path, IExperiment experiment, IGeppettoProject geppettoProject)
+	public GeppettoModel resolveImportValue(String path, IExperiment experiment, IGeppettoProject geppettoProject) throws GeppettoExecutionException
 	{
 		return getRuntimeProject(geppettoProject).resolveImportValue(path);
 	}

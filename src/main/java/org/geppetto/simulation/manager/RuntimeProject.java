@@ -134,7 +134,6 @@ public class RuntimeProject
 			// importing the types defined in the geppetto model using the model interpreters
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
-			importTypesVisitor.removeProcessedImportType();
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
 			// create time (puhrrrrr)
@@ -288,7 +287,6 @@ public class RuntimeProject
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(importType, importTypesVisitor);
 
-			importTypesVisitor.removeProcessedImportType();
 		}
 		catch(GeppettoVisitingException e)
 		{

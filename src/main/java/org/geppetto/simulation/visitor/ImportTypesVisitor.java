@@ -34,8 +34,6 @@ package org.geppetto.simulation.visitor;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.geppetto.core.model.GeppettoModelAccess;
@@ -61,19 +59,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
 	private GeppettoModelAccess geppettoModelAccess;
-	private List<ImportType> processed = new ArrayList<ImportType>();
 
-	/**
-	 * This method is used to remove the types that were replaced by real ones. It needs to be done after the iteration or we mess the iterator.
-	 */
-	public void removeProcessedImportType()
-	{
-		for(ImportType type : processed)
-		{
-			geppettoModelAccess.delete(type);
-		}
-		processed.clear();
-	}
 
 	@Override
 	public Object caseImportType(ImportType type)
@@ -96,9 +82,6 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				
 				geppettoModelAccess.swapType(type,importedType, library);
 				
-				processed.add(type);
-				
-
 			}
 			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)
 			{

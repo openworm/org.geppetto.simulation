@@ -110,7 +110,6 @@ public class RuntimeProject
 	 * @param project
 	 * @param geppettoManagerCallbackListener
 	 * @throws MalformedURLException
-	 * @throws GeppettoInitializationException
 	 */
 	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
 	{
@@ -316,7 +315,7 @@ public class RuntimeProject
 		try
 		{
 			// let's find the importValue
-			ImportValue importValue = PointerUtility.getValue(geppettoModel, path);
+			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path);
 			Pointer pointer = PointerUtility.getPointer(geppettoModel, path);
 			Type type = PointerUtility.getType(pointer);
 

@@ -377,6 +377,31 @@ public class GeppettoManager implements IGeppettoManager
 		}
 		return experiment;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.manager.IExperimentManager#newExperiment(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public IExperiment cloneExperiment(String requestId, IGeppettoProject project, IExperiment originalExperiment) throws GeppettoExecutionException, GeppettoAccessException
+	{
+		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))
+		{
+			throw new GeppettoAccessException("Insufficient access rights to create new experiment.");
+		}
+
+		IExperiment experiment = DataManagerHelper.getDataManager().cloneExperiment("New Experiment " + (project.getExperiments().size() + 1), "", project,originalExperiment);
+		try
+		{
+			getRuntimeProject(project).populateNewExperiment(experiment);
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		return experiment;
+	}
 
 	/*
 	 * (non-Javadoc)

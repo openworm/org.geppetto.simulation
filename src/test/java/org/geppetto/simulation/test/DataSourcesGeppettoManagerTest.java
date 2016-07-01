@@ -235,7 +235,9 @@ public class DataSourcesGeppettoManagerTest
 		Assert.assertEquals(1, geppettoModel.getLibraries().get(0).getTypes().size());
 		Assert.assertEquals("testImportType", type.getId());
 		Assert.assertTrue(type instanceof ImportType);
-		GeppettoModel model = manager.resolveImportType("testLibrary.testImportType", geppettoProject.getExperiments().get(0), geppettoProject);
+		List<String> types=new ArrayList<String>();
+		types.add("testLibrary.testImportType");
+		GeppettoModel model = manager.resolveImportType(types, geppettoProject.getExperiments().get(0), geppettoProject);
 		type = model.getLibraries().get(0).getTypes().get(0);
 		Assert.assertTrue(type instanceof CompositeType);
 		Assert.assertEquals(1, model.getLibraries().get(0).getTypes().size()); //still only one type but this time it's a composite

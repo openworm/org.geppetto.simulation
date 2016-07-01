@@ -672,8 +672,8 @@ public class GeppettoManager implements IGeppettoManager
 	}
 
 	@Override
-	public GeppettoModel resolveImportType(String typePath, IExperiment experiment, IGeppettoProject geppettoProject) throws GeppettoExecutionException
+	public GeppettoModel resolveImportType(List<String> typePaths, IExperiment experiment, IGeppettoProject geppettoProject) throws GeppettoExecutionException
 	{
-		return getRuntimeProject(geppettoProject).resolveImportType(typePath);
+		return getRuntimeProject(geppettoProject).resolveImportType(typePaths);
 	}
 }

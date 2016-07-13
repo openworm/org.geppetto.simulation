@@ -392,14 +392,6 @@ public class GeppettoManager implements IGeppettoManager
 		}
 
 		IExperiment experiment = DataManagerHelper.getDataManager().cloneExperiment("New Experiment " + (project.getExperiments().size() + 1), "", project,originalExperiment);
-		try
-		{
-			getRuntimeProject(project).populateNewExperiment(experiment);
-		}
-		catch(GeppettoVisitingException e)
-		{
-			throw new GeppettoExecutionException(e);
-		}
 		return experiment;
 	}
 

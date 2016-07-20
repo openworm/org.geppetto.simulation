@@ -171,7 +171,7 @@ public class ImportValueTest
 		IGeppettoDataManager dataManager = DataManagerHelper.getDataManager();
 		InputStreamReader inputStreamReader = new InputStreamReader(DataSourcesGeppettoManagerTest.class.getResourceAsStream("/test2/18.json"));
 		geppettoProject = dataManager.getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
-		manager.loadProject("1", geppettoProject);
+		//manager.loadProject("1", geppettoProject);
 		
 
 	}

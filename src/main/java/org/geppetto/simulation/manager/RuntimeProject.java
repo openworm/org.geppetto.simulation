@@ -315,9 +315,13 @@ public class RuntimeProject
 		try
 		{
 			// let's find the importValue
-			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path);
-			Pointer pointer = PointerUtility.getPointer(geppettoModel, path);
-			Type type = PointerUtility.getType(pointer);
+			
+			//Type a = geppettoModelAccess.getType(TypesPackage.Literals.COMPOSITE_TYPE);
+			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			String p = path.replace(".ImportValue", "");
+			String abc = "";
+			//Pointer pointer = PointerUtility.getPointer(geppettoModel, p);
+			Type type = PointerUtility.getType(geppettoModel, p);
 
 			// We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
@@ -340,7 +344,7 @@ public class RuntimeProject
 				{
 					// it's the initial value of a variable
 					((Map<Type, Value>) importedValue.eContainer()).put(type, importedValue);
-					PointerUtility.getVariable(pointer).setSynched(false);
+					//PointerUtility.getVariable(pointer).setSynched(false);
 				}
 			}
 

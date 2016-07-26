@@ -317,9 +317,9 @@ public class RuntimeProject
 			// let's find the importValue
 			
 			//Type a = geppettoModelAccess.getType(TypesPackage.Literals.COMPOSITE_TYPE);
-			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
 			String p = path.replace(".ImportValue", "");
-			String abc = "";
+			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, p, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			// throws exception
 			//Pointer pointer = PointerUtility.getPointer(geppettoModel, p);
 			Type type = PointerUtility.getType(geppettoModel, p);
 

@@ -154,20 +154,22 @@ public class GeppettoManager implements IGeppettoManager
 	 */
 	public void closeProject(String requestId, IGeppettoProject project) throws GeppettoExecutionException
 	{
-		if(!projects.containsKey(project) && projects.get(project) == null)
-		{
-			throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
+		if(projects.size()>0){
+			if(!projects.containsKey(project) && projects.get(project) == null)
+			{
+				throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
+			}
+			try
+			{
+				PathConfiguration.deleteProjectTmpFolder(getScope(), project.getId());
+			}
+			catch(IOException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
+			projects.get(project).release();
+			projects.remove(project);
 		}
-		try
-		{
-			PathConfiguration.deleteProjectTmpFolder(getScope(), project.getId());
-		}
-		catch(IOException e)
-		{
-			throw new GeppettoExecutionException(e);
-		}
-		projects.get(project).release();
-		projects.remove(project);
 	}
 
 	/**

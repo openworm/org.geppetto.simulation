@@ -665,14 +665,14 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IDataSourceManager#fetchVariable(java.lang.String, java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public GeppettoModel fetchVariable(String dataSourceId, String variableId, IExperiment experiment, IGeppettoProject project) throws GeppettoDataSourceException, GeppettoModelException,
+	public GeppettoModel fetchVariable(String dataSourceId, String variableId, IGeppettoProject project) throws GeppettoDataSourceException, GeppettoModelException,
 			GeppettoExecutionException
 	{
 		return getRuntimeProject(project).fetchVariable(dataSourceId, variableId);
 	}
 
 	@Override
-	public GeppettoModel resolveImportType(List<String> typePaths, IExperiment experiment, IGeppettoProject geppettoProject) throws GeppettoExecutionException
+	public GeppettoModel resolveImportType(List<String> typePaths, IGeppettoProject geppettoProject) throws GeppettoExecutionException
 	{
 		return getRuntimeProject(geppettoProject).resolveImportType(typePaths);
 	}

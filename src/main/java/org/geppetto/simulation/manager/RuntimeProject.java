@@ -265,7 +265,7 @@ public class RuntimeProject
 				for(Type type : variable.getTypes())
 				{
 					String instancePath = PointerUtility.getInstancePath(variable, type);
-					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
+					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l,new HashMap<String,String>());
 					DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
 				}
 			}

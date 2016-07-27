@@ -241,7 +241,7 @@ public class DataSourcesGeppettoManagerTest
 		type = model.getLibraries().get(0).getTypes().get(0);
 		Assert.assertTrue(type instanceof CompositeType);
 		Assert.assertEquals(1, model.getLibraries().get(0).getTypes().size()); //still only one type but this time it's a composite
-		Assert.assertEquals(6, ((CompositeType) type).getVariables().size());
+		Assert.assertEquals(5, ((CompositeType) type).getVariables().size());
 
 	}
 

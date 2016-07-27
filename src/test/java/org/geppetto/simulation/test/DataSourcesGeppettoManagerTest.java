@@ -217,7 +217,7 @@ public class DataSourcesGeppettoManagerTest
 	{
 		GeppettoModel geppettoModel = runtimeProject.getGeppettoModel();
 		Assert.assertEquals(1, geppettoModel.getVariables().size()); // only "time" //FIXME Should time be there without a simulation?
-		GeppettoModel model = manager.fetchVariable("testDataSource", "testVariable", geppettoProject.getExperiments().get(0), geppettoProject);
+		GeppettoModel model = manager.fetchVariable("testDataSource", "testVariable", geppettoProject);
 		Assert.assertEquals("testVariable", model.getVariables().get(1).getId());
 	}
 
@@ -235,11 +235,13 @@ public class DataSourcesGeppettoManagerTest
 		Assert.assertEquals(1, geppettoModel.getLibraries().get(0).getTypes().size());
 		Assert.assertEquals("testImportType", type.getId());
 		Assert.assertTrue(type instanceof ImportType);
-		GeppettoModel model = manager.resolveImportType("testLibrary.testImportType", geppettoProject.getExperiments().get(0), geppettoProject);
+		List<String> types=new ArrayList<String>();
+		types.add("testLibrary.testImportType");
+		GeppettoModel model = manager.resolveImportType(types, geppettoProject);
 		type = model.getLibraries().get(0).getTypes().get(0);
 		Assert.assertTrue(type instanceof CompositeType);
 		Assert.assertEquals(1, model.getLibraries().get(0).getTypes().size()); //still only one type but this time it's a composite
-		Assert.assertEquals(5, ((CompositeType) type).getVariables().size());
+		Assert.assertEquals(6, ((CompositeType) type).getVariables().size());
 
 	}
 

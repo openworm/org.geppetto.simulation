@@ -42,6 +42,7 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -63,6 +64,7 @@ import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.DropboxUploadService;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.ExperimentState;
@@ -100,10 +102,13 @@ public class GeppettoManager implements IGeppettoManager
 	// By default
 	private Scope scope = Scope.CONNECTION;
 
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
+
 	public GeppettoManager()
 	{
 		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
 		logger.info("New Geppetto Manager class");
+		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
 	}
 
 	public GeppettoManager(IGeppettoManager manager)
@@ -694,5 +699,16 @@ public class GeppettoManager implements IGeppettoManager
 	public GeppettoModel resolveImportType(List<String> typePaths, IGeppettoProject geppettoProject) throws GeppettoExecutionException
 	{
 		return getRuntimeProject(geppettoProject).resolveImportType(typePaths);
+	}
+
+	@Override
+	public void setISimulationListener(IGeppettoManagerCallbackListener listener) {
+		this.geppettoManagerCallbackListener = listener;	
+	}
+
+	@Override
+	public void experimentError(Exception exception, String errorMessage,
+			IExperiment experiment) {
+		this.geppettoManagerCallbackListener.simulationError(errorMessage, exception);
 	}
 }

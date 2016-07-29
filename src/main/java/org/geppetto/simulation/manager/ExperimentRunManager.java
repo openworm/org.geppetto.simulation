@@ -36,6 +36,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -53,6 +54,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.manager.Scope;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.simulation.IExperimentListener;
 
 /**
@@ -72,6 +74,8 @@ public class ExperimentRunManager implements IExperimentListener
 	private volatile int reqId = 0;
 
 	private Timer timer;
+
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	private static ExperimentRunManager instance = null;
 
@@ -153,6 +157,7 @@ public class ExperimentRunManager implements IExperimentListener
 		catch(Exception e)
 		{
 			simulationError(experiment);
+			this.experimentError(e, experiment);
 			throw new GeppettoExecutionException(e);
 		}
 	}
@@ -280,6 +285,16 @@ public class ExperimentRunManager implements IExperimentListener
 			throw new GeppettoExecutionException("The user " + user.getName() + " has no queued experiments.");
 		}
 
+	}
+
+	@Override
+	public void experimentError(Exception e,IExperiment experiment) {
+		String errorMessage = "Error running experiment with id " + experiment.getId();
+		this.geppettoManagerCallbackListener.simulationError(errorMessage, e);
+	}
+	
+	public void setExperimentListener(IGeppettoManagerCallbackListener listener) {
+		this.geppettoManagerCallbackListener = listener;	
 	}
 
 }

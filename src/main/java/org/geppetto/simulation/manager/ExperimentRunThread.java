@@ -316,7 +316,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		catch(GeppettoInitializationException | GeppettoModelException e)
 		{
 			// TODO How to make the error surface in some description?
-			simulationError();
+			simulationError(e);
 			logger.error(e);
 		}
 		try
@@ -325,7 +325,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		}
 		catch(InterruptedException e)
 		{
-			simulationError();
+			simulationError(e);
 			throw new RuntimeException(e);
 
 		}
@@ -338,18 +338,20 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		}
 		catch(GeppettoExecutionException e)
 		{
-			simulationError();
+			simulationError(e);
 			throw new RuntimeException("Post run experiment error", e);
 		}
 
 	}
 
 	/**
+	 * @param e 
 	 * 
 	 */
-	private void simulationError()
+	private void simulationError(Exception e)
 	{
 		experiment.setStatus(ExperimentStatus.ERROR);
+		this.listener.experimentError(e, experiment);
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
 

@@ -36,7 +36,6 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -144,7 +143,9 @@ public class ExperimentRunManager implements IExperimentListener
 		try
 		{
 			IGeppettoProject project = experiment.getParentProject();
-			geppettoManager.loadProject(String.valueOf(this.getReqId()), project);
+			if(!geppettoManager.isProjectOpen(project)){
+				geppettoManager.loadProject(String.valueOf(this.getReqId()), project);
+			}
 			RuntimeProject runtimeProject = geppettoManager.getRuntimeProject(project);
 			runtimeProject.openExperiment(String.valueOf(this.getReqId()), experiment);
 
@@ -157,7 +158,8 @@ public class ExperimentRunManager implements IExperimentListener
 		catch(Exception e)
 		{
 			simulationError(experiment);
-			this.experimentError(e, experiment);
+			String errorMessage = "Error running experiment with name: " + experiment.getName() + " and id: " + experiment.getId();
+			this.experimentError(e, errorMessage);
 			throw new GeppettoExecutionException(e);
 		}
 	}
@@ -288,8 +290,7 @@ public class ExperimentRunManager implements IExperimentListener
 	}
 
 	@Override
-	public void experimentError(Exception e,IExperiment experiment) {
-		String errorMessage = "Error running experiment with id " + experiment.getId();
+	public void experimentError(Exception e, String errorMessage) {
 		this.geppettoManagerCallbackListener.simulationError(errorMessage, e);
 	}
 	

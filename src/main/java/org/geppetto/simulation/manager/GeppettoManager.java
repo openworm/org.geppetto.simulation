@@ -42,7 +42,6 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -108,7 +107,6 @@ public class GeppettoManager implements IGeppettoManager
 	{
 		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
 		logger.info("New Geppetto Manager class");
-		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
 	}
 
 	public GeppettoManager(IGeppettoManager manager)
@@ -150,6 +148,13 @@ public class GeppettoManager implements IGeppettoManager
 		{
 			throw new GeppettoExecutionException("Cannot load two instances of the same project");
 		}
+	}
+	
+	public boolean isProjectOpen(IGeppettoProject project){
+		if(projects.containsKey(project)){
+			return true;
+		}
+		return false;
 	}
 
 	/*
@@ -703,12 +708,7 @@ public class GeppettoManager implements IGeppettoManager
 
 	@Override
 	public void setISimulationListener(IGeppettoManagerCallbackListener listener) {
-		this.geppettoManagerCallbackListener = listener;	
-	}
-
-	@Override
-	public void experimentError(Exception exception, String errorMessage,
-			IExperiment experiment) {
-		this.geppettoManagerCallbackListener.simulationError(errorMessage, exception);
+		this.geppettoManagerCallbackListener = listener;
+		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
 	}
 }

@@ -707,7 +707,7 @@ public class GeppettoManager implements IGeppettoManager
 	}
 
 	@Override
-	public void setISimulationListener(IGeppettoManagerCallbackListener listener) {
+	public void setSimulationListener(IGeppettoManagerCallbackListener listener) {
 		this.geppettoManagerCallbackListener = listener;
 		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
 	}

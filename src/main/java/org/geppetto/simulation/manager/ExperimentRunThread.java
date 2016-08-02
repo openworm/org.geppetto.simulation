@@ -412,7 +412,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		simulatorServices.clear();
 		conversionServices.clear();
 		simulatorRuntimes.clear();
-		listener = null;
+		//listener = null;
 	}
 
 	/*

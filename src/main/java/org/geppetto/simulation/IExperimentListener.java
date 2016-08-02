@@ -42,4 +42,5 @@ public interface IExperimentListener
 
 	void experimentRunDone(ExperimentRunThread experimentRun, IExperiment experiment, RuntimeProject project) throws GeppettoExecutionException;
 
+	void experimentError(Exception e, String errorMessage);
 }

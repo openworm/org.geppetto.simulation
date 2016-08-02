@@ -53,6 +53,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.manager.Scope;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.simulation.IExperimentListener;
 
 /**
@@ -72,6 +73,8 @@ public class ExperimentRunManager implements IExperimentListener
 	private volatile int reqId = 0;
 
 	private Timer timer;
+
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	private static ExperimentRunManager instance = null;
 
@@ -140,7 +143,9 @@ public class ExperimentRunManager implements IExperimentListener
 		try
 		{
 			IGeppettoProject project = experiment.getParentProject();
-			geppettoManager.loadProject(String.valueOf(this.getReqId()), project);
+			if(!geppettoManager.isProjectOpen(project)){
+				geppettoManager.loadProject(String.valueOf(this.getReqId()), project);
+			}
 			RuntimeProject runtimeProject = geppettoManager.getRuntimeProject(project);
 			runtimeProject.openExperiment(String.valueOf(this.getReqId()), experiment);
 
@@ -153,6 +158,8 @@ public class ExperimentRunManager implements IExperimentListener
 		catch(Exception e)
 		{
 			simulationError(experiment);
+			String errorMessage = "Error running experiment with name: " + experiment.getName() + " and id: " + experiment.getId();
+			this.experimentError(e, errorMessage);
 			throw new GeppettoExecutionException(e);
 		}
 	}
@@ -280,6 +287,15 @@ public class ExperimentRunManager implements IExperimentListener
 			throw new GeppettoExecutionException("The user " + user.getName() + " has no queued experiments.");
 		}
 
+	}
+
+	@Override
+	public void experimentError(Exception e, String errorMessage) {
+		this.geppettoManagerCallbackListener.simulationError(errorMessage, e);
+	}
+	
+	public void setExperimentListener(IGeppettoManagerCallbackListener listener) {
+		this.geppettoManagerCallbackListener = listener;	
 	}
 
 }

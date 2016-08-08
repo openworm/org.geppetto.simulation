@@ -60,8 +60,11 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.DataSource;
+import org.geppetto.model.GeppettoFactory;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.QueryResults;
+import org.geppetto.model.RunnableQuery;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesPackage;
 import org.geppetto.model.util.GeppettoModelException;
@@ -322,6 +325,36 @@ public class RuntimeProject
 		return geppettoModel;
 	}
 
+	
+	/**
+	 * @param queries
+	 * @return
+	 * @throws GeppettoModelException
+	 */
+	public QueryResults runQuery(List<RunnableQuery> queries) throws GeppettoModelException
+	{ 		
+		QueryResults results=GeppettoFactory.eINSTANCE.createQueryResults();
+		for(RunnableQuery runnable : queries)
+		{
+			DataSource dataSource = (DataSource) runnable.getQuery().eContainer();
+			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
+			
+			//dataSourceService.execute(runnable.getQuery(), variable, results);
+		}
+		return null;
+	}
+
+	/**
+	 * @param queries
+	 * @return
+	 */
+	public int runQueryCount(List<RunnableQuery> queries)
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	
 	/**
 	 * @param dataSourceId
 	 * @return
@@ -399,5 +432,7 @@ public class RuntimeProject
 	{
 		return geppettoProject;
 	}
+
+	
 
 }

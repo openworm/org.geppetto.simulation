@@ -118,6 +118,7 @@ public class GeppettoManager implements IGeppettoManager
 			GeppettoManager other = (GeppettoManager) manager;
 			this.projects.putAll(other.projects);
 			this.user = other.getUser();
+			this.login = other.isLogin();
 		}
 	}
 

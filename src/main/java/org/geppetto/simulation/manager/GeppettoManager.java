@@ -97,7 +97,8 @@ public class GeppettoManager implements IGeppettoManager
 	private DropboxUploadService dropboxService = new DropboxUploadService();
 
 	private IUser user;
-
+	private boolean login = false;
+	
 	// By default
 	private Scope scope = Scope.CONNECTION;
 
@@ -710,5 +711,15 @@ public class GeppettoManager implements IGeppettoManager
 	public void setSimulationListener(IGeppettoManagerCallbackListener listener) {
 		this.geppettoManagerCallbackListener = listener;
 		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
+	}
+
+	@Override
+	public void setLogin(boolean b) {
+		this.login = b;
+	}
+
+	@Override
+	public boolean isLogin() {
+		return this.login;
 	}
 }

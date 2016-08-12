@@ -350,8 +350,8 @@ public class RuntimeProject
 	 */
 	public int runQueryCount(List<RunnableQuery> queries)
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		//TODO implement
+		return (int) (Math.random()*100);
 	}
 	
 	

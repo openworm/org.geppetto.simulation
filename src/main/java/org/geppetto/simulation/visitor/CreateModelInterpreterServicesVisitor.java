@@ -49,6 +49,7 @@ import org.geppetto.model.util.GeppettoVisitingException;
 /**
  * This visitor discovers and instantiates the services for each model interpreter. A thread is used to instantiate the services so that a new instance of the services is created at each time (the
  * services use a ThreadScope).
+ * A new model interpreter is created for a given library only if it doesn't already exists in the modelInterpreters map
  * 
  * @author matteocantarelli
  * 
@@ -56,16 +57,16 @@ import org.geppetto.model.util.GeppettoVisitingException;
 public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 {
 
-	private Map<GeppettoLibrary, IModelInterpreter> models;
+	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
 	private Scope scope;
 	private long projectId;
 
-	public CreateModelInterpreterServicesVisitor(Map<GeppettoLibrary, IModelInterpreter> models, long projectId, Scope scope)
+	public CreateModelInterpreterServicesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, long projectId, Scope scope)
 	{
 		super();
 		this.scope = scope;
 		this.projectId = projectId;
-		this.models = models;
+		this.modelInterpreters = modelInterpreters;
 	}
 
 	@Override
@@ -77,12 +78,12 @@ public class CreateModelInterpreterServicesVisitor extends TypesSwitch<Object>
 			{
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
-				if(!models.containsKey(library))
+				if(!modelInterpreters.containsKey(library))
 				{
 					AModelInterpreter modelInterpreter = (AModelInterpreter) ServiceCreator.getNewServiceInstance(type.getModelInterpreterId());
 					modelInterpreter.setProjectId(projectId);
 					modelInterpreter.setScope(scope);
-					models.put(library, modelInterpreter);
+					modelInterpreters.put(library, modelInterpreter);
 				}
 			}
 			else

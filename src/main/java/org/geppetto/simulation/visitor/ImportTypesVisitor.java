@@ -33,8 +33,7 @@
 package org.geppetto.simulation.visitor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.URL;
 import java.util.Map;
 
 import org.geppetto.core.model.GeppettoModelAccess;
@@ -47,7 +46,6 @@ import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.util.TypesSwitch;
 import org.geppetto.model.util.GeppettoVisitingException;
-import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesPackage;
 
 /**
@@ -60,20 +58,8 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 {
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
-	private GeppettoModelAccess commonLibraryAccess;
-	private List<ImportType> processed = new ArrayList<ImportType>();
+	private GeppettoModelAccess geppettoModelAccess;
 
-	/**
-	 * This method is used to remove the types that were replaced by real ones. It needs to be done after the iteration or we mess the iterator.
-	 */
-	public void removeProcessedImportType()
-	{
-		for(ImportType type : processed)
-		{
-			((GeppettoLibrary) type.eContainer()).getTypes().remove(type);
-		}
-		processed.clear();
-	}
 
 	@Override
 	public Object caseImportType(ImportType type)
@@ -87,17 +73,15 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
-				importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getId(), library, commonLibraryAccess);
-				// TODO User GeppettoModelAccess and Commands to perform this swapping
-				List<Variable> referencedVars = new ArrayList<Variable>(type.getReferencedVariables());
-				for(Variable v : referencedVars)
+				URL url=null;
+				if(type.getUrl()!=null)
 				{
-					v.getTypes().remove(type);
-					v.getTypes().add(importedType);
+					url=URLReader.getURL(type.getUrl());
 				}
-				processed.add(type);
-				library.setSynched(false);
-				library.getTypes().add(importedType);
+				importedType = modelInterpreter.importType(url, type.getId(), library, geppettoModelAccess);
+				
+				geppettoModelAccess.swapType(type,importedType, library);
+				
 			}
 			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)
 			{
@@ -128,7 +112,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	{
 		super();
 		this.modelInterpreters = modelInterpreters;
-		this.commonLibraryAccess = commonLibraryAccess;
+		this.geppettoModelAccess = commonLibraryAccess;
 
 	}
 

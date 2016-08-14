@@ -35,12 +35,14 @@ package org.geppetto.simulation.manager;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.common.util.BasicEList;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.EMap;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
@@ -139,7 +141,6 @@ public class RuntimeProject
 			// importing the types defined in the geppetto model using the model interpreters
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
-			importTypesVisitor.removeProcessedImportType();
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
 			// create time (puhrrrrr)
@@ -268,7 +269,7 @@ public class RuntimeProject
 				for(Type type : variable.getTypes())
 				{
 					String instancePath = PointerUtility.getInstancePath(variable, type);
-					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
+					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l,new HashMap<String,String>());
 					DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
 				}
 			}
@@ -276,24 +277,26 @@ public class RuntimeProject
 	}
 
 	/**
-	 * @param typePath
+	 * @param typePaths
 	 * @return
 	 * @throws GeppettoModelException
 	 */
-	public GeppettoModel resolveImportType(String typePath) throws GeppettoExecutionException
+	public GeppettoModel resolveImportType(List<String> typePaths) throws GeppettoExecutionException
 	{
 		try
 		{
 			// let's find the importType
-			Type importType = PointerUtility.getType(geppettoModel, typePath);
+			EList<Type> importTypes=new BasicEList<Type>();
+			for(String typePath:typePaths){
+				importTypes.add(PointerUtility.getType(geppettoModel, typePath));
+			}
 
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
-			GeppettoModelTraversal.apply(importType, createServicesVisitor);
+			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
 
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
-			GeppettoModelTraversal.apply(importType, importTypesVisitor);
+			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
-			importTypesVisitor.removeProcessedImportType();
 		}
 		
 		catch(GeppettoVisitingException e)
@@ -346,8 +349,7 @@ public class RuntimeProject
 				}
 				else if(importValue.eContainer() instanceof Map)
 				{
-					String abc = "";
-					((Map<Type, Value>) importValue.eContainer()).put(type, importedValue);
+					((EMap<Type, Value>) importValue.eContainer()).put(type, importedValue);
 					type.setSynched(false);
 					((Variable)importedValue.eContainer().eContainer()).setSynched(false);
 					

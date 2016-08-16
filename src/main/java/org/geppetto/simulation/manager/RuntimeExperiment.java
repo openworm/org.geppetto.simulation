@@ -234,9 +234,12 @@ public class RuntimeExperiment
 	 */
 	public void release()
 	{
-		experimentState.getRecordedVariables().clear();
-		experimentState.getSetParameters().clear();
-		experimentState = null;
+		if(experimentState != null)
+		{
+			experimentState.getRecordedVariables().clear();
+			experimentState.getSetParameters().clear();
+			experimentState = null;
+		}
 	}
 
 	/**

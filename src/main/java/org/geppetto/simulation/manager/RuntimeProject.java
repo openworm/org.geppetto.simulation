@@ -42,7 +42,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.common.util.EMap;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
@@ -324,8 +323,7 @@ public class RuntimeProject
 		try
 		{
 			// let's find the importValue
-			String p = path.replace(".ImportValue", "");
-			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, p, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
 			Type type = (Type) importValue.eContainer().eContainer().eContainer();
 			// throws exception
 			//Pointer pointer = PointerUtility.getPointer(geppettoModel, p); // about this, what does this do ?
@@ -350,10 +348,13 @@ public class RuntimeProject
 					//TODO: You can leave this for now Nitesh as it won't be your case
 
 				}
-				else if(importValue.eContainer() instanceof Map)
+				else if(importValue.eContainer().eContainer() instanceof Variable)
 				{
-					((EMap<Type, Value>) importValue.eContainer()).put(type, importedValue);
+					Type mapType=((Variable) importValue.eContainer().eContainer()).getInitialValues().get(0).getKey();
+					((Variable) importValue.eContainer().eContainer()).getInitialValues().put(mapType, importedValue);
+					//TODO Do this through the GeppettoModelAccess
 					type.setSynched(false);
+					((GeppettoLibrary)type.eContainer()).setSynched(false);
 					((Variable)importedValue.eContainer().eContainer()).setSynched(false);
 					
 				}

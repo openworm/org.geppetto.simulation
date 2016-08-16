@@ -65,7 +65,7 @@ public class TestDataSourceService extends ADataSourceService implements IDataSo
 	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
 	{
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true);
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.POST);
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
@@ -128,7 +128,7 @@ public class TestDataSourceService extends ADataSourceService implements IDataSo
 		fetchedVariable.setId(variableId);
 		getGeppettoModelAccess().addVariable(fetchedVariable);
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess());
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.POST);
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);

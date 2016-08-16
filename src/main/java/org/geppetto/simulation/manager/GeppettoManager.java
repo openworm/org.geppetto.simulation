@@ -66,9 +66,12 @@ import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
+import org.geppetto.model.DataSource;
 import org.geppetto.model.ExperimentState;
 import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.ModelFormat;
+import org.geppetto.model.QueryResults;
+import org.geppetto.model.RunnableQuery;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
@@ -166,7 +169,8 @@ public class GeppettoManager implements IGeppettoManager
 	 */
 	public void closeProject(String requestId, IGeppettoProject project) throws GeppettoExecutionException
 	{
-		if(projects.size()>0){
+		if(projects.size() > 0)
+		{
 			if(!projects.containsKey(project) && projects.get(project) == null)
 			{
 				throw new GeppettoExecutionException("A project without a runtime project cannot be closed");
@@ -391,7 +395,7 @@ public class GeppettoManager implements IGeppettoManager
 		}
 		return experiment;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -405,7 +409,7 @@ public class GeppettoManager implements IGeppettoManager
 			throw new GeppettoAccessException("Insufficient access rights to create new experiment.");
 		}
 
-		IExperiment experiment = DataManagerHelper.getDataManager().cloneExperiment("New Experiment " + (project.getExperiments().size() + 1), "", project,originalExperiment);
+		IExperiment experiment = DataManagerHelper.getDataManager().cloneExperiment("New Experiment " + (project.getExperiments().size() + 1), "", project, originalExperiment);
 		return experiment;
 	}
 
@@ -696,12 +700,14 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IDataSourceManager#fetchVariable(java.lang.String, java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public GeppettoModel fetchVariable(String dataSourceId, String variableId, IGeppettoProject project) throws GeppettoDataSourceException, GeppettoModelException,
-			GeppettoExecutionException
+	public GeppettoModel fetchVariable(String dataSourceId, String variableId, IGeppettoProject project) throws GeppettoDataSourceException, GeppettoModelException, GeppettoExecutionException
 	{
 		return getRuntimeProject(project).fetchVariable(dataSourceId, variableId);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IRuntimeTreeManager#resolveImportType(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
+	 */
 	@Override
 	public GeppettoModel resolveImportType(List<String> typePaths, IGeppettoProject geppettoProject) throws GeppettoExecutionException
 	{
@@ -722,5 +728,23 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public boolean isLogin() {
 		return this.login;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDataSourceManager#runQuery(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public QueryResults runQuery(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoModelException, GeppettoExecutionException
+	{
+		return getRuntimeProject(project).runQuery(queries);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.geppetto.core.manager.IDataSourceManager#runQueryCount(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
+	public int runQueryCount(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoExecutionException
+	{
+		return getRuntimeProject(project).runQueryCount(queries);
 	}
 }

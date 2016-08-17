@@ -35,10 +35,13 @@ package org.geppetto.simulation.manager;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.emf.common.util.BasicEList;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
@@ -57,8 +60,11 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.DataSource;
+import org.geppetto.model.GeppettoFactory;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.QueryResults;
+import org.geppetto.model.RunnableQuery;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesPackage;
 import org.geppetto.model.util.GeppettoModelException;
@@ -134,7 +140,6 @@ public class RuntimeProject
 			// importing the types defined in the geppetto model using the model interpreters
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
-			importTypesVisitor.removeProcessedImportType();
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
 			// create time (puhrrrrr)
@@ -263,7 +268,7 @@ public class RuntimeProject
 				for(Type type : variable.getTypes())
 				{
 					String instancePath = PointerUtility.getInstancePath(variable, type);
-					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l);
+					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l,new HashMap<String,String>());
 					DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
 				}
 			}
@@ -271,24 +276,26 @@ public class RuntimeProject
 	}
 
 	/**
-	 * @param typePath
+	 * @param typePaths
 	 * @return
 	 * @throws GeppettoModelException
 	 */
-	public GeppettoModel resolveImportType(String typePath) throws GeppettoExecutionException
+	public GeppettoModel resolveImportType(List<String> typePaths) throws GeppettoExecutionException
 	{
 		try
 		{
 			// let's find the importType
-			Type importType = PointerUtility.getType(geppettoModel, typePath);
+			EList<Type> importTypes=new BasicEList<Type>();
+			for(String typePath:typePaths){
+				importTypes.add(PointerUtility.getType(geppettoModel, typePath));
+			}
 
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
-			GeppettoModelTraversal.apply(importType, createServicesVisitor);
+			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
 
 			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
-			GeppettoModelTraversal.apply(importType, importTypesVisitor);
+			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
-			importTypesVisitor.removeProcessedImportType();
 		}
 		catch(GeppettoVisitingException e)
 		{
@@ -318,6 +325,36 @@ public class RuntimeProject
 		return geppettoModel;
 	}
 
+	
+	/**
+	 * @param queries
+	 * @return
+	 * @throws GeppettoModelException
+	 */
+	public QueryResults runQuery(List<RunnableQuery> queries) throws GeppettoModelException
+	{ 		
+		QueryResults results=GeppettoFactory.eINSTANCE.createQueryResults();
+		for(RunnableQuery runnable : queries)
+		{
+			DataSource dataSource = (DataSource) runnable.getQuery().eContainer();
+			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
+			
+			//dataSourceService.execute(runnable.getQuery(), variable, results);
+		}
+		return null;
+	}
+
+	/**
+	 * @param queries
+	 * @return
+	 */
+	public int runQueryCount(List<RunnableQuery> queries)
+	{
+		//TODO implement
+		return (int) (Math.random()*100);
+	}
+	
+	
 	/**
 	 * @param dataSourceId
 	 * @return
@@ -395,5 +432,7 @@ public class RuntimeProject
 	{
 		return geppettoProject;
 	}
+
+	
 
 }

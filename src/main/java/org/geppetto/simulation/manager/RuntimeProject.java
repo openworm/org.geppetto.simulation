@@ -66,6 +66,7 @@ import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.QueryResult;
 import org.geppetto.model.QueryResults;
 import org.geppetto.model.RunnableQuery;
+import org.geppetto.model.SerializableQueryResult;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesPackage;
 import org.geppetto.model.util.GeppettoModelException;
@@ -349,11 +350,11 @@ public class RuntimeProject
 		results.getHeader().add("Name");
 		results.getHeader().add("Definition");
 
-		QueryResult queryResult0 = GeppettoFactory.eINSTANCE.createQueryResult();
-		QueryResult queryResult1 = GeppettoFactory.eINSTANCE.createQueryResult();
-		QueryResult queryResult2 = GeppettoFactory.eINSTANCE.createQueryResult();
-		QueryResult queryResult3 = GeppettoFactory.eINSTANCE.createQueryResult();
-		QueryResult queryResult4 = GeppettoFactory.eINSTANCE.createQueryResult();
+		SerializableQueryResult queryResult0 = GeppettoFactory.eINSTANCE.createSerializableQueryResult();
+		SerializableQueryResult queryResult1 = GeppettoFactory.eINSTANCE.createSerializableQueryResult();
+		SerializableQueryResult queryResult2 = GeppettoFactory.eINSTANCE.createSerializableQueryResult();
+		SerializableQueryResult queryResult3 = GeppettoFactory.eINSTANCE.createSerializableQueryResult();
+		SerializableQueryResult queryResult4 = GeppettoFactory.eINSTANCE.createSerializableQueryResult();
 
 		queryResult0.getValues().add("FBbt_00111365");
 		queryResult0.getValues().add("adult medulla distal astrocyte-like glial cell");

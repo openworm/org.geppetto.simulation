@@ -357,7 +357,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		this.listener.experimentError(e, errorMessage);
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
-
 	/**
 	 * @return true if all the simulators associated with this experiment have completed their execution
 	 */
@@ -490,7 +489,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	@Override
 	public void externalProcessFailed(String message, Exception e) {
-		String errorMessage = message + " experiment with name: " + experiment.getName() + " and id: " + experiment.getId();
-		this.simulationError(e, errorMessage);		
+		String errorMessage ="Experiment with name: " + experiment.getName() + 
+							" and id: " + experiment.getId() + " has failed." + '\n';
+		
+		experiment.setStatus(ExperimentStatus.ERROR);
+		this.listener.externalProcessError(errorMessage, message+e.getMessage(), e);		
+		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
 }

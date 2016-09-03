@@ -65,7 +65,6 @@ import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
-import org.geppetto.model.DataSource;
 import org.geppetto.model.ExperimentState;
 import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.ModelFormat;
@@ -693,7 +692,9 @@ public class GeppettoManager implements IGeppettoManager
 		return getRuntimeProject(project).fetchVariable(dataSourceId, variableId);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.manager.IRuntimeTreeManager#resolveImportType(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
@@ -702,16 +703,20 @@ public class GeppettoManager implements IGeppettoManager
 		return getRuntimeProject(geppettoProject).resolveImportType(typePaths);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.manager.IDataSourceManager#runQuery(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public QueryResults runQuery(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoModelException, GeppettoExecutionException
+	public QueryResults runQuery(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoModelException, GeppettoExecutionException, GeppettoDataSourceException
 	{
 		return getRuntimeProject(project).runQuery(queries);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.manager.IDataSourceManager#runQueryCount(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override

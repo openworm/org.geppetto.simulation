@@ -66,7 +66,6 @@ import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
-import org.geppetto.model.DataSource;
 import org.geppetto.model.ExperimentState;
 import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.ModelFormat;
@@ -100,7 +99,6 @@ public class GeppettoManager implements IGeppettoManager
 	private DropboxUploadService dropboxService = new DropboxUploadService();
 
 	private IUser user;
-	private boolean login = false;
 	
 	// By default
 	private Scope scope = Scope.CONNECTION;
@@ -121,7 +119,6 @@ public class GeppettoManager implements IGeppettoManager
 			GeppettoManager other = (GeppettoManager) manager;
 			this.projects.putAll(other.projects);
 			this.user = other.getUser();
-			this.login = other.isLogin();
 		}
 	}
 
@@ -718,16 +715,6 @@ public class GeppettoManager implements IGeppettoManager
 	public void setSimulationListener(IGeppettoManagerCallbackListener listener) {
 		this.geppettoManagerCallbackListener = listener;
 		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
-	}
-
-	@Override
-	public void setLogin(boolean b) {
-		this.login = b;
-	}
-
-	@Override
-	public boolean isLogin() {
-		return this.login;
 	}
 	
 	/* (non-Javadoc)

@@ -336,8 +336,8 @@ public class RuntimeProject
 		QueryResults results=GeppettoFactory.eINSTANCE.createQueryResults();
 		for(RunnableQuery runnable : queries)
 		{
-			DataSource dataSource = (DataSource) runnable.getQuery().eContainer();
-			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
+			//DataSource dataSource = (DataSource) runnable.getQuery().eContainer();
+			//IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
 			
 			//dataSourceService.execute(runnable.getQuery(), variable, results);
 		}

@@ -63,6 +63,7 @@ import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.DropboxUploadService;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.ExperimentState;
@@ -101,6 +102,8 @@ public class GeppettoManager implements IGeppettoManager
 
 	// By default
 	private Scope scope = Scope.CONNECTION;
+
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	public GeppettoManager()
 	{
@@ -147,6 +150,13 @@ public class GeppettoManager implements IGeppettoManager
 		{
 			throw new GeppettoExecutionException("Cannot load two instances of the same project");
 		}
+	}
+
+	public boolean isProjectOpen(IGeppettoProject project){
+		if(projects.containsKey(project)){
+			return true;
+		}
+		return false;
 	}
 
 	/*
@@ -703,6 +713,12 @@ public class GeppettoManager implements IGeppettoManager
 		return getRuntimeProject(geppettoProject).resolveImportType(typePaths);
 	}
 
+	@Override
+	public void setSimulationListener(IGeppettoManagerCallbackListener listener) {
+		this.geppettoManagerCallbackListener = listener;
+		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 

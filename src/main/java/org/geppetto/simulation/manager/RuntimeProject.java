@@ -343,7 +343,7 @@ public class RuntimeProject
 
 			Variable variable = geppettoModelAccess.getPointer(runnable.getTargetVariablePath()).getElements().get(0).getVariable();
 
-			results = dataSourceService.execute(query, variable, null);
+			results = dataSourceService.execute(query, variable, null); 
 
 		}
 		return results;

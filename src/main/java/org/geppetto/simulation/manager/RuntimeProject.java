@@ -61,6 +61,7 @@ import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.datasources.CompoundRefQuery;
 import org.geppetto.model.datasources.DataSource;
 import org.geppetto.model.datasources.Query;
 import org.geppetto.model.datasources.QueryResults;
@@ -338,12 +339,15 @@ public class RuntimeProject
 		for(RunnableQuery runnable : queries)
 		{
 			Query query = ModelUtility.getQuery(runnable.getQueryPath(), geppettoModel);
-			DataSource dataSource = (DataSource) query.eContainer();
-			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
 
+			//Use the first query of the chain to have the datasource we want to start from
+			Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
+			DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
+			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
+			
 			Variable variable = geppettoModelAccess.getPointer(runnable.getTargetVariablePath()).getElements().get(0).getVariable();
 
-			results = dataSourceService.execute(query, variable, null); 
+			results = dataSourceService.execute(query, variable, null);
 
 		}
 		return results;

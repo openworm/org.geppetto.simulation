@@ -347,7 +347,7 @@ public class RuntimeProject
 			
 			Variable variable = geppettoModelAccess.getPointer(runnable.getTargetVariablePath()).getElements().get(0).getVariable();
 
-			results = dataSourceService.execute(query, variable, null);
+			results = dataSourceService.execute(query, variable);
 
 		}
 		return results;
@@ -356,11 +356,27 @@ public class RuntimeProject
 	/**
 	 * @param queries
 	 * @return
+	 * @throws GeppettoModelException 
+	 * @throws GeppettoDataSourceException 
 	 */
-	public int runQueryCount(List<RunnableQuery> queries)
+	public int runQueryCount(List<RunnableQuery> queries) throws GeppettoModelException, GeppettoDataSourceException
 	{
-		// TODO implement
-		return (int) (Math.random() * 100);
+		int results = 0;
+		for(RunnableQuery runnable : queries)
+		{
+			Query query = ModelUtility.getQuery(runnable.getQueryPath(), geppettoModel);
+
+			//Use the first query of the chain to have the datasource we want to start from
+			Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
+			DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
+			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
+			
+			Variable variable = geppettoModelAccess.getPointer(runnable.getTargetVariablePath()).getElements().get(0).getVariable();
+
+			results = dataSourceService.getNumberOfResults(query, variable);
+
+		}
+		return results;
 	}
 
 	/**

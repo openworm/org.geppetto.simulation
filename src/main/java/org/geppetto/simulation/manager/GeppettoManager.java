@@ -736,7 +736,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IDataSourceManager#runQueryCount(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public int runQueryCount(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoExecutionException
+	public int runQueryCount(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoExecutionException, GeppettoModelException, GeppettoDataSourceException
 	{
 		return getRuntimeProject(project).runQueryCount(queries);
 	}

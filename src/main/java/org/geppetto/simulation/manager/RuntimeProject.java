@@ -325,22 +325,16 @@ public class RuntimeProject
 			// let's find the importValue
 			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
 			Type type = (Type) importValue.eContainer().eContainer().eContainer();
-			// throws exception
-			//Pointer pointer = PointerUtility.getPointer(geppettoModel, p); // about this, what does this do ?
-			//Type type = PointerUtility.getType(geppettoModel, p);
-			
-			
 			// We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(type, createServicesVisitor);
-			String s = "";
+			
 			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
 			{
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
 				Value importedValue = modelInterpreter.importValue(importValue);
-				
 				//Class<? extends EObject> a = importedValue.eContainer().getClass();
 				if(importValue.eContainer() instanceof Type)
 				{

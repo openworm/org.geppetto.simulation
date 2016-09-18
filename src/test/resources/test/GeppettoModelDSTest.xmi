@@ -23,7 +23,7 @@
         description="">
       <queryChain
           xsi:type="gep:ProcessQuery"
-          label=""
+          name=""
           queryProcessorId="testQueryProcessorService"/>
     </fetchVariableQuery>
   </dataSources>

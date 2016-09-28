@@ -57,10 +57,12 @@ import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.GeppettoModelReader;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.datasources.CompoundRefQuery;
 import org.geppetto.model.datasources.DataSource;
 import org.geppetto.model.datasources.Query;
@@ -73,9 +75,11 @@ import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.util.ModelUtility;
 import org.geppetto.model.util.PointerUtility;
+import org.geppetto.model.values.ImportValue;
 import org.geppetto.model.values.PhysicalQuantity;
 import org.geppetto.model.values.Pointer;
 import org.geppetto.model.values.Unit;
+import org.geppetto.model.values.Value;
 import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
@@ -114,7 +118,6 @@ public class RuntimeProject
 	 * @param project
 	 * @param geppettoManagerCallbackListener
 	 * @throws MalformedURLException
-	 * @throws GeppettoInitializationException
 	 */
 	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
 	{
@@ -288,8 +291,7 @@ public class RuntimeProject
 		{
 			// let's find the importType
 			EList<Type> importTypes = new BasicEList<Type>();
-			for(String typePath : typePaths)
-			{
+			for(String typePath:typePaths){
 				importTypes.add(PointerUtility.getType(geppettoModel, typePath));
 			}
 
@@ -300,11 +302,70 @@ public class RuntimeProject
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}
+		
 		catch(GeppettoVisitingException e)
 		{
 			throw new GeppettoExecutionException(e);
 		}
 		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+
+		return geppettoModel;
+	}
+
+	/**
+	 * @param path
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	public GeppettoModel resolveImportValue(String path) throws GeppettoExecutionException
+	{
+		try
+		{
+			// let's find the importValue
+			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			Type type = (Type) importValue.eContainer().eContainer().eContainer();
+			// We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
+			GeppettoModelTraversal.apply(type, createServicesVisitor);
+			
+			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
+			{
+				// this import type is inside a library
+				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
+				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
+				Value importedValue = modelInterpreter.importValue(importValue);
+				//Class<? extends EObject> a = importedValue.eContainer().getClass();
+				if(importValue.eContainer() instanceof Type)
+				{
+					// it's the default value of a type
+					//TODO: You can leave this for now Nitesh as it won't be your case
+
+				}
+				else if(importValue.eContainer().eContainer() instanceof Variable)
+				{
+					Type mapType=((Variable) importValue.eContainer().eContainer()).getInitialValues().get(0).getKey();
+					((Variable) importValue.eContainer().eContainer()).getInitialValues().put(mapType, importedValue);
+					//TODO Do this through the GeppettoModelAccess
+					type.setSynched(false);
+					((GeppettoLibrary)type.eContainer()).setSynched(false);
+					((Variable)importedValue.eContainer().eContainer()).setSynched(false);
+					
+				}
+			}
+
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		catch(ModelInterpreterException e)
 		{
 			throw new GeppettoExecutionException(e);
 		}

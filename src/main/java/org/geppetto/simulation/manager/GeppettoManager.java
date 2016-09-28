@@ -719,6 +719,19 @@ public class GeppettoManager implements IGeppettoManager
 		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
 	}
 	
+	
+	@Override
+	public GeppettoModel resolveImportValue(String path, IExperiment experiment, IGeppettoProject geppettoProject)
+	{
+		try {
+			return getRuntimeProject(geppettoProject).resolveImportValue(path);
+		} catch (GeppettoExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 

@@ -291,7 +291,8 @@ public class RuntimeProject
 		{
 			// let's find the importType
 			EList<Type> importTypes = new BasicEList<Type>();
-			for(String typePath:typePaths){
+			for(String typePath : typePaths)
+			{
 				importTypes.add(PointerUtility.getType(geppettoModel, typePath));
 			}
 
@@ -302,7 +303,7 @@ public class RuntimeProject
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}
-		
+
 		catch(GeppettoVisitingException e)
 		{
 			throw new GeppettoExecutionException(e);
@@ -330,29 +331,29 @@ public class RuntimeProject
 			// We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(type, createServicesVisitor);
-			
+
 			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
 			{
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
 				Value importedValue = modelInterpreter.importValue(importValue);
-				//Class<? extends EObject> a = importedValue.eContainer().getClass();
+				// Class<? extends EObject> a = importedValue.eContainer().getClass();
 				if(importValue.eContainer() instanceof Type)
 				{
 					// it's the default value of a type
-					//TODO: You can leave this for now Nitesh as it won't be your case
+					// TODO: You can leave this for now Nitesh as it won't be your case
 
 				}
 				else if(importValue.eContainer().eContainer() instanceof Variable)
 				{
-					Type mapType=((Variable) importValue.eContainer().eContainer()).getInitialValues().get(0).getKey();
+					Type mapType = ((Variable) importValue.eContainer().eContainer()).getInitialValues().get(0).getKey();
 					((Variable) importValue.eContainer().eContainer()).getInitialValues().put(mapType, importedValue);
-					//TODO Do this through the GeppettoModelAccess
+					// TODO Do this through the GeppettoModelAccess
 					type.setSynched(false);
-					((GeppettoLibrary)type.eContainer()).setSynched(false);
-					((Variable)importedValue.eContainer().eContainer()).setSynched(false);
-					
+					((GeppettoLibrary) type.eContainer()).setSynched(false);
+					((Variable) importedValue.eContainer().eContainer()).setSynched(false);
+
 				}
 			}
 
@@ -396,48 +397,32 @@ public class RuntimeProject
 	 */
 	public QueryResults runQuery(List<RunnableQuery> queries) throws GeppettoModelException, GeppettoDataSourceException
 	{
-		QueryResults results = null;
-		for(RunnableQuery runnable : queries)
-		{
-			Query query = ModelUtility.getQuery(runnable.getQueryPath(), geppettoModel);
+		Query query = ModelUtility.getQuery(queries.get(0).getQueryPath(), geppettoModel);
 
-			//Use the first query of the chain to have the datasource we want to start from
-			Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
-			DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
-			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
-			
-			Variable variable = geppettoModelAccess.getPointer(runnable.getTargetVariablePath()).getElements().get(0).getVariable();
+		// Use the first query of the chain to have the datasource we want to start from
+		Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
+		DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
+		IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
 
-			results = dataSourceService.execute(query, variable);
-
-		}
-		return results;
+		return dataSourceService.execute(queries);
 	}
 
 	/**
 	 * @param queries
 	 * @return
-	 * @throws GeppettoModelException 
-	 * @throws GeppettoDataSourceException 
+	 * @throws GeppettoModelException
+	 * @throws GeppettoDataSourceException
 	 */
 	public int runQueryCount(List<RunnableQuery> queries) throws GeppettoModelException, GeppettoDataSourceException
 	{
-		int results = 0;
-		for(RunnableQuery runnable : queries)
-		{
-			Query query = ModelUtility.getQuery(runnable.getQueryPath(), geppettoModel);
+		Query query = ModelUtility.getQuery(queries.get(0).getQueryPath(), geppettoModel);
 
-			//Use the first query of the chain to have the datasource we want to start from
-			Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
-			DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
-			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
-			
-			Variable variable = geppettoModelAccess.getPointer(runnable.getTargetVariablePath()).getElements().get(0).getVariable();
+		// Use the first query of the chain to have the datasource we want to start from
+		Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
+		DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
+		IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
 
-			results = dataSourceService.getNumberOfResults(query, variable);
-
-		}
-		return results;
+		return dataSourceService.getNumberOfResults(queries);
 	}
 
 	/**

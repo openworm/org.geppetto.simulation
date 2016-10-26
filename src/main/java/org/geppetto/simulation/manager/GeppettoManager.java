@@ -63,14 +63,14 @@ import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.DropboxUploadService;
+import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
-import org.geppetto.model.DataSource;
 import org.geppetto.model.ExperimentState;
 import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.ModelFormat;
-import org.geppetto.model.QueryResults;
-import org.geppetto.model.RunnableQuery;
+import org.geppetto.model.datasources.QueryResults;
+import org.geppetto.model.datasources.RunnableQuery;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
@@ -102,6 +102,8 @@ public class GeppettoManager implements IGeppettoManager
 
 	// By default
 	private Scope scope = Scope.CONNECTION;
+
+	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	public GeppettoManager()
 	{
@@ -148,6 +150,13 @@ public class GeppettoManager implements IGeppettoManager
 		{
 			throw new GeppettoExecutionException("Cannot load two instances of the same project");
 		}
+	}
+
+	public boolean isProjectOpen(IGeppettoProject project){
+		if(projects.containsKey(project)){
+			return true;
+		}
+		return false;
 	}
 
 	/*
@@ -693,7 +702,9 @@ public class GeppettoManager implements IGeppettoManager
 		return getRuntimeProject(project).fetchVariable(dataSourceId, variableId);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.manager.IRuntimeTreeManager#resolveImportType(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
@@ -702,20 +713,43 @@ public class GeppettoManager implements IGeppettoManager
 		return getRuntimeProject(geppettoProject).resolveImportType(typePaths);
 	}
 
-	/* (non-Javadoc)
+	@Override
+	public void setSimulationListener(IGeppettoManagerCallbackListener listener) {
+		this.geppettoManagerCallbackListener = listener;
+		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
+	}
+	
+	
+	@Override
+	public GeppettoModel resolveImportValue(String path, IExperiment experiment, IGeppettoProject geppettoProject)
+	{
+		try {
+			return getRuntimeProject(geppettoProject).resolveImportValue(path);
+		} catch (GeppettoExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.manager.IDataSourceManager#runQuery(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public QueryResults runQuery(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoModelException, GeppettoExecutionException
+	public QueryResults runQuery(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoModelException, GeppettoExecutionException, GeppettoDataSourceException
 	{
 		return getRuntimeProject(project).runQuery(queries);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.manager.IDataSourceManager#runQueryCount(java.util.List, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public int runQueryCount(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoExecutionException
+	public int runQueryCount(List<RunnableQuery> queries, IGeppettoProject project) throws GeppettoExecutionException, GeppettoModelException, GeppettoDataSourceException
 	{
 		return getRuntimeProject(project).runQueryCount(queries);
 	}

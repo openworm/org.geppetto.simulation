@@ -57,23 +57,29 @@ import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.GeppettoModelReader;
 import org.geppetto.core.model.IModelInterpreter;
+import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.utilities.URLReader;
-import org.geppetto.model.DataSource;
-import org.geppetto.model.GeppettoFactory;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoModel;
-import org.geppetto.model.QueryResults;
-import org.geppetto.model.RunnableQuery;
+import org.geppetto.model.GeppettoPackage;
+import org.geppetto.model.datasources.CompoundRefQuery;
+import org.geppetto.model.datasources.DataSource;
+import org.geppetto.model.datasources.Query;
+import org.geppetto.model.datasources.QueryResults;
+import org.geppetto.model.datasources.RunnableQuery;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesPackage;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.model.util.ModelUtility;
 import org.geppetto.model.util.PointerUtility;
+import org.geppetto.model.values.ImportValue;
 import org.geppetto.model.values.PhysicalQuantity;
 import org.geppetto.model.values.Pointer;
 import org.geppetto.model.values.Unit;
+import org.geppetto.model.values.Value;
 import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
@@ -112,7 +118,6 @@ public class RuntimeProject
 	 * @param project
 	 * @param geppettoManagerCallbackListener
 	 * @throws MalformedURLException
-	 * @throws GeppettoInitializationException
 	 */
 	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
 	{
@@ -268,7 +273,7 @@ public class RuntimeProject
 				for(Type type : variable.getTypes())
 				{
 					String instancePath = PointerUtility.getInstancePath(variable, type);
-					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l,new HashMap<String,String>());
+					ISimulatorConfiguration simulatorConfiguration = DataManagerHelper.getDataManager().newSimulatorConfiguration("", "", 0l, 0l, new HashMap<String, String>());
 					DataManagerHelper.getDataManager().newAspectConfiguration(experiment, instancePath, simulatorConfiguration);
 				}
 			}
@@ -285,8 +290,9 @@ public class RuntimeProject
 		try
 		{
 			// let's find the importType
-			EList<Type> importTypes=new BasicEList<Type>();
-			for(String typePath:typePaths){
+			EList<Type> importTypes = new BasicEList<Type>();
+			for(String typePath : typePaths)
+			{
 				importTypes.add(PointerUtility.getType(geppettoModel, typePath));
 			}
 
@@ -297,11 +303,70 @@ public class RuntimeProject
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}
+
 		catch(GeppettoVisitingException e)
 		{
 			throw new GeppettoExecutionException(e);
 		}
 		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+
+		return geppettoModel;
+	}
+
+	/**
+	 * @param path
+	 * @return
+	 * @throws GeppettoExecutionException
+	 */
+	public GeppettoModel resolveImportValue(String path) throws GeppettoExecutionException
+	{
+		try
+		{
+			// let's find the importValue
+			ImportValue importValue = (ImportValue) PointerUtility.getValue(geppettoModel, path, geppettoModelAccess.getType(TypesPackage.Literals.STATE_VARIABLE_TYPE));
+			Type type = (Type) importValue.eContainer().eContainer().eContainer();
+			// We probably don't want to create a new one that will have to reopen the NWB file. Validate this hypothesis.
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
+			GeppettoModelTraversal.apply(type, createServicesVisitor);
+
+			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
+			{
+				// this import type is inside a library
+				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
+				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
+				Value importedValue = modelInterpreter.importValue(importValue);
+				// Class<? extends EObject> a = importedValue.eContainer().getClass();
+				if(importValue.eContainer() instanceof Type)
+				{
+					// it's the default value of a type
+					// TODO: You can leave this for now Nitesh as it won't be your case
+
+				}
+				else if(importValue.eContainer().eContainer() instanceof Variable)
+				{
+					Type mapType = ((Variable) importValue.eContainer().eContainer()).getInitialValues().get(0).getKey();
+					((Variable) importValue.eContainer().eContainer()).getInitialValues().put(mapType, importedValue);
+					// TODO Do this through the GeppettoModelAccess
+					type.setSynched(false);
+					((GeppettoLibrary) type.eContainer()).setSynched(false);
+					((Variable) importedValue.eContainer().eContainer()).setSynched(false);
+
+				}
+			}
+
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		catch(ModelInterpreterException e)
 		{
 			throw new GeppettoExecutionException(e);
 		}
@@ -325,36 +390,41 @@ public class RuntimeProject
 		return geppettoModel;
 	}
 
-	
 	/**
 	 * @param queries
 	 * @return
 	 * @throws GeppettoModelException
 	 */
-	public QueryResults runQuery(List<RunnableQuery> queries) throws GeppettoModelException
-	{ 		
-		QueryResults results=GeppettoFactory.eINSTANCE.createQueryResults();
-		for(RunnableQuery runnable : queries)
-		{
-			DataSource dataSource = (DataSource) runnable.getQuery().eContainer();
-			IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
-			
-			//dataSourceService.execute(runnable.getQuery(), variable, results);
-		}
-		return null;
+	public QueryResults runQuery(List<RunnableQuery> queries) throws GeppettoModelException, GeppettoDataSourceException
+	{
+		Query query = ModelUtility.getQuery(queries.get(0).getQueryPath(), geppettoModel);
+
+		// Use the first query of the chain to have the datasource we want to start from
+		Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
+		DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
+		IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
+
+		return dataSourceService.execute(queries);
 	}
 
 	/**
 	 * @param queries
 	 * @return
+	 * @throws GeppettoModelException
+	 * @throws GeppettoDataSourceException
 	 */
-	public int runQueryCount(List<RunnableQuery> queries)
+	public int runQueryCount(List<RunnableQuery> queries) throws GeppettoModelException, GeppettoDataSourceException
 	{
-		//TODO implement
-		return (int) (Math.random()*100);
+		Query query = ModelUtility.getQuery(queries.get(0).getQueryPath(), geppettoModel);
+
+		// Use the first query of the chain to have the datasource we want to start from
+		Query firstQueryOfChain = ((CompoundRefQuery) query).getQueryChain().get(0);
+		DataSource dataSource = (DataSource) firstQueryOfChain.eContainer();
+		IDataSourceService dataSourceService = getDataSourceService(dataSource.getId());
+
+		return dataSourceService.getNumberOfResults(queries);
 	}
-	
-	
+
 	/**
 	 * @param dataSourceId
 	 * @return
@@ -432,7 +502,5 @@ public class RuntimeProject
 	{
 		return geppettoProject;
 	}
-
-	
 
 }

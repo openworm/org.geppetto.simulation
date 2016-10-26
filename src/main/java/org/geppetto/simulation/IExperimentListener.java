@@ -44,5 +44,5 @@ public interface IExperimentListener
 
 	void experimentError(Exception e, String errorMessage);
 	
-	void externalProcessError(String titleMessage, String errorMessage, Exception exception);
+	void externalProcessError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment);
 }

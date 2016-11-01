@@ -317,7 +317,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		{
 			// TODO How to make the error surface in some description?
 			String errorMessage = "Error running experiment with name: (" + experiment.getName() + ") and id: " + experiment.getId();
-			simulationError(e, errorMessage);
+			externalProcessFailed(errorMessage,e);
 			logger.error(e);
 		}
 		try
@@ -327,7 +327,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		catch(InterruptedException e)
 		{
 			String errorMessage = "Error running experiment with name: (" + experiment.getName() + ") and id: " + experiment.getId();
-			simulationError(e,errorMessage);
+			externalProcessFailed(errorMessage,e);
 			throw new RuntimeException(e);
 
 		}
@@ -341,22 +341,12 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		catch(GeppettoExecutionException e)
 		{
 			String errorMessage = "Error running experiment with name: (" + experiment.getName() + ") and id: " + experiment.getId();
-			simulationError(e, errorMessage);
+			externalProcessFailed(errorMessage,e);
 			throw new RuntimeException("Post run experiment error", e);
 		}
 
 	}
 
-	/**
-	 * @param e 
-	 * 
-	 */
-	private void simulationError(Exception e, String errorMessage)
-	{
-		experiment.setStatus(ExperimentStatus.ERROR);
-		this.listener.experimentError(e, errorMessage);
-		DataManagerHelper.getDataManager().saveEntity(experiment);
-	}
 	/**
 	 * @return true if all the simulators associated with this experiment have completed their execution
 	 */
@@ -493,7 +483,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 							" and id: " + experiment.getId() + " has failed." + '\n';
 		
 		experiment.setStatus(ExperimentStatus.ERROR);
-		this.listener.externalProcessError(errorMessage, message+e.getMessage(), e, experiment);		
+		this.listener.experimentError(errorMessage, message+e.getMessage(), e, experiment);		
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
 }

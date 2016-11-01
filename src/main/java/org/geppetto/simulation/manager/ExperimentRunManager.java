@@ -159,7 +159,7 @@ public class ExperimentRunManager implements IExperimentListener
 		{
 			simulationError(experiment);
 			String errorMessage = "Error running experiment with name: " + experiment.getName() + " and id: " + experiment.getId();
-			this.experimentError(e, errorMessage);
+			this.experimentError(errorMessage,e.getMessage(), e, experiment);
 			throw new GeppettoExecutionException(e);
 		}
 	}
@@ -288,14 +288,9 @@ public class ExperimentRunManager implements IExperimentListener
 		}
 
 	}
-
-	@Override
-	public void experimentError(Exception e, String errorMessage) {
-		this.geppettoManagerCallbackListener.simulationError(errorMessage, e);
-	}
 	
 	@Override
-	public void externalProcessError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment) {
+	public void experimentError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment) {
 		this.geppettoManagerCallbackListener.externalProcessError(titleMessage, errorMessage, exception, experiment);
 	}
 	

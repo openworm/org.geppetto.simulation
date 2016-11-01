@@ -291,7 +291,7 @@ public class ExperimentRunManager implements IExperimentListener
 	
 	@Override
 	public void experimentError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment) {
-		this.geppettoManagerCallbackListener.externalProcessError(titleMessage, errorMessage, exception, experiment);
+		this.geppettoManagerCallbackListener.experimentError(titleMessage, errorMessage, exception, experiment);
 	}
 	
 	public void setExperimentListener(IGeppettoManagerCallbackListener listener) {

@@ -316,8 +316,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		catch(GeppettoInitializationException | GeppettoModelException e)
 		{
 			// TODO How to make the error surface in some description?
-			String errorMessage = "Error running experiment with name: (" + experiment.getName() + ") and id: " + experiment.getId();
-			externalProcessFailed(errorMessage,e);
+			externalProcessFailed("",e);
 			logger.error(e);
 		}
 		try
@@ -483,7 +482,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 							" and id: " + experiment.getId() + " has failed." + '\n';
 		
 		experiment.setStatus(ExperimentStatus.ERROR);
-		this.listener.experimentError(errorMessage, message, e, experiment);		
+		this.listener.experimentError(errorMessage, message+e.getMessage(), e, experiment);		
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
 }

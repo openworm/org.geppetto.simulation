@@ -483,7 +483,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 							" and id: " + experiment.getId() + " has failed." + '\n';
 		
 		experiment.setStatus(ExperimentStatus.ERROR);
-		this.listener.experimentError(errorMessage, message+e.getMessage(), e, experiment);		
+		this.listener.experimentError(errorMessage, message, e, experiment);		
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
 }

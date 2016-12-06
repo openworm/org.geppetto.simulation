@@ -260,7 +260,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IExperimentManager#playExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment)
 	 */
 	@Override
-	public ExperimentState playExperiment(String requestId, IExperiment experiment, List<String> filter) throws GeppettoExecutionException, GeppettoAccessException
+	public ExperimentState getExperimentState(String requestId, IExperiment experiment, List<String> variables) throws GeppettoExecutionException, GeppettoAccessException
 	{
 		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.READ_PROJECT))
 		{
@@ -270,7 +270,7 @@ public class GeppettoManager implements IGeppettoManager
 		if(experiment.getStatus().equals(ExperimentStatus.COMPLETED))
 		{
 
-			return getRuntimeProject(experiment.getParentProject()).getRuntimeExperiment(experiment).getRecordedVariables(filter);
+			return getRuntimeProject(experiment.getParentProject()).getRuntimeExperiment(experiment).getExperimentState(variables);
 
 		}
 		else

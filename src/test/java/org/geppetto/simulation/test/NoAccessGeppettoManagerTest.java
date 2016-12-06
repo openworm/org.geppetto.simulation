@@ -381,7 +381,7 @@ public class NoAccessGeppettoManagerTest
 	{
 		privileges.remove(0);
 		exception.expect(GeppettoAccessException.class);
-		manager.playExperiment("1", existingExperiment, null);
+		manager.getExperimentState("1", existingExperiment, null);
 	}
 
 	/**

@@ -518,7 +518,7 @@ public class GeppettoManagerTest
 	@Test
 	public void test22PlayExperiment() throws GeppettoExecutionException, NumberFormatException, IOException, GeppettoAccessException
 	{
-		ExperimentState experimentState = manager.playExperiment("1", addedExperiment, null);
+		ExperimentState experimentState = manager.getExperimentState("1", addedExperiment, null);
 		List<VariableValue> recorded = experimentState.getRecordedVariables();
 		Assert.assertEquals(4, recorded.size());
 		VariableValue time = recorded.get(0);
@@ -541,7 +541,7 @@ public class GeppettoManagerTest
 
 		List<String> filter = new ArrayList<String>();
 		filter.add("testVar(testType).a(StateVariable)");
-		experimentState = manager.playExperiment("1", addedExperiment, filter);
+		experimentState = manager.getExperimentState("1", addedExperiment, filter);
 		Assert.assertEquals("time(StateVariable)", time.getPointer().getInstancePath());
 		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
 		Assert.assertEquals("testVar(testType).a(StateVariable)", a.getPointer().getInstancePath());

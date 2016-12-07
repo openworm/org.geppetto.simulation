@@ -534,12 +534,16 @@ public class GeppettoManagerTest
 		Assert.assertNotNull(a.getValue());
 		Assert.assertNotNull(b.getValue());
 
+		VariableValue p2 = experimentState.getSetParameters().get(0);
+		Assert.assertEquals("testVar(testType).p2(Parameter)", p2.getPointer().getInstancePath());
+		Assert.assertEquals(0.234d, ((Quantity) p2.getValue()).getValue(), 0d);
+
 		checkValues(b, 3);
 		checkValues(time, 0);
 		checkValues(a, 2);
 		checkValues(c, 1);
 
-		List<String> variables=new ArrayList<String>();
+		List<String> variables = new ArrayList<String>();
 		variables.add("testVar.a");
 		experimentState = manager.getExperimentState("1", addedExperiment, variables);
 		recorded = experimentState.getRecordedVariables();
@@ -548,7 +552,9 @@ public class GeppettoManagerTest
 		Assert.assertEquals(2, recorded.size());
 		Assert.assertEquals("time(StateVariable)", time.getPointer().getInstancePath());
 		Assert.assertEquals("testVar(testType).a(StateVariable)", a.getPointer().getInstancePath());
-		
+		p2 = experimentState.getSetParameters().get(0);
+		Assert.assertEquals("testVar(testType).p2(Parameter)", p2.getPointer().getInstancePath());
+		Assert.assertEquals(0.234d, ((Quantity) p2.getValue()).getValue(), 0d);
 
 	}
 
@@ -660,10 +666,9 @@ public class GeppettoManagerTest
 		geppettoRecording.openConnection().connect();
 		URL rawRecording = manager.downloadResults("testVar(testType)", ResultsFormat.RAW, addedExperiment, geppettoProject);
 		rawRecording.openConnection().connect();
-		//unix and windows output paths differ, checks both
-		boolean rawRecPath= rawRecording.getPath().endsWith("testVar(testType)/rawRecording.zip") ||
-							rawRecording.getPath().endsWith("testVar(testType)\\rawRecording.zip");
-		
+		// unix and windows output paths differ, checks both
+		boolean rawRecPath = rawRecording.getPath().endsWith("testVar(testType)/rawRecording.zip") || rawRecording.getPath().endsWith("testVar(testType)\\rawRecording.zip");
+
 		Assert.assertTrue(rawRecPath);
 	}
 

@@ -386,6 +386,7 @@ public class RuntimeExperiment
 		}
 		else
 		{
+			experimentStateTransfer.getSetParameters().addAll(EcoreUtil.copyAll(experimentState.getSetParameters()));
 			//if only a subset of the variables was requested this has now been stored in experimentStateTransfer, a temporary object which only contains the requested variables
 			return experimentStateTransfer;
 		}

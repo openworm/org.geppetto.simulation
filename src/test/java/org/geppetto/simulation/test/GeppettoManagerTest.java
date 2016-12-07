@@ -539,20 +539,16 @@ public class GeppettoManagerTest
 		checkValues(a, 2);
 		checkValues(c, 1);
 
-		List<String> filter = new ArrayList<String>();
-		filter.add("testVar(testType).a(StateVariable)");
-		experimentState = manager.getExperimentState("1", addedExperiment, filter);
+		List<String> variables=new ArrayList<String>();
+		variables.add("testVar.a");
+		experimentState = manager.getExperimentState("1", addedExperiment, variables);
+		recorded = experimentState.getRecordedVariables();
+		time = recorded.get(0);
+		a = recorded.get(1);
+		Assert.assertEquals(2, recorded.size());
 		Assert.assertEquals("time(StateVariable)", time.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
 		Assert.assertEquals("testVar(testType).a(StateVariable)", a.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).b(StateVariable)", b.getPointer().getInstancePath());
-
-		Assert.assertNotNull(time.getValue());
-		checkValues(time, 0);
-		Assert.assertNull(c.getValue());
-		Assert.assertNotNull(a.getValue());
-		checkValues(a, 2);
-		Assert.assertNull(b.getValue());
+		
 
 	}
 

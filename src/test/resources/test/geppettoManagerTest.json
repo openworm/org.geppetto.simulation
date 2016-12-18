@@ -1,70 +1,54 @@
-{
-    "id": 5,
-    "name": "Primary Auditory Cortex Network",
-    "activeExperimentId": 1,
-    "experiments": [
-	    {
-		  	id:1,      
-		  	name: "Auditory Cortex NEURON simulation",
-		  	status: "COMPLETED",
-		  	description:"Network model of primary auditory cortex in rodents. David Beeman, University of Colorado, Boulder. Model developed in NeuroML. Simulation executed in NEURON. For more information see http://opensourcebrain.org/projects/acnet2.",
-            "lastModified":"1436102517799",
-		  	script: "/test/script.js",
-		  	aspectConfigurations: [
-		    {
-		  		id:1,
-				instance:"testVar(testType)",
-		        simulatorConfiguration: {
-		          id: 1,
-		          simulatorId: "neuronSimulator",
-		          conversionServiceId: "lemsConversion",
-		          timestep: 0.00001,
-		          length: 0.3,
-		          parameters: {target: "network_ACnet2"}
-		        },
-		        watchedVariables:["testVar(testType).a(StateVariable)",
-		        "testVar(testType).b(StateVariable)"
-		        ],
-		        modelParameters:[
-			        {
-			        	id: 1,
-			        	variable:"testVar(testType).p1(Parameter)",
-				        value: 0.2
-			        },
-					{
-			        	id: 2,
-			        	variable: "testVar(testType).p2(Parameter)",
-				        value: 0.4
-			        }
-		        ]
-		  	}
-		  	],
-		  	simulationResults: [
-		  	{
-		  		id:1,
-		  		format: "GEPPETTO_RECORDING",
-		  		simulatedInstnace:"acnet2.baskets_12_0",
-		        result: {
-		          id: 1,
-		          url: "/test/results.h5",
-		          type: "RECORDING"
-		        }
-		  	},
-		  	{
-		  		id:2,
-		  		format: "RAW",
-				simulatedInstnace:"acnet2.baskets_12_0",
-		        result: {
-		          id: 2,
-		          url: "/test/acnet2.electrical-rawRecording.zip",
-		          type: "RECORDING"
-		        }
-		  	}]
-	}
-    ],
-    "geppettoModel": {
-        "id": 9,
-        "url": "/test/GeppettoManagerTestModel.xmi",
-        "type": "GEPPETTO_PROJECT"
-    }
+{ "activeExperimentId" : 1,
+  "experiments" : [ { "aspectConfigurations" : [ { "id" : 1,
+              "instance" : "testVar(testType)",
+              "modelParameters" : [ { "id" : 1,
+                    "value" : 0.2,
+                    "variable" : "testVar(testType).p1(Parameter)"
+                  },
+                  { "id" : 2,
+                    "value" : 0.4,
+                    "variable" : "testVar(testType).p2(Parameter)"
+                  }
+                ],
+              "simulatorConfiguration" : { "conversionServiceId" : "lemsConversion",
+                  "id" : 1,
+                  "length" : 0.3,
+                  "parameters" : { "target" : "network_ACnet2" },
+                  "simulatorId" : "neuronSimulator",
+                  "timestep" : 1.0e-05
+                },
+              "watchedVariables" : [ "testVar(testType).a(StateVariable)",
+                  "testVar(testType).b(StateVariable)"
+                ]
+            } ],
+        "description" : "Network model of primary auditory cortex in rodents. David Beeman, University of Colorado, Boulder. Model developed in NeuroML. Simulation executed in NEURON. For more information see http://opensourcebrain.org/projects/acnet2.",
+        "id" : 1,
+        "lastModified" : "1436102517799",
+        "name" : "Auditory Cortex NEURON simulation",
+        "script" : "/test/script.js",
+        "simulationResults" : [ { "format" : "GEPPETTO_RECORDING",
+              "id" : 1,
+              "result" : { "id" : 1,
+                  "type" : "RECORDING",
+                  "url" : "/test/results.h5"
+                },
+              "simulatedInstnace" : "acnet2.baskets_12_0"
+            },
+            { "format" : "RAW",
+              "id" : 2,
+              "result" : { "id" : 2,
+                  "type" : "RECORDING",
+                  "url" : "/test/acnet2.electrical-rawRecording.zip"
+                },
+              "simulatedInstnace" : "acnet2.baskets_12_0"
+            }
+          ],
+        "status" : "COMPLETED"
+      } ],
+  "geppettoModel" : { "id" : 9,
+      "type" : "GEPPETTO_PROJECT",
+      "url" : "/test/GeppettoManagerTestModel.xmi"
+    },
+  "id" : 5,
+  "name" : "Primary Auditory Cortex Network"
 }

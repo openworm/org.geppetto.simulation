@@ -207,8 +207,19 @@ public class RuntimeProject
 	 * @param experiment
 	 * @return
 	 */
-	public RuntimeExperiment getRuntimeExperiment(IExperiment experiment)
+	public RuntimeExperiment getRuntimeExperiment(IExperiment experiment) throws GeppettoExecutionException
 	{
+		if(!experimentRuntime.containsKey(experiment))
+		{
+			try
+			{
+				openExperiment(null, experiment);
+			}
+			catch(MalformedURLException | GeppettoInitializationException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
+		}
 		return experimentRuntime.get(experiment);
 	}
 
@@ -248,7 +259,7 @@ public class RuntimeProject
 	/**
 	 * 
 	 */
-	public void release()
+	public void release() throws GeppettoExecutionException
 	{
 		for(IExperiment e : experimentRuntime.keySet())
 		{

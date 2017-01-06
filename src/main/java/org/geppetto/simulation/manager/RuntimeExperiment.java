@@ -91,6 +91,7 @@ public class RuntimeExperiment
 		// every experiment has a state
 		experimentState = GeppettoFactory.eINSTANCE.createExperimentState();
 		experimentState.setExperimentId(experiment.getId());
+		experimentState.setProjectId(experiment.getParentProject().getId());
 		init();
 	}
 
@@ -304,7 +305,8 @@ public class RuntimeExperiment
 		// We create an experiment state based on what's requested
 		ExperimentState experimentStateTransfer = GeppettoFactory.eINSTANCE.createExperimentState();
 		experimentStateTransfer.setExperimentId(experiment.getId());
-
+		experimentStateTransfer.setProjectId(experiment.getParentProject().getId());
+		
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))

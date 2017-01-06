@@ -194,7 +194,22 @@ public class GeppettoManager implements IGeppettoManager
 	{
 		if(!projects.containsKey(project))
 		{
-			throw new GeppettoExecutionException("The project with ID:" + project.getId() + " and Name:" + project.getName() + "is not loaded");
+			try
+			{
+				loadProject(null, project);
+			}
+			catch(MalformedURLException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
+			catch(GeppettoInitializationException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
+			catch(GeppettoAccessException e)
+			{
+				throw new GeppettoExecutionException(e);
+			}
 		}
 		return projects.get(project);
 	}

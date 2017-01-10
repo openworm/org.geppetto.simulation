@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +65,7 @@ import org.geppetto.model.types.Type;
 import org.geppetto.model.values.Quantity;
 import org.geppetto.simulation.manager.ExperimentRunManager;
 import org.geppetto.simulation.manager.GeppettoManager;
+import org.geppetto.simulation.manager.RuntimeExperiment;
 import org.geppetto.simulation.manager.RuntimeProject;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -117,6 +117,7 @@ public class NoAccessGeppettoManagerTest
 		context.registerBeanDefinition("scopedTarget.testSimulator", simulatorBeanDefinition);
 		ContextRefreshedEvent event = new ContextRefreshedEvent(context);
 		ApplicationListenerBean listener = new ApplicationListenerBean();
+		context.refresh();
 		listener.onApplicationEvent(event);
 		ApplicationContext retrievedContext = ApplicationListenerBean.getApplicationContext("testModelInterpreter");
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testModelInterpreter"));
@@ -505,10 +506,10 @@ public class NoAccessGeppettoManagerTest
 	@Test
 	public void test29CloseProject() throws GeppettoExecutionException
 	{
+		RuntimeExperiment re = runtimeProject.getRuntimeExperiment(existingExperiment);
 		manager.closeProject("1", geppettoProject);
 		Assert.assertNull(runtimeProject.getActiveExperiment());
-		exception.expect(NullPointerException.class);
-		Assert.assertNull(runtimeProject.getRuntimeExperiment(existingExperiment).getExperimentState());
+		Assert.assertNull(re.getExperimentState());
 	}
 
 	/**

@@ -68,6 +68,7 @@ import org.geppetto.model.values.Quantity;
 import org.geppetto.model.values.TimeSeries;
 import org.geppetto.simulation.manager.ExperimentRunManager;
 import org.geppetto.simulation.manager.GeppettoManager;
+import org.geppetto.simulation.manager.RuntimeExperiment;
 import org.geppetto.simulation.manager.RuntimeProject;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -118,6 +119,7 @@ public class GeppettoManagerTest
 		context.registerBeanDefinition("scopedTarget.testSimulator", simulatorBeanDefinition);
 		ContextRefreshedEvent event = new ContextRefreshedEvent(context);
 		ApplicationListenerBean listener = new ApplicationListenerBean();
+		context.refresh();
 		listener.onApplicationEvent(event);
 		ApplicationContext retrievedContext = ApplicationListenerBean.getApplicationContext("testModelInterpreter");
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testModelInterpreter"));
@@ -728,10 +730,10 @@ public class GeppettoManagerTest
 	@Test
 	public void test29CloseProject() throws GeppettoExecutionException
 	{
+		RuntimeExperiment re=runtimeProject.getRuntimeExperiment(addedExperiment);
 		manager.closeProject("1", geppettoProject);
 		Assert.assertNull(runtimeProject.getActiveExperiment());
-		exception.expect(NullPointerException.class);
-		Assert.assertNull(runtimeProject.getRuntimeExperiment(addedExperiment).getExperimentState());
+		Assert.assertNull(re.getExperimentState());
 	}
 
 	/**

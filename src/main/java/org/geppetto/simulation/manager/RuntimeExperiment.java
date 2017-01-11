@@ -306,7 +306,7 @@ public class RuntimeExperiment
 		ExperimentState experimentStateTransfer = GeppettoFactory.eINSTANCE.createExperimentState();
 		experimentStateTransfer.setExperimentId(experiment.getId());
 		experimentStateTransfer.setProjectId(experiment.getParentProject().getId());
-		
+
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))
@@ -383,13 +383,13 @@ public class RuntimeExperiment
 		}
 		if(variables == null)
 		{
-			//if there was no filter we just return the experiment state which has now been populated
+			// if there was no filter we just return the experiment state which has now been populated
 			return experimentState;
 		}
 		else
 		{
 			experimentStateTransfer.getSetParameters().addAll(EcoreUtil.copyAll(experimentState.getSetParameters()));
-			//if only a subset of the variables was requested this has now been stored in experimentStateTransfer, a temporary object which only contains the requested variables
+			// if only a subset of the variables was requested this has now been stored in experimentStateTransfer, a temporary object which only contains the requested variables
 			return experimentStateTransfer;
 		}
 
@@ -403,16 +403,15 @@ public class RuntimeExperiment
 	 */
 	private IAspectConfiguration getAspectConfiguration(Pointer pointer) throws GeppettoModelException
 	{
-		String instancePathString = pointer.getInstancePath();
-
-		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
+		if(experiment.getAspectConfigurations().size() == 1)
 		{
-			if(instancePathString.startsWith(aspectConfig.getInstance()))
-			{
-				return aspectConfig;
-			}
+			return experiment.getAspectConfigurations().get(0);
 		}
-		throw new GeppettoModelException("Cannot find an aspect configuration for the pointer " + pointer.getInstancePath());
+		else
+		{
+			throw new GeppettoModelException("Multiple aspect configuration found. Not yet supported: need to implement a way to select the appropriate one. ");
+		}
+
 	}
 
 	/**

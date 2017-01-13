@@ -152,6 +152,7 @@ public class ExperimentRunManager implements IExperimentListener
 			ExperimentRunThread experimentRun = new ExperimentRunThread(experiment, runtimeProject, this);
 			experimentRun.start();
 			experiment.setStatus(ExperimentStatus.RUNNING);
+			experiment.updateLastRan();
 			DataManagerHelper.getDataManager().saveEntity(experiment);
 
 		}

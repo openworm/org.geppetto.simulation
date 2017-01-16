@@ -300,6 +300,22 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IProjectManager#deleteProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
+	public void makeProjectPublic(String requestId, IGeppettoProject project, boolean isPublic) throws GeppettoExecutionException, GeppettoAccessException
+	{
+		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))
+		{
+			throw new GeppettoAccessException("Insufficient access rights to make project public.");
+		}
+
+		DataManagerHelper.getDataManager().makeGeppettoProjectPublic(project.getId(),isPublic);;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.manager.IProjectManager#deleteProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
+	 */
+	@Override
 	public void deleteProject(String requestId, IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException
 	{
 		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))

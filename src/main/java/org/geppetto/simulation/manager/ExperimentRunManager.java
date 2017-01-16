@@ -152,13 +152,14 @@ public class ExperimentRunManager implements IExperimentListener
 			ExperimentRunThread experimentRun = new ExperimentRunThread(experiment, runtimeProject, this);
 			experimentRun.start();
 			experiment.setStatus(ExperimentStatus.RUNNING);
-			experiment.updateLastRan();
+			experiment.updateStartDate();
 			DataManagerHelper.getDataManager().saveEntity(experiment);
 
 		}
 		catch(Exception e)
 		{
 			simulationError(experiment);
+			experiment.updateEndDate();
 			String errorMessage = "Error running experiment with name: " + experiment.getName() + " and id: " + experiment.getId();
 			this.experimentError(errorMessage,e.getMessage(), e, experiment);
 			throw new GeppettoExecutionException(e);

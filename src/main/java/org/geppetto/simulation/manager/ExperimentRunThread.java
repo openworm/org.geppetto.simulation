@@ -307,6 +307,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				if(checkAllSimulatorsAreDone())
 				{
 					experiment.setStatus(ExperimentStatus.COMPLETED);
+					experiment.updateEndDate();
 					DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
 					logger.info("All simulators are done, experiment " + experiment.getId() + " was completed.");
 					break;

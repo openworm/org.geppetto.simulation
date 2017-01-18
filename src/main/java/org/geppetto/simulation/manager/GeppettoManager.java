@@ -135,23 +135,45 @@ public class GeppettoManager implements IGeppettoManager
 	 */
 	public void loadProject(String requestId, IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
-		if(!getScope().equals(Scope.RUN) && !user.getUserGroup().getPrivileges().contains(UserPrivileges.READ_PROJECT))
-		{
-			throw new GeppettoAccessException("Insufficient access rights to load project.");
-		}
+		if(!project.isPublic()){
+			if(!getScope().equals(Scope.RUN) && !user.getUserGroup().getPrivileges().contains(UserPrivileges.READ_PROJECT))
+			{
+				throw new GeppettoAccessException("Insufficient access rights to load project.");
+			}
+			
+			boolean isUserProject = this.isUserProject(project.getId());
 
-		// RuntimeProject is created and populated when loadProject is called
-		if(!projects.containsKey(project))
-		{
+			if(!isUserProject){
+				throw new GeppettoAccessException("Project doesn't belong to you.");
+			}
+			
+			// RuntimeProject is created and populated when loadProject is called
+			if(!projects.containsKey(project))
+			{
+				RuntimeProject runtimeProject = new RuntimeProject(project, this);
+				projects.put(project, runtimeProject);
+			}
+			else
+			{
+				throw new GeppettoExecutionException("Cannot load two instances of the same project");
+			}
+		}else{
+			project.setReadOnly(!this.isUserProject(project.getId()));
 			RuntimeProject runtimeProject = new RuntimeProject(project, this);
 			projects.put(project, runtimeProject);
 		}
-		else
-		{
-			throw new GeppettoExecutionException("Cannot load two instances of the same project");
-		}
 	}
 
+	public boolean isUserProject(long id){
+		List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
+		for(IGeppettoProject p : userProjects){
+			if(p.getId() == id){
+				return true;
+			}
+		}
+		
+		return false;
+	}
 	public boolean isProjectOpen(IGeppettoProject project){
 		if(projects.containsKey(project)){
 			return true;

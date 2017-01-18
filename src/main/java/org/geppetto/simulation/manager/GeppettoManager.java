@@ -144,7 +144,7 @@ public class GeppettoManager implements IGeppettoManager
 			boolean isUserProject = this.isUserProject(project.getId());
 
 			if(!isUserProject){
-				throw new GeppettoAccessException("Project doesn't belong to you.");
+				throw new GeppettoAccessException("Project not found for the current user.");
 			}
 			
 			// RuntimeProject is created and populated when loadProject is called

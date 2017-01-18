@@ -135,48 +135,56 @@ public class GeppettoManager implements IGeppettoManager
 	 */
 	public void loadProject(String requestId, IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
-		if(!project.isPublic()){
-			if(!getScope().equals(Scope.RUN) && !user.getUserGroup().getPrivileges().contains(UserPrivileges.READ_PROJECT))
-			{
-				throw new GeppettoAccessException("Insufficient access rights to load project.");
+		if(!getScope().equals(Scope.RUN) && !user.getUserGroup().getPrivileges().contains(UserPrivileges.READ_PROJECT))
+		{
+			throw new GeppettoAccessException("Insufficient access rights to load project.");
+		}
+		if(!project.isVolatile())
+		{
+			//if the project is persisted...
+			if(!project.isPublic())
+			{	
+				//and it's not public...
+				if(!isUserProject(project.getId()))
+				{
+					//and doesn't belong to the current user
+					throw new GeppettoAccessException("Project not found for the current user.");
+				}
 			}
-			
-			boolean isUserProject = this.isUserProject(project.getId());
-
-			if(!isUserProject){
-				throw new GeppettoAccessException("Project not found for the current user.");
-			}
-			
-			// RuntimeProject is created and populated when loadProject is called
-			if(!projects.containsKey(project))
-			{
-				RuntimeProject runtimeProject = new RuntimeProject(project, this);
-				projects.put(project, runtimeProject);
-			}
-			else
-			{
-				throw new GeppettoExecutionException("Cannot load two instances of the same project");
-			}
-		}else{
+		}
+		if(!projects.containsKey(project))
+		{
 			RuntimeProject runtimeProject = new RuntimeProject(project, this);
 			projects.put(project, runtimeProject);
 		}
+		else
+		{
+			throw new GeppettoExecutionException("Cannot load two instances of the same project");
+		}
+
 	}
 
-	public boolean isUserProject(long id){
+	public boolean isUserProject(long id)
+	{
 		List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
-		for(IGeppettoProject p : userProjects){
-			if(p!=null){
-				if(p.getId() == id){
+		for(IGeppettoProject p : userProjects)
+		{
+			if(p != null)
+			{
+				if(p.getId() == id)
+				{
 					return true;
 				}
 			}
 		}
-		
+
 		return false;
 	}
-	public boolean isProjectOpen(IGeppettoProject project){
-		if(projects.containsKey(project)){
+
+	public boolean isProjectOpen(IGeppettoProject project)
+	{
+		if(projects.containsKey(project))
+		{
 			return true;
 		}
 		return false;
@@ -330,9 +338,10 @@ public class GeppettoManager implements IGeppettoManager
 			throw new GeppettoAccessException("Insufficient access rights to make project public.");
 		}
 
-		DataManagerHelper.getDataManager().makeGeppettoProjectPublic(project.getId(),isPublic);;
+		DataManagerHelper.getDataManager().makeGeppettoProjectPublic(project.getId(), isPublic);
+		;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -601,8 +610,8 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IRuntimeTreeManager#setWatchedVariables(java.util.List, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public ExperimentState setWatchedVariables(List<String> watchedVariables, IExperiment experiment, IGeppettoProject project, boolean watch) throws GeppettoExecutionException,
-			GeppettoAccessException
+	public ExperimentState setWatchedVariables(List<String> watchedVariables, IExperiment experiment, IGeppettoProject project, boolean watch)
+			throws GeppettoExecutionException, GeppettoAccessException
 	{
 		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))
 		{
@@ -768,24 +777,27 @@ public class GeppettoManager implements IGeppettoManager
 	}
 
 	@Override
-	public void setSimulationListener(IGeppettoManagerCallbackListener listener) {
+	public void setSimulationListener(IGeppettoManagerCallbackListener listener)
+	{
 		this.geppettoManagerCallbackListener = listener;
 		ExperimentRunManager.getInstance().setExperimentListener(this.geppettoManagerCallbackListener);
 	}
-	
-	
+
 	@Override
 	public GeppettoModel resolveImportValue(String path, IExperiment experiment, IGeppettoProject geppettoProject)
 	{
-		try {
+		try
+		{
 			return getRuntimeProject(geppettoProject).resolveImportValue(path);
-		} catch (GeppettoExecutionException e) {
+		}
+		catch(GeppettoExecutionException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 

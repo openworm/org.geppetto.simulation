@@ -141,12 +141,6 @@ public class GeppettoManager implements IGeppettoManager
 				throw new GeppettoAccessException("Insufficient access rights to load project.");
 			}
 			
-			boolean isUserProject = this.isUserProject(project.getId());
-
-			if(!isUserProject){
-				throw new GeppettoAccessException("Project doesn't belong to you.");
-			}
-			
 			// RuntimeProject is created and populated when loadProject is called
 			if(!projects.containsKey(project))
 			{
@@ -158,7 +152,6 @@ public class GeppettoManager implements IGeppettoManager
 				throw new GeppettoExecutionException("Cannot load two instances of the same project");
 			}
 		}else{
-			project.setReadOnly(!this.isUserProject(project.getId()));
 			RuntimeProject runtimeProject = new RuntimeProject(project, this);
 			projects.put(project, runtimeProject);
 		}
@@ -167,8 +160,10 @@ public class GeppettoManager implements IGeppettoManager
 	public boolean isUserProject(long id){
 		List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
 		for(IGeppettoProject p : userProjects){
-			if(p.getId() == id){
-				return true;
+			if(p!=null){
+				if(p.getId() == id){
+					return true;
+				}
 			}
 		}
 		

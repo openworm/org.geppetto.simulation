@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,8 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUserGroup;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.data.model.UserPrivileges;
+import org.geppetto.core.data.model.local.LocalGeppettoProject;
+import org.geppetto.core.data.model.local.LocalUser;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.services.registry.ApplicationListenerBean;
 import org.geppetto.core.services.registry.ServicesRegistry;
@@ -125,7 +128,7 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testSimulator"));
 		Assert.assertTrue(retrievedContext.getBean("scopedTarget.testSimulator") instanceof TestSimulatorService);
 		DataManagerHelper.setDataManager(new DefaultGeppettoDataManager());
-		Assert.assertNotNull(ExperimentRunManager.getInstance());
+		Assert.assertNotNull(ExperimentRunManager.getInstance());		
 	}
 
 	/**
@@ -139,7 +142,7 @@ public class NoAccessGeppettoManagerTest
 		long value = 1000l * 1000 * 1000;
 		privileges = new ArrayList<UserPrivileges>();
 		IUserGroup userGroup = DataManagerHelper.getDataManager().newUserGroup("guest", privileges, value, value * 2);
-		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));
+		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));		
 	}
 
 	/**
@@ -175,6 +178,7 @@ public class NoAccessGeppettoManagerTest
 		InputStreamReader inputStreamReader = new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 		privileges.add(UserPrivileges.READ_PROJECT);
+		((LocalUser)manager.getUser()).getGeppettoProjects().add((LocalGeppettoProject)geppettoProject);
 		manager.loadProject("1", geppettoProject);
 
 	}

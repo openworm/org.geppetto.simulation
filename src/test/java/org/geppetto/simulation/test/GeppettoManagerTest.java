@@ -55,6 +55,7 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUserGroup;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.data.model.UserPrivileges;
+import org.geppetto.core.data.model.local.LocalGeppettoProject;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.services.registry.ApplicationListenerBean;
 import org.geppetto.core.services.registry.ServicesRegistry;
@@ -172,6 +173,7 @@ public class GeppettoManagerTest
 	{
 		InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+		((LocalGeppettoProject)geppettoProject).setPublic(true);
 		manager.loadProject("1", geppettoProject);
 
 	}

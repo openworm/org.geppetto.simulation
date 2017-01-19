@@ -166,14 +166,16 @@ public class GeppettoManager implements IGeppettoManager
 
 	public boolean isUserProject(long id)
 	{
-		List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
-		for(IGeppettoProject p : userProjects)
-		{
-			if(p != null)
+		if(user!=null){
+			List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
+			for(IGeppettoProject p : userProjects)
 			{
-				if(p.getId() == id)
+				if(p != null)
 				{
-					return true;
+					if(p.getId() == id)
+					{
+						return true;
+					}
 				}
 			}
 		}

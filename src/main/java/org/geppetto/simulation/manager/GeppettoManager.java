@@ -135,20 +135,23 @@ public class GeppettoManager implements IGeppettoManager
 	 */
 	public void loadProject(String requestId, IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
-		if(!getScope().equals(Scope.RUN) && !user.getUserGroup().getPrivileges().contains(UserPrivileges.READ_PROJECT))
+		if(!getScope().equals(Scope.RUN))
 		{
-			throw new GeppettoAccessException("Insufficient access rights to load project.");
-		}
-		if(!project.isVolatile())
-		{
-			//if the project is persisted...
-			if(!project.isPublic())
-			{	
-				//and it's not public...
-				if(!isUserProject(project.getId()))
+			if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.READ_PROJECT))
+			{
+				throw new GeppettoAccessException("Insufficient access rights to load project.");
+			}
+			if(!project.isVolatile())
+			{
+				// if the project is persisted...
+				if(!project.isPublic())
 				{
-					//and doesn't belong to the current user
-					throw new GeppettoAccessException("Project not found for the current user.");
+					// and it's not public...
+					if(!isUserProject(project.getId()))
+					{
+						// and doesn't belong to the current user
+						throw new GeppettoAccessException("Project not found for the current user.");
+					}
 				}
 			}
 		}

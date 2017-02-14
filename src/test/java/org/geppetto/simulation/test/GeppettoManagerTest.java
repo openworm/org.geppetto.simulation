@@ -55,6 +55,7 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUserGroup;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.data.model.UserPrivileges;
+import org.geppetto.core.data.model.local.LocalGeppettoProject;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.services.registry.ApplicationListenerBean;
 import org.geppetto.core.services.registry.ServicesRegistry;
@@ -68,6 +69,7 @@ import org.geppetto.model.values.Quantity;
 import org.geppetto.model.values.TimeSeries;
 import org.geppetto.simulation.manager.ExperimentRunManager;
 import org.geppetto.simulation.manager.GeppettoManager;
+import org.geppetto.simulation.manager.RuntimeExperiment;
 import org.geppetto.simulation.manager.RuntimeProject;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -118,6 +120,7 @@ public class GeppettoManagerTest
 		context.registerBeanDefinition("scopedTarget.testSimulator", simulatorBeanDefinition);
 		ContextRefreshedEvent event = new ContextRefreshedEvent(context);
 		ApplicationListenerBean listener = new ApplicationListenerBean();
+		context.refresh();
 		listener.onApplicationEvent(event);
 		ApplicationContext retrievedContext = ApplicationListenerBean.getApplicationContext("testModelInterpreter");
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testModelInterpreter"));
@@ -170,6 +173,7 @@ public class GeppettoManagerTest
 	{
 		InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+		((LocalGeppettoProject)geppettoProject).setPublic(true);
 		manager.loadProject("1", geppettoProject);
 
 	}
@@ -518,7 +522,7 @@ public class GeppettoManagerTest
 	@Test
 	public void test22PlayExperiment() throws GeppettoExecutionException, NumberFormatException, IOException, GeppettoAccessException
 	{
-		ExperimentState experimentState = manager.playExperiment("1", addedExperiment, null);
+		ExperimentState experimentState = manager.getExperimentState("1", addedExperiment, null);
 		List<VariableValue> recorded = experimentState.getRecordedVariables();
 		Assert.assertEquals(4, recorded.size());
 		VariableValue time = recorded.get(0);
@@ -534,25 +538,27 @@ public class GeppettoManagerTest
 		Assert.assertNotNull(a.getValue());
 		Assert.assertNotNull(b.getValue());
 
+		VariableValue p2 = experimentState.getSetParameters().get(0);
+		Assert.assertEquals("testVar(testType).p2(Parameter)", p2.getPointer().getInstancePath());
+		Assert.assertEquals(0.234d, ((Quantity) p2.getValue()).getValue(), 0d);
+
 		checkValues(b, 3);
 		checkValues(time, 0);
 		checkValues(a, 2);
 		checkValues(c, 1);
 
-		List<String> filter = new ArrayList<String>();
-		filter.add("testVar(testType).a(StateVariable)");
-		experimentState = manager.playExperiment("1", addedExperiment, filter);
+		List<String> variables = new ArrayList<String>();
+		variables.add("testVar.a");
+		experimentState = manager.getExperimentState("1", addedExperiment, variables);
+		recorded = experimentState.getRecordedVariables();
+		time = recorded.get(0);
+		a = recorded.get(1);
+		Assert.assertEquals(2, recorded.size());
 		Assert.assertEquals("time(StateVariable)", time.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).c(StateVariable)", c.getPointer().getInstancePath());
 		Assert.assertEquals("testVar(testType).a(StateVariable)", a.getPointer().getInstancePath());
-		Assert.assertEquals("testVar(testType).b(StateVariable)", b.getPointer().getInstancePath());
-
-		Assert.assertNotNull(time.getValue());
-		checkValues(time, 0);
-		Assert.assertNull(c.getValue());
-		Assert.assertNotNull(a.getValue());
-		checkValues(a, 2);
-		Assert.assertNull(b.getValue());
+		p2 = experimentState.getSetParameters().get(0);
+		Assert.assertEquals("testVar(testType).p2(Parameter)", p2.getPointer().getInstancePath());
+		Assert.assertEquals(0.234d, ((Quantity) p2.getValue()).getValue(), 0d);
 
 	}
 
@@ -664,10 +670,9 @@ public class GeppettoManagerTest
 		geppettoRecording.openConnection().connect();
 		URL rawRecording = manager.downloadResults("testVar(testType)", ResultsFormat.RAW, addedExperiment, geppettoProject);
 		rawRecording.openConnection().connect();
-		//unix and windows output paths differ, checks both
-		boolean rawRecPath= rawRecording.getPath().endsWith("testVar(testType)/rawRecording.zip") ||
-							rawRecording.getPath().endsWith("testVar(testType)\\rawRecording.zip");
-		
+		// unix and windows output paths differ, checks both
+		boolean rawRecPath = rawRecording.getPath().endsWith("testVar(testType)/rawRecording.zip") || rawRecording.getPath().endsWith("testVar(testType)\\rawRecording.zip");
+
 		Assert.assertTrue(rawRecPath);
 	}
 
@@ -727,10 +732,10 @@ public class GeppettoManagerTest
 	@Test
 	public void test29CloseProject() throws GeppettoExecutionException
 	{
+		RuntimeExperiment re=runtimeProject.getRuntimeExperiment(addedExperiment);
 		manager.closeProject("1", geppettoProject);
 		Assert.assertNull(runtimeProject.getActiveExperiment());
-		exception.expect(NullPointerException.class);
-		Assert.assertNull(runtimeProject.getRuntimeExperiment(addedExperiment).getExperimentState());
+		Assert.assertNull(re.getExperimentState());
 	}
 
 	/**

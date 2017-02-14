@@ -35,12 +35,14 @@ package org.geppetto.simulation.manager;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.HDF5Reader;
@@ -89,6 +91,7 @@ public class RuntimeExperiment
 		// every experiment has a state
 		experimentState = GeppettoFactory.eINSTANCE.createExperimentState();
 		experimentState.setExperimentId(experiment.getId());
+		experimentState.setProjectId(experiment.getParentProject().getId());
 		init();
 	}
 
@@ -297,8 +300,13 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public ExperimentState getRecordedVariables(List<String> filter) throws GeppettoExecutionException
+	public ExperimentState getExperimentState(List<String> variables) throws GeppettoExecutionException
 	{
+		// We create an experiment state based on what's requested
+		ExperimentState experimentStateTransfer = GeppettoFactory.eINSTANCE.createExperimentState();
+		experimentStateTransfer.setExperimentId(experiment.getId());
+		experimentStateTransfer.setProjectId(experiment.getParentProject().getId());
+
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{
 			if(result.getFormat().equals(ResultsFormat.GEPPETTO_RECORDING))
@@ -321,23 +329,50 @@ public class RuntimeExperiment
 					recordingReader = new RecordingReader(new Recording(HDF5Reader.readHDF5File(url, experiment.getParentProject().getId())), result.getFormat());
 				}
 
+				List<Pointer> variablesPointers = new ArrayList<Pointer>();
+				if(variables != null)
+				{
+					for(String variable : variables)
+					{
+						try
+						{
+							variablesPointers.add(PointerUtility.getPointer(runtimeProject.getGeppettoModel(), variable));
+						}
+						catch(GeppettoModelException e)
+						{
+							throw new GeppettoExecutionException(e);
+						}
+
+					}
+				}
+				// For all the variables that were recorded..
 				for(VariableValue watchedVariableValue : experimentState.getRecordedVariables())
 				{
-					boolean removed = false;
 					String watchedVariable = watchedVariableValue.getPointer().getInstancePath();
-					if(filter != null)
+					if(variables != null)
 					{
-						if(!filter.contains(watchedVariable) && !watchedVariable.equals("time(StateVariable)"))
+						for(Pointer filteredVariable : variablesPointers)
 						{
-							watchedVariableValue.setValue(null);
-							removed = true;
+							if(PointerUtility.equals(filteredVariable, watchedVariableValue.getPointer()) || watchedVariable.equals("time(StateVariable)"))
+							{
+								if(watchedVariableValue.getValue() == null)
+								{
+									recordingReader.readRecording(watchedVariable, experimentState, true);
+									logger.info("Finished reading results for " + watchedVariable);
+								}
+								experimentStateTransfer.getRecordedVariables().add(EcoreUtil.copy(watchedVariableValue));
+								break;
+							}
+
 						}
 					}
-					if(!removed && watchedVariableValue.getValue() == null)
+					else
 					{
-						// we add to the model state every variable that was recorded
-						recordingReader.readRecording(watchedVariable, experimentState, true);
-						logger.info("Finished reading results for " + watchedVariable);
+						if(watchedVariableValue.getValue() == null)
+						{
+							recordingReader.readRecording(watchedVariable, experimentState, true);
+							logger.info("Finished reading results for " + watchedVariable);
+						}
 					}
 				}
 
@@ -346,7 +381,18 @@ public class RuntimeExperiment
 			}
 
 		}
-		return experimentState;
+		if(variables == null)
+		{
+			// if there was no filter we just return the experiment state which has now been populated
+			return experimentState;
+		}
+		else
+		{
+			experimentStateTransfer.getSetParameters().addAll(EcoreUtil.copyAll(experimentState.getSetParameters()));
+			// if only a subset of the variables was requested this has now been stored in experimentStateTransfer, a temporary object which only contains the requested variables
+			return experimentStateTransfer;
+		}
+
 	}
 
 	/**
@@ -357,16 +403,15 @@ public class RuntimeExperiment
 	 */
 	private IAspectConfiguration getAspectConfiguration(Pointer pointer) throws GeppettoModelException
 	{
-		String instancePathString = pointer.getInstancePath();
-
-		for(IAspectConfiguration aspectConfig : experiment.getAspectConfigurations())
+		if(experiment.getAspectConfigurations().size() == 1)
 		{
-			if(instancePathString.startsWith(aspectConfig.getInstance()))
-			{
-				return aspectConfig;
-			}
+			return experiment.getAspectConfigurations().get(0);
 		}
-		throw new GeppettoModelException("Cannot find an aspect configuration for the pointer " + pointer.getInstancePath());
+		else
+		{
+			throw new GeppettoModelException("Multiple aspect configuration found. Not yet supported: need to implement a way to select the appropriate one. ");
+		}
+
 	}
 
 	/**

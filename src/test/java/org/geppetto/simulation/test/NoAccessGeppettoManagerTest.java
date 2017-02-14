@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +54,8 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUserGroup;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.data.model.UserPrivileges;
+import org.geppetto.core.data.model.local.LocalGeppettoProject;
+import org.geppetto.core.data.model.local.LocalUser;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.services.registry.ApplicationListenerBean;
 import org.geppetto.core.services.registry.ServicesRegistry;
@@ -66,6 +68,7 @@ import org.geppetto.model.types.Type;
 import org.geppetto.model.values.Quantity;
 import org.geppetto.simulation.manager.ExperimentRunManager;
 import org.geppetto.simulation.manager.GeppettoManager;
+import org.geppetto.simulation.manager.RuntimeExperiment;
 import org.geppetto.simulation.manager.RuntimeProject;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -117,6 +120,7 @@ public class NoAccessGeppettoManagerTest
 		context.registerBeanDefinition("scopedTarget.testSimulator", simulatorBeanDefinition);
 		ContextRefreshedEvent event = new ContextRefreshedEvent(context);
 		ApplicationListenerBean listener = new ApplicationListenerBean();
+		context.refresh();
 		listener.onApplicationEvent(event);
 		ApplicationContext retrievedContext = ApplicationListenerBean.getApplicationContext("testModelInterpreter");
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testModelInterpreter"));
@@ -124,7 +128,7 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testSimulator"));
 		Assert.assertTrue(retrievedContext.getBean("scopedTarget.testSimulator") instanceof TestSimulatorService);
 		DataManagerHelper.setDataManager(new DefaultGeppettoDataManager());
-		Assert.assertNotNull(ExperimentRunManager.getInstance());
+		Assert.assertNotNull(ExperimentRunManager.getInstance());		
 	}
 
 	/**
@@ -138,7 +142,7 @@ public class NoAccessGeppettoManagerTest
 		long value = 1000l * 1000 * 1000;
 		privileges = new ArrayList<UserPrivileges>();
 		IUserGroup userGroup = DataManagerHelper.getDataManager().newUserGroup("guest", privileges, value, value * 2);
-		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));
+		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));		
 	}
 
 	/**
@@ -174,6 +178,7 @@ public class NoAccessGeppettoManagerTest
 		InputStreamReader inputStreamReader = new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 		privileges.add(UserPrivileges.READ_PROJECT);
+		((LocalUser)manager.getUser()).getGeppettoProjects().add((LocalGeppettoProject)geppettoProject);
 		manager.loadProject("1", geppettoProject);
 
 	}
@@ -381,7 +386,7 @@ public class NoAccessGeppettoManagerTest
 	{
 		privileges.remove(0);
 		exception.expect(GeppettoAccessException.class);
-		manager.playExperiment("1", existingExperiment, null);
+		manager.getExperimentState("1", existingExperiment, null);
 	}
 
 	/**
@@ -505,10 +510,10 @@ public class NoAccessGeppettoManagerTest
 	@Test
 	public void test29CloseProject() throws GeppettoExecutionException
 	{
+		RuntimeExperiment re = runtimeProject.getRuntimeExperiment(existingExperiment);
 		manager.closeProject("1", geppettoProject);
 		Assert.assertNull(runtimeProject.getActiveExperiment());
-		exception.expect(NullPointerException.class);
-		Assert.assertNull(runtimeProject.getRuntimeExperiment(existingExperiment).getExperimentState());
+		Assert.assertNull(re.getExperimentState());
 	}
 
 	/**

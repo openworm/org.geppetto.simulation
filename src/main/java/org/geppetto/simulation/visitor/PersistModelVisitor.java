@@ -97,9 +97,14 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 				for(URL url : dependentModels)
 				{
 					// let's create a map for the new file paths
-					String fileName = url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
-					String newPath = "projects/" + Long.toString(project.getId()) + "/" + fileName;
-					replaceMap.put(url.toString(), newPath);
+					String newPath = "projects/" + Long.toString(project.getId()) + url.getPath();
+					// we process the path by building a new URL which will take care of relative paths if they exist
+					String processedPath = new URL(new URL("http://127.0.0.1/"), newPath).getPath();
+					if(processedPath.charAt(0) == '/')
+					{
+						processedPath = processedPath.substring(1);
+					}
+					replaceMap.put(url.toString(), processedPath);
 				}
 				for(URL url : dependentModels)
 				{

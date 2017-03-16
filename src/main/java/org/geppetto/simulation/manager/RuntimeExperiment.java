@@ -429,6 +429,15 @@ public class RuntimeExperiment
 		}
 		return doSetModelParameters(parameters);
 	}
+	
+	/**
+	 * @param view
+	 * @throws GeppettoExecutionException
+	 */
+	public ExperimentState setExperimentView(String view) throws GeppettoExecutionException
+	{
+		return doSetView(view);
+	}
 
 	/**
 	 * @param modelAspectPath
@@ -516,6 +525,26 @@ public class RuntimeExperiment
 				throw new GeppettoExecutionException(e);
 			}
 
+		}
+
+		return experimentState;
+	}
+	
+	/**
+	 * @param parameters
+	 * @return ExperimentState
+	 * @throws GeppettoExecutionException
+	 */
+	private ExperimentState doSetView(String view) throws GeppettoExecutionException
+	{
+		try
+		{
+			// TODO set view on experiment
+			DataManagerHelper.getDataManager().saveEntity(experiment);
+		}
+		catch(Exception e)
+		{
+			throw new GeppettoExecutionException(e);
 		}
 
 		return experimentState;

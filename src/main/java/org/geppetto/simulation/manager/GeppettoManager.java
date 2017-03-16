@@ -608,6 +608,21 @@ public class GeppettoManager implements IGeppettoManager
 		DataManagerHelper.getDataManager().saveEntity(project);
 		return setParameters;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 */
+	@Override
+	public void setExperimentView(String view, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException
+	{
+		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))
+		{
+			throw new GeppettoAccessException("Insufficient access rights to set model parameters.");
+		}
+
+		getRuntimeProject(project).getRuntimeExperiment(experiment).setExperimentView(view);
+		DataManagerHelper.getDataManager().saveEntity(project);
+	}
 
 	/*
 	 * (non-Javadoc)

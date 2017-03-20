@@ -56,6 +56,7 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulationResult;
 import org.geppetto.core.data.model.IUser;
+import org.geppetto.core.data.model.IView;
 import org.geppetto.core.data.model.ResultsFormat;
 import org.geppetto.core.data.model.UserPrivileges;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
@@ -619,8 +620,8 @@ public class GeppettoManager implements IGeppettoManager
 		{
 			throw new GeppettoAccessException("Insufficient access rights to set expeirment view.");
 		}
-
-		experiment.setView(view);
+		IView v=DataManagerHelper.getDataManager().newView(view);
+		experiment.setView(v);
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
 

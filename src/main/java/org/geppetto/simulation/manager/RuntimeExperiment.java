@@ -520,35 +520,6 @@ public class RuntimeExperiment
 
 		return experimentState;
 	}
-	
-	/**
-	 * @param view
-	 * @throws GeppettoExecutionException
-	 */
-	public ExperimentState setExperimentView(String view) throws GeppettoExecutionException
-	{
-		return doSetView(view);
-	}
-	
-	/**
-	 * @param parameters
-	 * @return ExperimentState
-	 * @throws GeppettoExecutionException
-	 */
-	private ExperimentState doSetView(String view) throws GeppettoExecutionException
-	{
-		try
-		{
-			// TODO set view on experiment - how?
-			DataManagerHelper.getDataManager().saveEntity(experiment);
-		}
-		catch(Exception e)
-		{
-			throw new GeppettoExecutionException(e);
-		}
-
-		return experimentState;
-	}
 
 	/**
 	 * @param aspectID

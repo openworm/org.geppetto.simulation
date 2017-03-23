@@ -621,17 +621,17 @@ public class GeppettoManager implements IGeppettoManager
 			throw new GeppettoAccessException("Insufficient access rights to set expeirment view.");
 		}
 		
+		IView v = null;
 		if(experiment.getView() == null){
-			IView v = DataManagerHelper.getDataManager().newView(view);
-			experiment.setView(v);
+			v = DataManagerHelper.getDataManager().newView(view, experiment);
 		}
 		else
 		{
-			IView v = experiment.getView();
+			v = experiment.getView();
 			v.setView(view);
 		}
 		
-		DataManagerHelper.getDataManager().saveEntity(experiment);
+		DataManagerHelper.getDataManager().saveEntity(v);
 	}
 
 	/*

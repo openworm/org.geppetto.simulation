@@ -622,13 +622,30 @@ public class GeppettoManager implements IGeppettoManager
 		}
 		
 		IView v = null;
-		if(experiment.getView() == null){
-			v = DataManagerHelper.getDataManager().newView(view, experiment);
+		
+		if(experiment != null){
+			// save view at the experiment level 
+			if(experiment.getView() == null){
+				v = DataManagerHelper.getDataManager().newView(view, experiment);
+			}
+			else
+			{
+				v = experiment.getView();
+				v.setView(view);
+			}
 		}
 		else
 		{
-			v = experiment.getView();
-			v.setView(view);
+			// save view at the project level if experiment was not found
+			// save view at the experiment level 
+			if(project.getView() == null){
+				v = DataManagerHelper.getDataManager().newView(view, project);
+			}
+			else
+			{
+				v = project.getView();
+				v.setView(view);
+			}
 		}
 		
 		DataManagerHelper.getDataManager().saveEntity(v);

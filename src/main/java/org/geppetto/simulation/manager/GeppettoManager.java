@@ -824,4 +824,10 @@ public class GeppettoManager implements IGeppettoManager
 	{
 		return getRuntimeProject(project).runQueryCount(queries);
 	}
+
+	@Override
+	public URL downloadProject(IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -50,6 +50,7 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
+import org.geppetto.core.data.model.IView;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.manager.IGeppettoManager;
@@ -85,6 +86,8 @@ import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.ImportTypesVisitor;
+
+import com.google.gson.JsonObject;
 
 /**
  * The Runtime project holds the runtime state for an open project.
@@ -143,8 +146,14 @@ public class RuntimeProject
 			start = System.currentTimeMillis();
 
 			// importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, geppettoProject.getView().getView().equals(IView.EMPTY));
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
+			
+			List<JsonObject> viewCustomisations = importTypesVisitor.getDefaultViewCustomisations();
+			if(geppettoProject.getView().getView().equals(IView.EMPTY)){
+				geppettoProject.getView().setView(ViewProcessor.getView(viewCustomisations));
+			}
+			
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
 			// create time (puhrrrrr)
@@ -310,7 +319,7 @@ public class RuntimeProject
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
 
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, false);
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}

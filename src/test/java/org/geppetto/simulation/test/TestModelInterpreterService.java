@@ -115,12 +115,11 @@ public class TestModelInterpreterService extends AModelInterpreter
 	{
 		switch(feature)
 		{
-			case DYNAMIC_VISUALTREE_FEATURE:
-				return false;
 			case SET_PARAMETERS_FEATURE:
 				return true;
+			default:
+				return false;
 		}
-		return false;
 	}
 
 

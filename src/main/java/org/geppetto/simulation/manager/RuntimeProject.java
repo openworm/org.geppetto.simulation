@@ -34,6 +34,7 @@ package org.geppetto.simulation.manager;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -512,6 +513,10 @@ public class RuntimeProject
 	public IGeppettoProject getGeppettoProject()
 	{
 		return geppettoProject;
+	}
+
+	public URL downloadProject() {
+		return null;
 	}
 
 }

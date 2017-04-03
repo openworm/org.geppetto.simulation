@@ -827,7 +827,6 @@ public class GeppettoManager implements IGeppettoManager
 
 	@Override
 	public URL downloadProject(IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException {
-		// TODO Auto-generated method stub
-		return null;
+		return getRuntimeProject(project).downloadProject();
 	}
 }

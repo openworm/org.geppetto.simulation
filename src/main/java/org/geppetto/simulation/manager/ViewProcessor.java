@@ -24,7 +24,7 @@ public class ViewProcessor
 		JsonParser parser = new JsonParser();
 		
 		// root element to merge all customisations into one view
-		JsonObject root = parser.parse("{\"views\": {}").getAsJsonObject();
+		JsonObject root = parser.parse("{\"views\": {}}").getAsJsonObject();
 
 		Map<String, List<JsonObject>> jsonObjectsMap = new HashMap<String, List<JsonObject>>();
 		for (JsonObject jsonObj : viewCustomisations) {

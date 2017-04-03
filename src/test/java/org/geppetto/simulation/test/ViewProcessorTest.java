@@ -27,15 +27,15 @@ public class ViewProcessorTest
 				+ "\"height\": 314.8"
 				+ "},"
 				+ "\"dataType\": \"object\","
-				+ "\"data\": [\"hhcell.hhpop[0].v1\"],"
+				+ "\"data\": [\"hhcell.hhpop[0].v1\"]"
 				+ "}}").getAsJsonObject();
 		
 		JsonObject object2 = parser.parse("{\"Plot1\": {"
 				+ "\"widgetType\": 0,"
 				+ "\"size\": {"
 				+ "\"width\": 628.8"
-				+ "\"data\": [\"hhcell.hhpop[0].v2\"],"
 				+ "},"
+				+ "\"data\": [\"hhcell.hhpop[0].v2\"]"
 				+ "}}").getAsJsonObject();
 		
 		JsonObject object3 = parser.parse("{\"Popup1\": {"
@@ -46,8 +46,8 @@ public class ViewProcessorTest
 				+ "},"
 				+ "\"dataType\": \"string\","
 				+ "\"componentSpecific\": {"
-				+ "\"customHandlers\": [\"test1\"],"
-				+ "},"
+				+ "\"customHandlers\": [\"test1\"]"
+				+ "}"
 				+ "}}").getAsJsonObject();
 		
 		JsonObject object4 = parser.parse("{\"Popup1\": {"
@@ -57,14 +57,14 @@ public class ViewProcessorTest
 				+ "},"
 				+ "\"data\": \"bugs\","
 				+ "\"componentSpecific\": {"
-				+ "\"customHandlers\": [\"test2\"],"
-				+ "},"
+				+ "\"customHandlers\": [\"test2\"]"
+				+ "}"
 				+ "}}").getAsJsonObject();
 		
 		JsonObject object5 = parser.parse("{\"PopupX\": {"
 				+ "\"name\": \"abc\","
 				+ "\"widgetType\": 1,"
-				+ "\"data\": \"xxx\","
+				+ "\"data\": \"xxx\""
 				+ "}}").getAsJsonObject();
 		
 		List<JsonObject> viewCustomisations = new ArrayList<JsonObject>();
@@ -72,6 +72,9 @@ public class ViewProcessorTest
 		viewCustomisations.add(object2);
 		viewCustomisations.add(object3);
 		viewCustomisations.add(object4);
+		viewCustomisations.add(object5);
+		
+		// do the bit of business
 		String actual = ViewProcessor.getView(viewCustomisations);
 		
 		Assert.assertEquals(expected, actual);

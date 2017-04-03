@@ -84,6 +84,7 @@ import org.geppetto.model.values.Value;
 import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
+import org.geppetto.simulation.manager.ViewProcessor.JsonObjectExtensionConflictException;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.ImportTypesVisitor;
 
@@ -151,7 +152,11 @@ public class RuntimeProject
 			
 			List<JsonObject> viewCustomisations = importTypesVisitor.getDefaultViewCustomisations();
 			if(geppettoProject.getView().getView().equals(IView.EMPTY)){
-				geppettoProject.getView().setView(ViewProcessor.getView(viewCustomisations));
+				try {
+					geppettoProject.getView().setView(ViewProcessor.getView(viewCustomisations));
+				} catch (JsonObjectExtensionConflictException e) {
+					throw new GeppettoInitializationException(e.getMessage());
+				}
 			}
 			
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");

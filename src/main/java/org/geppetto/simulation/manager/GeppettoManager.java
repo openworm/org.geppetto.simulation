@@ -33,12 +33,14 @@
 package org.geppetto.simulation.manager;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,9 +76,17 @@ import org.geppetto.model.datasources.RunnableQuery;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.simulation.utilities.GeppettoProjectZipper;
+import org.geppetto.simulation.visitor.GeppettoModelVisitor;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
+
+import com.amazonaws.util.json.JSONArray;
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
+import com.google.gson.Gson;
+import com.rits.cloning.Cloner;
 
 /**
  * GeppettoManager is the implementation of IGeppettoManager which represents the Java API entry point for Geppetto. This class is instantiated with a session scope, which means there is one
@@ -388,7 +398,7 @@ public class GeppettoManager implements IGeppettoManager
 
 					// save Geppetto Model
 					URL url = new URL(project.getGeppettoModel().getUrl());
-					Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url).toURI());
+					Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,true).toURI());
 
 					// save each model inside GeppettoModel and save every file referenced inside every model
 					PersistModelVisitor persistModelVisitor = new PersistModelVisitor(localGeppettoModelFile, getRuntimeProject(project), project);
@@ -411,7 +421,7 @@ public class GeppettoManager implements IGeppettoManager
 						if(experiment.getScript() != null)
 						{
 							URL scriptURL = new URL(experiment.getScript());
-							Path localScript = Paths.get(URLReader.createLocalCopy(scope, project.getId(), scriptURL).toURI());
+							Path localScript = Paths.get(URLReader.createLocalCopy(scope, project.getId(), scriptURL,true).toURI());
 							String newScriptPath = "projects/" + Long.toString(project.getId()) + "/" + experiment.getId() + "/script.js";
 							S3Manager.getInstance().saveFileToS3(localScript.toFile(), newScriptPath);
 							experiment.setScript(S3Manager.getInstance().getURL(newScriptPath).toString());
@@ -826,7 +836,29 @@ public class GeppettoManager implements IGeppettoManager
 	}
 
 	@Override
-	public URL downloadProject(IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException {
-		return getRuntimeProject(project).downloadProject();
+	public Path downloadProject(IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException {
+		Path zip = null;
+		try {
+			File dir = new File(PathConfiguration.getProjectTmpPath(scope,project.getId()));
+			dir.mkdirs();
+			Zipper zipper = new Zipper(dir.getAbsolutePath()+"/project.zip");
+
+			GeppettoProjectZipper geppettoProjectZipper = new GeppettoProjectZipper();
+			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper);
+			
+			URL url = URLReader.getURL(project.getGeppettoModel().getUrl());
+			Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,false).toURI());
+			
+			GeppettoModelVisitor visitor = new GeppettoModelVisitor(localGeppettoModelFile, this.getRuntimeProject(project), project);
+			GeppettoModelTraversal.apply(getRuntimeProject(project).getGeppettoModel(), visitor);
+			
+			zipper.addToZip(jsonFile.toURI().toURL());
+			zipper.addToZip(localGeppettoModelFile.toUri().toURL());
+			zip = zipper.processAddedFilesAndZip();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return zip;
 	}
 }

@@ -1,0 +1,118 @@
+{ "activeExperimentId" : 1,
+  "experiments" : [ { "aspectConfigurations" : [ { "id" : 1,
+              "instance" : "testVar(testType)",
+              "modelParameters" : [ { "id" : 1,
+                    "value" : 0.2,
+                    "variable" : "testVar(testType).p1(Parameter)"
+                  },
+                  { "id" : 2,
+                    "value" : 0.4,
+                    "variable" : "testVar(testType).p2(Parameter)"
+                  }
+                ],
+              "simulatorConfiguration" : { "conversionServiceId" : "lemsConversion",
+                  "id" : 1,
+                  "length" : 0.3,
+                  "parameters" : { "target" : "network_ACnet2" },
+                  "simulatorId" : "neuronSimulator",
+                  "timestep" : 1.0e-05
+                },
+              "watchedVariables" : [ "testVar(testType).a(StateVariable)",
+                  "testVar(testType).b(StateVariable)"
+                ]
+            } ],
+        "description" : "Network model of primary auditory cortex in rodents. David Beeman, University of Colorado, Boulder. Model developed in NeuroML. Simulation executed in NEURON. For more information see http://opensourcebrain.org/projects/acnet2.",
+        "id" : 1,
+        "lastModified" : "1436102517799",
+        "name" : "Auditory Cortex NEURON simulation",
+        "script" : "/test/script.js",
+        "simulationResults" : [ { "format" : "GEPPETTO_RECORDING",
+              "id" : 1,
+              "result" : { "id" : 1,
+                  "type" : "RECORDING",
+                  "url" : "/test/results.h5"
+                },
+              "simulatedInstnace" : "acnet2.baskets_12_0"
+            },
+            { "format" : "RAW",
+              "id" : 2,
+              "result" : { "id" : 2,
+                  "type" : "RECORDING",
+                  "url" : "/test/rawRecording.zip"
+                },
+              "simulatedInstnace" : "acnet2.baskets_12_0"
+            }
+          ],
+        "status" : "COMPLETED"
+      },      { "aspectConfigurations" : [ { "id" : 1,
+              "instance" : "testVar(testType)",
+              "modelParameters" : [ { "id" : 1,
+                    "value" : 0.2,
+                    "variable" : "testVar(testType).p1(Parameter)"
+                  },
+                  { "id" : 2,
+                    "value" : 0.4,
+                    "variable" : "testVar(testType).p2(Parameter)"
+                  }
+                ],
+              "simulatorConfiguration" : { "conversionServiceId" : "lemsConversion",
+                  "id" : 1,
+                  "length" : 0.3,
+                  "parameters" : { "target" : "network_ACnet2" },
+                  "simulatorId" : "neuronSimulator",
+                  "timestep" : 1.0e-05
+                },
+              "watchedVariables" : [ "testVar(testType).a(StateVariable)",
+                  "testVar(testType).b(StateVariable)"
+                ]
+            } ],
+        "description" : "Network model of primary auditory cortex in rodents. David Beeman, University of Colorado, Boulder. Model developed in NeuroML. Simulation executed in NEURON. For more information see http://opensourcebrain.org/projects/acnet2.",
+        "id" : 1,
+        "lastModified" : "1436102517799",
+        "name" : "Auditory Cortex NEURON simulation",
+        "script" : "/test/script.js",
+        "simulationResults" : [ { "format" : "GEPPETTO_RECORDING",
+              "id" : 1,
+              "result" : { "id" : 1,
+                  "type" : "RECORDING",
+                  "url" : "/results.h5"
+                },
+              "simulatedInstnace" : "acnet2.baskets_12_0"
+            }
+          ],
+        "status" : "COMPLETED"
+      },{ "aspectConfigurations" : [ { "id" : 1,
+              "instance" : "testVar(testType)",
+              "modelParameters" : [ { "id" : 1,
+                    "value" : 0.2,
+                    "variable" : "testVar(testType).p1(Parameter)"
+                  },
+                  { "id" : 2,
+                    "value" : 0.4,
+                    "variable" : "testVar(testType).p2(Parameter)"
+                  }
+                ],
+              "simulatorConfiguration" : { "conversionServiceId" : "lemsConversion",
+                  "id" : 1,
+                  "length" : 0.3,
+                  "parameters" : { "target" : "network_ACnet2" },
+                  "simulatorId" : "neuronSimulator",
+                  "timestep" : 1.0e-05
+                },
+              "watchedVariables" : [ "testVar(testType).a(StateVariable)",
+                  "testVar(testType).b(StateVariable)"
+                ]
+            } ],
+        "description" : "Network model of primary auditory cortex in rodents. David Beeman, University of Colorado, Boulder. Model developed in NeuroML. Simulation executed in NEURON. For more information see http://opensourcebrain.org/projects/acnet2.",
+        "id" : 1,
+        "lastModified" : "1436102517799",
+        "name" : "Auditory Cortex NEURON simulation",
+        "status" : "COMPLETED"
+      } ],
+  "geppettoModel" : { "id" : 9,
+      "type" : "GEPPETTO_PROJECT",
+      "url" : "/test/GeppettoManagerTestModel.xmi"
+    },
+  "id" : 5,
+  "name" : "Primary Auditory Cortex Network"
+}

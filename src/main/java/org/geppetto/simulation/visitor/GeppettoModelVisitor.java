@@ -1,35 +1,3 @@
-/*******************************************************************************
- * The MIT License (MIT)
- * 
- * Copyright (c) 2011 - 2015 OpenWorm.
- * http://openworm.org
- * 
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the MIT License
- * which accompanies this distribution, and is available at
- * http://opensource.org/licenses/MIT
- *
- * Contributors:
- *     	OpenWorm - http://openworm.org/people.html
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights 
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
- * copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *******************************************************************************/
 package org.geppetto.simulation.visitor;
 
 import java.io.IOException;
@@ -57,13 +25,7 @@ import org.geppetto.model.util.GeppettoSwitch;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.simulation.manager.RuntimeProject;
 
-/**
- * @author matteocantarelli
- *
- */
-public class PersistModelVisitor extends GeppettoSwitch<Object>
-{
-
+public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 	private IGeppettoProject project;
 
 	private Map<String, String> replaceMap = new HashMap<String, String>();
@@ -77,7 +39,7 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 	 * @param runtimeProject
 	 * @param project
 	 */
-	public PersistModelVisitor(Path localGeppettoModelFile, RuntimeProject runtimeProject, IGeppettoProject project)
+	public GeppettoModelVisitor(Path localGeppettoModelFile, RuntimeProject runtimeProject, IGeppettoProject project)
 	{
 		this.runtimeProject = runtimeProject;
 		this.project = project;
@@ -97,7 +59,7 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 				for(URL url : dependentModels)
 				{
 					// let's create a map for the new file paths
-					String newPath = "projects/" + Long.toString(project.getId()) + url.getPath();
+					String newPath = "/"+url.getPath();
 					// we process the path by building a new URL which will take care of relative paths if they exist
 					String processedPath = new URL(new URL("http://127.0.0.1/"), newPath).getPath();
 					if(processedPath.charAt(0) == '/')
@@ -108,11 +70,9 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 				}
 				for(URL url : dependentModels)
 				{
-					Path localFile = Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, project.getId(), url,true).toURI());
+					Path localFile = Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, project.getId(), url,false).toURI());
 					// let's replace every occurrence of the original URLs inside the file with their copy
 					replaceURLs(localFile, replaceMap);
-					// noew let's save the file in S3
-					S3Manager.getInstance().saveFileToS3(localFile.toFile(), replaceMap.get(url.toString()));
 				}
 			}
 		}

@@ -539,7 +539,7 @@ public class RuntimeExperiment
 					try
 					{
 						url = URLReader.getURL(result.getResult().getUrl());
-						dropboxService.upload(new File(URLReader.createLocalCopy(Scope.CONNECTION, experiment.getParentProject().getId(), url).toURI()));
+						dropboxService.upload(new File(URLReader.createLocalCopy(Scope.CONNECTION, experiment.getParentProject().getId(), url,true).toURI()));
 					}
 					catch(Exception e)
 					{

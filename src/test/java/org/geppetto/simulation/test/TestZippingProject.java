@@ -1,7 +1,10 @@
 package org.geppetto.simulation.test;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,21 +74,107 @@ public class TestZippingProject {
 		IUserGroup userGroup = DataManagerHelper.getDataManager().newUserGroup("unaccountableAristocrats", privileges, value, value * 2);
 		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));
 	}
-	
+
 	@Test
 	public void testZippingProject(){
 
 		try
 		{
-			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest2.json"));
+			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/hhcell/GEPPETTO.json"));
 			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 			((LocalGeppettoProject)geppettoProject).setPublic(true);
 			manager.loadProject("1", geppettoProject);
 
-			manager.downloadProject(geppettoProject);
+			Path projectZipped = manager.downloadProject(geppettoProject);
+			assertNotNull(projectZipped);
+			
+			assertTrue(projectZipped.toFile().exists());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	
+//	@Test
+//	public void testZippingProject(){
+//
+//		try
+//		{
+//			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project2/geppettoManagerTest2.json"));
+//			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+//			((LocalGeppettoProject)geppettoProject).setPublic(true);
+//			manager.loadProject("1", geppettoProject);
+//
+//			Path projectZipped = manager.downloadProject(geppettoProject);
+//			assertNotNull(projectZipped);
+//			
+//			assertTrue(projectZipped.toFile().exists());
+//		}
+//		catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
+//	
+//	@Test
+//	public void testZippingProject2(){
+//
+//		try
+//		{
+//			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project3/geppettoManagerTest3.json"));
+//			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+//			((LocalGeppettoProject)geppettoProject).setPublic(true);
+//			manager.loadProject("1", geppettoProject);
+//
+//			Path projectZipped = manager.downloadProject(geppettoProject);
+//			
+//			assertNotNull(projectZipped);
+//			
+//			assertTrue(projectZipped.toFile().exists());	
+//		}
+//		catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
+//	
+//	@Test
+//	public void testZippingProject3(){
+//
+//		try
+//		{
+//			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project4/geppettoManagerTest.json"));
+//			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+//			((LocalGeppettoProject)geppettoProject).setPublic(true);
+//			manager.loadProject("1", geppettoProject);
+//
+//			Path projectZipped = manager.downloadProject(geppettoProject);
+//			
+//			assertNotNull(projectZipped);
+//			
+//			assertTrue(projectZipped.toFile().exists());	
+//		}
+//		catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
+//	
+//	@Test
+//	public void testZippingProject4(){
+//
+//		try
+//		{
+//			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project5/geppettoManagerTest.json"));
+//			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+//			((LocalGeppettoProject)geppettoProject).setPublic(true);
+//			manager.loadProject("1", geppettoProject);
+//
+//			Path projectZipped = manager.downloadProject(geppettoProject);
+//			
+//			assertNotNull(projectZipped);
+//			
+//			assertTrue(projectZipped.toFile().exists());	
+//		}
+//		catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 }

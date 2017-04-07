@@ -88,7 +88,7 @@ public class GeppettoProjectZipper {
 							//full path to simulations results file
 							String resultsPath = 
 									simulationResult.getAsJsonObject("result").getAsJsonPrimitive("url").getAsString();
-							if(!simulationResultsPaths.contains(fullPath)){
+							if(!simulationResultsPaths.contains(resultsPath)){
 								simulationResultsPaths.add(resultsPath);
 								URL resultsLocation = URLReader.getURL(resultsPath);
 								//only add simulations results to zip if it hasn'e been already added

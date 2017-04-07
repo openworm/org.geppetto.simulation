@@ -137,6 +137,8 @@ public class TestModelInterpreterService extends AModelInterpreter
 		CompositeType type = TypesFactory.eINSTANCE.createCompositeType();
 		try
 		{
+			dependentModels.clear();
+			
 			type.setId("testType");
 			type.setName("testType");
 

@@ -1,0 +1,46 @@
+{ "activeExperimentId" : 1,
+  "experiments" : [ { "aspectConfigurations" : [ { "instance" : "hhcell",
+              "simulatorConfiguration" : { "conversionServiceId" : "lemsConversion",
+                  "id" : 1,
+                  "length" : 0.3,
+                  "parameters" : { "target" : "net1" },
+                  "simulatorId" : "neuronSimulator",
+                  "timestep" : 5.0e-05
+                },
+              "watchedVariables" : [ "hhcell.hhpop[0].v",
+                  "hhcell.hhpop[0].bioPhys1.membraneProperties.naChans.na.m.q",
+                  "hhcell.hhpop[0].bioPhys1.membraneProperties.naChans.na.h.q",
+                  "hhcell.hhpop[0].bioPhys1.membraneProperties.kChans.k.n.q"
+                ]
+            } ],
+        "description" : "The Hodgkin-Huxley model (or conductance-based model) is a mathematical model that describes how action potentials in neurons are initiated and propagated. It is a set of nonlinear differential equations that approximates the electrical characteristics of excitable cells such as neurons.",
+        "id" : 1,
+        "lastModified" : "1436102517799",
+        "name" : "Hodgkin-Huxley NEURON simulation",
+        "script" : "/test/hhcell/HH_Geppetto_Script.js",
+        "simulationResults" : [ { "format" : "GEPPETTO_RECORDING",
+              "id" : 1,
+              "result" : { "id" : 1,
+                  "type" : "RECORDING",
+                  "url" : "/test/hhcell/results.h5"
+                },
+              "simulatedInstance" : "hhcell"
+            },
+            { "format" : "RAW",
+              "id" : 2,
+              "result" : { "id" : 2,
+                  "type" : "RECORDING",
+                  "url" : "/test/hhcell/rawRecording.zip"
+                },
+              "simulatedInstance" : "hhcell"
+            }
+          ],
+        "status" : "COMPLETED"
+      } ],
+  "geppettoModel" : { "id" : 1,
+      "type" : "GEPPETTO_PROJECT",
+      "url" : "/test/hhcell/GeppettoModel.xmi"
+    },
+  "id" : 1,
+  "name" : "Hodgkin-Huxley Neuron"
+}

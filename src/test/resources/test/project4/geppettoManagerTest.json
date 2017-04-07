@@ -111,7 +111,7 @@
       } ],
   "geppettoModel" : { "id" : 9,
       "type" : "GEPPETTO_PROJECT",
-      "url" : "/test/GeppettoManagerTestModel.xmi"
+      "url" : "/test/project4/CPharyn.xmi"
     },
   "id" : 5,
   "name" : "Primary Auditory Cortex Network"

@@ -20,10 +20,12 @@ import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.utilities.URLReader;
+import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.util.GeppettoSwitch;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.simulation.manager.RuntimeProject;
+
 
 public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 	private IGeppettoProject project;
@@ -34,18 +36,24 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 
 	private RuntimeProject runtimeProject;
 
+	private Zipper zipper;
+
+	private Path localGeppettoTypeFile;
+
 	/**
+	 * @param localGeppettoTypeFile 
 	 * @param localGeppettoModelFile
 	 * @param runtimeProject
 	 * @param project
+	 * @param zipper 
 	 */
-	public GeppettoModelVisitor(Path localGeppettoModelFile, RuntimeProject runtimeProject, IGeppettoProject project)
+	public GeppettoModelVisitor(Path localGeppettoTypeFile, RuntimeProject runtimeProject, Zipper zipper)
 	{
 		this.runtimeProject = runtimeProject;
-		this.project = project;
-		this.localGeppettoModelFile = localGeppettoModelFile;
+		this.zipper = zipper;
+		this.localGeppettoTypeFile = localGeppettoTypeFile;
 	}
-
+	
 	@Override
 	public Object caseGeppettoLibrary(GeppettoLibrary library)
 	{
@@ -55,22 +63,19 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 			if(!library.getId().equals(SharedLibraryManager.getSharedCommonLibrary().getId()))
 			{
 				IModelInterpreter modelInterpreter = runtimeProject.getModelInterpreter(library);
-				List<URL> dependentModels = modelInterpreter.getDependentModels();
+				List<URL> dependentModels = modelInterpreter.getDependentModels();		
 				for(URL url : dependentModels)
 				{
 					// let's create a map for the new file paths
-					String newPath = "/"+url.getPath();
-					// we process the path by building a new URL which will take care of relative paths if they exist
-					String processedPath = new URL(new URL("http://127.0.0.1/"), newPath).getPath();
-					if(processedPath.charAt(0) == '/')
-					{
-						processedPath = processedPath.substring(1);
-					}
-					replaceMap.put(url.toString(), processedPath);
+					String fullPath = url.getPath();
+					String newPath = this.getRelativePath(fullPath);
+					
+					replaceMap.put(fullPath, newPath);
 				}
 				for(URL url : dependentModels)
 				{
-					Path localFile = Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, project.getId(), url,false).toURI());
+					Path localFile = 
+							Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, runtimeProject.getGeppettoProject().getId(), url,false).toURI());
 					// let's replace every occurrence of the original URLs inside the file with their copy
 					replaceURLs(localFile, replaceMap);
 				}
@@ -79,7 +84,7 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 		catch(URISyntaxException | IOException | GeppettoInitializationException e)
 		{
 			return new GeppettoVisitingException(e);
-		}
+		} 
 
 		return super.caseGeppettoLibrary(library);
 	}
@@ -98,7 +103,7 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 		String content = new String(Files.readAllBytes(localFile), charset);
 		for(String old : replaceMap.keySet())
 		{
-			content = content.replaceAll(Pattern.quote(old), S3Manager.getInstance().getURL(replaceMap.get(old)).toString());
+			content = content.replaceAll(Pattern.quote(old), replaceMap.get(old));
 		}
 		Files.write(localFile, content.getBytes(charset));
 	}
@@ -107,4 +112,17 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 	{
 		replaceURLs(localGeppettoModelFile, replaceMap);
 	}
+	
+	/**
+	 * Makes a fullpath become a relativve path
+	 * @param fullPath
+	 * @return
+	 */
+	public String getRelativePath(String fullPath){
+		String[] fullPathSplit = fullPath.split("/");
+		String relativePath = "/"+fullPathSplit[fullPathSplit.length-1];
+		
+		return relativePath;
+	}
 }
+

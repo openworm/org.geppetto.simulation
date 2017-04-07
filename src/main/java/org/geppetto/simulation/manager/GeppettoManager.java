@@ -33,14 +33,12 @@
 package org.geppetto.simulation.manager;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +61,7 @@ import org.geppetto.core.data.model.UserPrivileges;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.manager.IGeppettoManager;
 import org.geppetto.core.manager.Scope;
+import org.geppetto.core.model.GeppettoModelReader;
 import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.DropboxUploadService;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
@@ -77,16 +76,11 @@ import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.simulation.utilities.GeppettoProjectZipper;
-import org.geppetto.simulation.visitor.GeppettoModelVisitor;
+import org.geppetto.simulation.visitor.GeppettoModelTypesVisitor;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
-import com.amazonaws.util.json.JSONArray;
-import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
-import com.google.gson.Gson;
-import com.rits.cloning.Cloner;
 
 /**
  * GeppettoManager is the implementation of IGeppettoManager which represents the Java API entry point for Geppetto. This class is instantiated with a session scope, which means there is one
@@ -845,18 +839,22 @@ public class GeppettoManager implements IGeppettoManager
 
 			GeppettoProjectZipper geppettoProjectZipper = new GeppettoProjectZipper();
 			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper);
+			zipper.addToZip(jsonFile.toURI().toURL());
+
+			GeppettoModel geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(project.getGeppettoModel().getUrl()));
 			
 			URL url = URLReader.getURL(project.getGeppettoModel().getUrl());
 			Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,false).toURI());
 			
-			GeppettoModelVisitor visitor = new GeppettoModelVisitor(localGeppettoModelFile, this.getRuntimeProject(project), project);
-			GeppettoModelTraversal.apply(getRuntimeProject(project).getGeppettoModel(), visitor);
-			
-			zipper.addToZip(jsonFile.toURI().toURL());
+			//Changes paths inside the .XMI
+			GeppettoModelTypesVisitor importTypesVisitor = 
+					new GeppettoModelTypesVisitor(localGeppettoModelFile,getRuntimeProject(project),zipper,this.getScope());
+			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			zipper.addToZip(localGeppettoModelFile.toUri().toURL());
+			
 			zip = zipper.processAddedFilesAndZip();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Unable to download project"+e);
 		}
 		
 		return zip;

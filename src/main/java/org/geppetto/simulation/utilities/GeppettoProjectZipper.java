@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.security.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -76,6 +78,13 @@ public class GeppettoProjectZipper {
 					zipper.addToZip(URLReader.getURL(scriptPath));
 				}
 				experiment.addProperty("script", this.getRelativePath(scriptPath));
+			}
+			
+			if(experiment.has("lastModified")){
+				//full path to existing project lastModified
+				String lastModified =  experiment.getAsJsonPrimitive("lastModified").getAsString();
+				Date timestamp = new Date(lastModified);
+				experiment.addProperty("lastModified", timestamp.getTime()/1000);
 			}
 
 			//loop through simulation results to change relative path

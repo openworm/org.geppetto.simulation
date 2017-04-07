@@ -28,18 +28,20 @@ public class ViewProcessor
 
 		Map<String, List<JsonObject>> jsonObjectsMap = new HashMap<String, List<JsonObject>>();
 		for (JsonObject jsonObj : viewCustomisations) {
-			// build map of top level duplicates
-			for (Map.Entry<String,JsonElement> entry : jsonObj.entrySet()) {
-				// for each entry add to map and if already there increase count
-				if(jsonObjectsMap.get(entry.getKey()) != null){
-					// already there, add element
-					List<JsonObject> objs = jsonObjectsMap.get(entry.getKey());
-					objs.add((JsonObject) entry.getValue());
-					jsonObjectsMap.put(entry.getKey(), objs);
-				} else {
-					List<JsonObject> objs = new ArrayList<JsonObject>();
-					objs.add((JsonObject) entry.getValue());
-					jsonObjectsMap.put(entry.getKey(), objs);
+			if (jsonObj != null) {
+				// build map of top level duplicates
+				for (Map.Entry<String, JsonElement> entry : jsonObj.entrySet()) {
+					// for each entry add to map and if already there increase count
+					if (jsonObjectsMap.get(entry.getKey()) != null) {
+						// already there, add element
+						List<JsonObject> objs = jsonObjectsMap.get(entry.getKey());
+						objs.add((JsonObject) entry.getValue());
+						jsonObjectsMap.put(entry.getKey(), objs);
+					} else {
+						List<JsonObject> objs = new ArrayList<JsonObject>();
+						objs.add((JsonObject) entry.getValue());
+						jsonObjectsMap.put(entry.getKey(), objs);
+					}
 				}
 			}
 		}

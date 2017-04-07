@@ -141,7 +141,7 @@ public class TestModelInterpreterService extends AModelInterpreter
 		{
 			dependentModels.clear();
 			dependentModels.add(url);
-			dependentModels.add(URLReader.getURL("/test/hhcell/NML2_SingleCompHHCell.nml"));
+			dependentModels.add(URLReader.getURL("file:///NML2_SingleCompHHCell.nml"));
 			type.setId("testType");
 			type.setName("testType");
 

@@ -1,5 +1,6 @@
 package org.geppetto.simulation.visitor;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -11,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.geppetto.core.common.GeppettoInitializationException;
@@ -31,9 +33,9 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 	private IGeppettoProject project;
 
 	private Map<String, String> replaceMap = new HashMap<String, String>();
-
+	private Map<URL, Path> localFileMap = new HashMap<URL, Path>();
 	private RuntimeProject runtimeProject;
-
+	private String URLIdentifier = "amazon.s3";
 	private Zipper zipper;
 
 	/**
@@ -61,20 +63,41 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 				List<URL> dependentModels = modelInterpreter.getDependentModels();		
 				for(URL url : dependentModels)
 				{
-					// let's create a map for the new file paths
-					String fullPath = url.getPath();
-					String newPath = this.getRelativePath(fullPath);
-					
-					replaceMap.put(fullPath, newPath);
-					
-					zipper.addToZip(url);
+					File urlFile = new File(url.getFile());
+					if(urlFile.exists()){
+						URL localCopy = URLReader.createLocalCopy(Scope.CONNECTION, runtimeProject.getGeppettoProject().getId(), url,false);
+						Path localFile = Paths.get(localCopy.toURI());
+						Charset charset = StandardCharsets.UTF_8;
+						
+						//Paths stored in dependent models object don't match the ones inside the XML/NML files.
+						//A regexp is needed to look through the file and get it instead
+						String content = new String(Files.readAllBytes(localFile), charset);
+						String regExp = "\\<include\\s*(href|file|url)\\s*=\\s*\\\"(.*)\\\"\\s*(\\/>|><\\/include>)";
+						Pattern pattern = Pattern.compile(regExp, Pattern.CASE_INSENSITIVE);
+						String smallerDocumentString = cleanLEMSNeuroMLDocument(content);
+						Matcher matcher = pattern.matcher(smallerDocumentString);
+						
+						//loop through matches inside the contents of file
+						while (matcher.find()) {
+						    String fullPath = matcher.group(2);
+						    String newPath = this.getRelativePath(fullPath);
+						    
+						    // let's create a map for the new file paths
+						    if(fullPath.contains(URLIdentifier)||!fullPath.startsWith("http")){
+						    	replaceMap.put(fullPath, newPath);
+						    }
+						}
+						localFileMap.put(url, localFile);
+					}
 				}
 				for(URL url : dependentModels)
 				{
-					Path localFile = 
-							Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, runtimeProject.getGeppettoProject().getId(), url,false).toURI());
-					// let's replace every occurrence of the original URLs inside the file with their copy
-					replaceURLs(localFile, replaceMap);
+					File urlFile = new File(url.getFile());
+					if(urlFile.exists()){
+						// let's replace every occurrence of the original URLs inside the file with their copy
+						replaceURLs(this.localFileMap.get(url), replaceMap);
+						zipper.addToZip(url);
+					}
 				}
 			}
 		}
@@ -98,6 +121,7 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 		Charset charset = StandardCharsets.UTF_8;
 
 		String content = new String(Files.readAllBytes(localFile), charset);
+
 		for(String old : replaceMap.keySet())
 		{
 			content = content.replaceAll(Pattern.quote(old), replaceMap.get(old));
@@ -115,6 +139,13 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 		String relativePath = "/"+fullPathSplit[fullPathSplit.length-1];
 		
 		return relativePath;
+	}
+	
+	private String cleanLEMSNeuroMLDocument(String lemsString)
+	{
+		String smallerLemsString = lemsString.replaceAll("(?s)<!--.*?-->", ""); // remove comments
+		smallerLemsString = smallerLemsString.replaceAll("(?m)^[ \t]*\r?\n", "").trim();// remove empty lines
+		return smallerLemsString;
 	}
 }
 

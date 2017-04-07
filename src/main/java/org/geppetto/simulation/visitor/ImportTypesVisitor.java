@@ -89,7 +89,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 				if(this.gatherDefaultView && modelInterpreter.isSupported(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE))
 				{
-					viewCustomisations.add(((IDefaultViewCustomiserFeature) modelInterpreter.getFeature(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE)).getDefaultViewCustomisation(type));
+					viewCustomisations.add(((IDefaultViewCustomiserFeature) modelInterpreter.getFeature(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE)).getDefaultViewCustomisation(importedType));
 				}
 
 				geppettoModelAccess.swapType(type, importedType, library);

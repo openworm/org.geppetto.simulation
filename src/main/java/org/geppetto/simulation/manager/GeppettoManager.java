@@ -855,6 +855,7 @@ public class GeppettoManager implements IGeppettoManager
 			zip = zipper.processAddedFilesAndZip();
 		} catch (Exception e) {
 			logger.error("Unable to download project"+e);
+			throw new GeppettoExecutionException(e);
 		}
 		
 		return zip;

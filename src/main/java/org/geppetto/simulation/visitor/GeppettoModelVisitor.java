@@ -32,13 +32,9 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 
 	private Map<String, String> replaceMap = new HashMap<String, String>();
 
-	private Path localGeppettoModelFile;
-
 	private RuntimeProject runtimeProject;
 
 	private Zipper zipper;
-
-	private Path localGeppettoTypeFile;
 
 	/**
 	 * @param localGeppettoTypeFile 
@@ -47,11 +43,10 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 	 * @param project
 	 * @param zipper 
 	 */
-	public GeppettoModelVisitor(Path localGeppettoTypeFile, RuntimeProject runtimeProject, Zipper zipper)
+	public GeppettoModelVisitor(RuntimeProject runtimeProject, Zipper zipper)
 	{
 		this.runtimeProject = runtimeProject;
 		this.zipper = zipper;
-		this.localGeppettoTypeFile = localGeppettoTypeFile;
 	}
 	
 	@Override
@@ -71,6 +66,8 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 					String newPath = this.getRelativePath(fullPath);
 					
 					replaceMap.put(fullPath, newPath);
+					
+					zipper.addToZip(url);
 				}
 				for(URL url : dependentModels)
 				{
@@ -106,11 +103,6 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 			content = content.replaceAll(Pattern.quote(old), replaceMap.get(old));
 		}
 		Files.write(localFile, content.getBytes(charset));
-	}
-
-	public void processLocalGeppettoFile() throws IOException
-	{
-		replaceURLs(localGeppettoModelFile, replaceMap);
 	}
 	
 	/**

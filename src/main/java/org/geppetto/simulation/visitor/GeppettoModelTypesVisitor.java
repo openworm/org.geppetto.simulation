@@ -1,19 +1,15 @@
 package org.geppetto.simulation.visitor;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.geppetto.core.manager.Scope;
-import org.geppetto.core.s3.S3Manager;
-import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.types.ImportType;
@@ -44,20 +40,14 @@ public class GeppettoModelTypesVisitor extends TypesSwitch<Object>
 
 				//only replace URLs for local and amazon instance paths, not other hhttp
 				if(fullPath.contains(URLIdentifier)||!fullPath.startsWith("http")){
-					URL url = URLReader.getURL(fullPath);
-
 					replaceMap.put(fullPath, newPath);
 
 					// let's replace every occurrence of the original URLs inside the file with their copy
 					replaceURLs(localGeppettoModelFile, replaceMap);				
 
 					//user visitor to traverse through Geppetto Model
-					Path localGeppettoTypeFile = Paths.get(URLReader.createLocalCopy(scope, this.runtimeProject.getGeppettoProject().getId(), url, false).toURI());
-					GeppettoModelVisitor dependentModelsVisitor = new GeppettoModelVisitor(localGeppettoTypeFile,this.runtimeProject, zipper);
+					GeppettoModelVisitor dependentModelsVisitor = new GeppettoModelVisitor(this.runtimeProject, zipper);
 					GeppettoModelTraversal.apply(this.runtimeProject.getGeppettoModel(), dependentModelsVisitor);
-					
-					//add geppetto model that was modified to zip
-					zipper.addToZip(localGeppettoTypeFile.toUri().toURL());
 				}
 			}
 		}

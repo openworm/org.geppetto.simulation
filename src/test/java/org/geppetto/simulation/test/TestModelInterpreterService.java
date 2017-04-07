@@ -33,6 +33,7 @@
 package org.geppetto.simulation.test;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +46,7 @@ import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.registry.ServicesRegistry;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.ModelFormat;
 import org.geppetto.model.VariableValue;
@@ -138,7 +140,8 @@ public class TestModelInterpreterService extends AModelInterpreter
 		try
 		{
 			dependentModels.clear();
-			
+			dependentModels.add(url);
+			dependentModels.add(URLReader.getURL("/test/hhcell/NML2_SingleCompHHCell.nml"));
 			type.setId("testType");
 			type.setName("testType");
 
@@ -178,6 +181,9 @@ public class TestModelInterpreterService extends AModelInterpreter
 		catch(GeppettoVisitingException e)
 		{
 			throw new ModelInterpreterException(e);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return type;
 	}

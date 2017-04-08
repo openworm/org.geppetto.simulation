@@ -2,13 +2,11 @@ package org.geppetto.simulation.test;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.data.DataManagerHelper;
 import org.geppetto.core.data.DefaultGeppettoDataManager;
 import org.geppetto.core.data.model.IGeppettoProject;

@@ -141,7 +141,6 @@ public class TestModelInterpreterService extends AModelInterpreter
 		{
 			dependentModels.clear();
 			dependentModels.add(url);
-			dependentModels.add(URLReader.getURL("file:///NML2_SingleCompHHCell.nml"));
 			type.setId("testType");
 			type.setName("testType");
 
@@ -181,9 +180,6 @@ public class TestModelInterpreterService extends AModelInterpreter
 		catch(GeppettoVisitingException e)
 		{
 			throw new ModelInterpreterException(e);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return type;
 	}

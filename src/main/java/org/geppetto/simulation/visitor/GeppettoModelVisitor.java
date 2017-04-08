@@ -54,7 +54,6 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 	@Override
 	public Object caseGeppettoLibrary(GeppettoLibrary library)
 	{
-
 		try
 		{
 			if(!library.getId().equals(SharedLibraryManager.getSharedCommonLibrary().getId()))
@@ -65,12 +64,13 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 				{
 					File urlFile = new File(url.getFile());
 					if(urlFile.exists()){
+						//create local copy of model file, to edit and used for zipping
 						URL localCopy = URLReader.createLocalCopy(Scope.CONNECTION, runtimeProject.getGeppettoProject().getId(), url,false);
 						Path localFile = Paths.get(localCopy.toURI());
-						Charset charset = StandardCharsets.UTF_8;
 						
 						//Paths stored in dependent models object don't match the ones inside the XML/NML files.
 						//A regexp is needed to look through the file and get it instead
+						Charset charset = StandardCharsets.UTF_8;
 						String content = new String(Files.readAllBytes(localFile), charset);
 						String regExp = "\\<include\\s*(href|file|url)\\s*=\\s*\\\"(.*)\\\"\\s*(\\/>|><\\/include>)";
 						Pattern pattern = Pattern.compile(regExp, Pattern.CASE_INSENSITIVE);
@@ -87,6 +87,7 @@ public class GeppettoModelVisitor extends GeppettoSwitch<Object>{
 						    	replaceMap.put(fullPath, newPath);
 						    }
 						}
+						//keeps track of location of file, to modified it later on when replacing the URLs
 						localFileMap.put(url, localFile);
 					}
 				}

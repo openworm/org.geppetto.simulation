@@ -122,6 +122,9 @@ public class RuntimeProject
 
 	private Map<String, IDataSourceService> dataSourceServices;
 
+	private String urlBase;
+
+
 	private static Log logger = LogFactory.getLog(RuntimeProject.class);
 
 	/**
@@ -140,6 +143,7 @@ public class RuntimeProject
 		try
 		{
 			long start = System.currentTimeMillis();
+			this.urlBase = urlBase;
 			String urlPath = urlBase + geppettoModelData.getUrl();
 			// reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(urlPath));
@@ -155,7 +159,7 @@ public class RuntimeProject
 			start = System.currentTimeMillis();
 
 			// importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess,urlBase);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
@@ -322,7 +326,7 @@ public class RuntimeProject
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
 
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, this.getURLBase());
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}
@@ -337,6 +341,10 @@ public class RuntimeProject
 		}
 
 		return geppettoModel;
+	}
+
+	private String getURLBase() {
+		return this.urlBase;
 	}
 
 	/**
@@ -524,5 +532,10 @@ public class RuntimeProject
 	public IGeppettoProject getGeppettoProject()
 	{
 		return geppettoProject;
+	}
+	
+
+	public String getUrlBase() {
+		return urlBase;
 	}
 }

@@ -59,6 +59,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
 	private GeppettoModelAccess geppettoModelAccess;
+	private String urlBase;
 
 
 	@Override
@@ -76,7 +77,8 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				URL url=null;
 				if(type.getUrl()!=null)
 				{
-					url=URLReader.getURL(type.getUrl());
+					String urlPath = urlBase + type.getUrl();
+					url=URLReader.getURL(urlPath);
 				}
 				importedType = modelInterpreter.importType(url, type.getId(), library, geppettoModelAccess);
 				
@@ -108,11 +110,12 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	 * @param commonLibraryAccess
 	 * @param libraryManager
 	 */
-	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess)
+	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess, String urlBase)
 	{
 		super();
 		this.modelInterpreters = modelInterpreters;
 		this.geppettoModelAccess = commonLibraryAccess;
+		this.urlBase =urlBase;
 
 	}
 

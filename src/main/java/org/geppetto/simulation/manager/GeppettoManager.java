@@ -324,8 +324,8 @@ public class GeppettoManager implements IGeppettoManager
 
 		if(experiment.getStatus().equals(ExperimentStatus.COMPLETED))
 		{
-
-			return getRuntimeProject(experiment.getParentProject()).getRuntimeExperiment(experiment).getExperimentState(variables);
+			String urlBase = getRuntimeProject(experiment.getParentProject()).getUrlBase();
+			return getRuntimeProject(experiment.getParentProject()).getRuntimeExperiment(experiment).getExperimentState(variables,urlBase);
 
 		}
 		else

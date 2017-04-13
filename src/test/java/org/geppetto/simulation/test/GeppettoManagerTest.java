@@ -174,7 +174,7 @@ public class GeppettoManagerTest
 		InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 		((LocalGeppettoProject)geppettoProject).setPublic(true);
-		manager.loadProject("1", geppettoProject);
+		manager.loadProject("1", geppettoProject,"");
 
 	}
 

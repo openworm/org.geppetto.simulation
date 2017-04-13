@@ -126,10 +126,11 @@ public class RuntimeProject
 
 	/**
 	 * @param project
+	 * @param urlBase 
 	 * @param geppettoManagerCallbackListener
 	 * @throws MalformedURLException
 	 */
-	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager, String urlBase) throws MalformedURLException, GeppettoInitializationException
 	{
 		this.geppettoManager = geppettoManager;
 		this.geppettoProject = project;
@@ -139,8 +140,9 @@ public class RuntimeProject
 		try
 		{
 			long start = System.currentTimeMillis();
+			String urlPath = urlBase + geppettoModelData.getUrl();
 			// reading and parsing the model
-			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
+			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(urlPath));
 
 			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
 			// since every geppetto model will have his

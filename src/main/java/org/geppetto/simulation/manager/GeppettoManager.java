@@ -137,7 +137,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * 
 	 * @see org.geppetto.core.manager.IProjectManager#loadProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
 	 */
-	public void loadProject(String requestId, IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
+	public void loadProject(String requestId, IGeppettoProject project,String urlBase) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
 		if(!getScope().equals(Scope.RUN))
 		{
@@ -161,7 +161,7 @@ public class GeppettoManager implements IGeppettoManager
 		}
 		if(!projects.containsKey(project))
 		{
-			RuntimeProject runtimeProject = new RuntimeProject(project, this);
+			RuntimeProject runtimeProject = new RuntimeProject(project, this,urlBase);
 			projects.put(project, runtimeProject);
 		}
 		else
@@ -236,7 +236,7 @@ public class GeppettoManager implements IGeppettoManager
 		{
 			try
 			{
-				loadProject(null, project);
+				loadProject(null, project,"");
 			}
 			catch(MalformedURLException e)
 			{

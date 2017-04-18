@@ -4,7 +4,7 @@
 package org.geppetto.simulation.manager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +15,7 @@ import com.google.gson.JsonParser;
 
 /**
  * @author matteocantarelli
+ * @author giovanniidili
  *
  */
 public class ViewProcessor
@@ -26,7 +27,7 @@ public class ViewProcessor
 		// root element to merge all customisations into one view
 		JsonObject root = parser.parse("{\"views\": {}}").getAsJsonObject();
 
-		Map<String, List<JsonObject>> jsonObjectsMap = new HashMap<String, List<JsonObject>>();
+		Map<String, List<JsonObject>> jsonObjectsMap = new LinkedHashMap<String, List<JsonObject>>();
 		for (JsonObject jsonObj : viewCustomisations) {
 			if (jsonObj != null) {
 				// build map of top level duplicates

@@ -108,7 +108,7 @@ public class PersistModelVisitor extends GeppettoSwitch<Object>
 				}
 				for(URL url : dependentModels)
 				{
-					Path localFile = Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, project.getId(), url).toURI());
+					Path localFile = Paths.get(URLReader.createLocalCopy(Scope.CONNECTION, project.getId(), url,true).toURI());
 					// let's replace every occurrence of the original URLs inside the file with their copy
 					replaceURLs(localFile, replaceMap);
 					// noew let's save the file in S3

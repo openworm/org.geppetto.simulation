@@ -32,8 +32,10 @@
  *******************************************************************************/
 package org.geppetto.simulation.manager;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
@@ -54,6 +57,7 @@ import org.geppetto.core.data.model.IView;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.manager.IGeppettoManager;
+import org.geppetto.core.manager.Scope;
 import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.GeppettoModelReader;
@@ -90,6 +94,12 @@ import org.geppetto.simulation.visitor.ImportTypesVisitor;
 
 import com.google.gson.JsonObject;
 
+import com.amazonaws.util.json.JSONArray;
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
+import com.google.gson.Gson;
+import com.rits.cloning.Cloner;
+
 /**
  * The Runtime project holds the runtime state for an open project.
  * 
@@ -116,14 +126,18 @@ public class RuntimeProject
 
 	private Map<String, IDataSourceService> dataSourceServices;
 
+	private String urlBase;
+
+
 	private static Log logger = LogFactory.getLog(RuntimeProject.class);
 
 	/**
 	 * @param project
+	 * @param urlBase 
 	 * @param geppettoManagerCallbackListener
 	 * @throws MalformedURLException
 	 */
-	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager) throws MalformedURLException, GeppettoInitializationException
+	public RuntimeProject(IGeppettoProject project, IGeppettoManager geppettoManager, String urlBase) throws MalformedURLException, GeppettoInitializationException
 	{
 		this.geppettoManager = geppettoManager;
 		this.geppettoProject = project;
@@ -133,8 +147,10 @@ public class RuntimeProject
 		try
 		{
 			long start = System.currentTimeMillis();
+			this.urlBase = urlBase;
+			String urlPath = urlBase + geppettoModelData.getUrl();
 			// reading and parsing the model
-			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
+			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(urlPath));
 
 			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
 			// since every geppetto model will have his
@@ -147,7 +163,7 @@ public class RuntimeProject
 			start = System.currentTimeMillis();
 
 			// importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, geppettoProject.getView().getView().equals(IView.EMPTY));
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, geppettoProject.getView().getView().equals(IView.EMPTY),urlBase);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			
 			List<JsonObject> viewCustomisations = importTypesVisitor.getDefaultViewCustomisations();
@@ -324,7 +340,7 @@ public class RuntimeProject
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
 
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, false);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, false,urlBase);
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}
@@ -339,6 +355,10 @@ public class RuntimeProject
 		}
 
 		return geppettoModel;
+	}
+
+	private String getURLBase() {
+		return this.urlBase;
 	}
 
 	/**
@@ -527,5 +547,9 @@ public class RuntimeProject
 	{
 		return geppettoProject;
 	}
+	
 
+	public String getUrlBase() {
+		return urlBase;
+	}
 }

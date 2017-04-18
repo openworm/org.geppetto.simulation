@@ -300,7 +300,7 @@ public class RuntimeExperiment
 	 * @return
 	 * @throws GeppettoExecutionException
 	 */
-	public ExperimentState getExperimentState(List<String> variables) throws GeppettoExecutionException
+	public ExperimentState getExperimentState(List<String> variables,String urlBase) throws GeppettoExecutionException
 	{
 		// We create an experiment state based on what's requested
 		ExperimentState experimentStateTransfer = GeppettoFactory.eINSTANCE.createExperimentState();
@@ -319,7 +319,8 @@ public class RuntimeExperiment
 					URL url;
 					try
 					{
-						url = URLReader.getURL(result.getResult().getUrl());
+						String urlPath = urlBase + result.getResult().getUrl();
+						url = URLReader.getURL(urlPath);
 					}
 					catch(IOException e)
 					{
@@ -539,7 +540,7 @@ public class RuntimeExperiment
 					try
 					{
 						url = URLReader.getURL(result.getResult().getUrl());
-						dropboxService.upload(new File(URLReader.createLocalCopy(Scope.CONNECTION, experiment.getParentProject().getId(), url).toURI()));
+						dropboxService.upload(new File(URLReader.createLocalCopy(Scope.CONNECTION, experiment.getParentProject().getId(), url,true).toURI()));
 					}
 					catch(Exception e)
 					{

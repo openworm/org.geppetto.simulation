@@ -33,6 +33,7 @@
 package org.geppetto.simulation.test;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +46,7 @@ import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.registry.ServicesRegistry;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.ModelFormat;
 import org.geppetto.model.VariableValue;
@@ -136,6 +138,8 @@ public class TestModelInterpreterService extends AModelInterpreter
 		CompositeType type = TypesFactory.eINSTANCE.createCompositeType();
 		try
 		{
+			dependentModels.clear();
+			dependentModels.add(url);
 			type.setId("testType");
 			type.setName("testType");
 

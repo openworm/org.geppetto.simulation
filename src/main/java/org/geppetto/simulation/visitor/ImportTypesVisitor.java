@@ -67,6 +67,7 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	private List<JsonObject> viewCustomisations = new ArrayList<JsonObject>();
 	private GeppettoModelAccess geppettoModelAccess;
 	private boolean gatherDefaultView = false;
+	private String urlBase;
 
 	@Override
 	public Object caseImportType(ImportType type)
@@ -83,7 +84,8 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				URL url = null;
 				if(type.getUrl() != null)
 				{
-					url = URLReader.getURL(type.getUrl());
+					String urlPath = urlBase + type.getUrl();
+					url=URLReader.getURL(urlPath);
 				}
 				importedType = modelInterpreter.importType(url, type.getId(), library, geppettoModelAccess);
 
@@ -120,13 +122,12 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	 * @param commonLibraryAccess
 	 * @param libraryManager
 	 */
-	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess, boolean gatherDefaultView)
-	{
+	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess, boolean gatherDefaultView,String urlBase){
 		super();
 		this.modelInterpreters = modelInterpreters;
 		this.geppettoModelAccess = commonLibraryAccess;
 		this.gatherDefaultView = gatherDefaultView;
-
+		this.urlBase =urlBase;
 	}
 
 	/**
@@ -136,7 +137,6 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	public List<JsonObject> getDefaultViewCustomisations()
 	{
 		return viewCustomisations;
-
 	}
 
 }

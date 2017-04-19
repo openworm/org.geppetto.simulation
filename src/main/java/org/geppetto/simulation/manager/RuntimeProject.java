@@ -162,12 +162,16 @@ public class RuntimeProject
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
 			start = System.currentTimeMillis();
 
+			boolean empty =  false;
+			if(geppettoProject.getView().getView()== null){
+				empty = true;
+			}
 			// importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, geppettoProject.getView().getView().equals(IView.EMPTY),urlBase);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess,empty,urlBase);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			
 			List<JsonObject> viewCustomisations = importTypesVisitor.getDefaultViewCustomisations();
-			if(geppettoProject.getView().getView().equals(IView.EMPTY)){
+			if(!empty){
 				try {
 					geppettoProject.getView().setView(ViewProcessor.getView(viewCustomisations));
 				} catch (JsonObjectExtensionConflictException e) {

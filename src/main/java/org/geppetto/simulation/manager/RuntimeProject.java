@@ -148,7 +148,10 @@ public class RuntimeProject
 		{
 			long start = System.currentTimeMillis();
 			this.urlBase = urlBase;
-			String urlPath = urlBase + geppettoModelData.getUrl();
+			String urlPath =geppettoModelData.getUrl();
+			if(!urlPath.startsWith("http")){
+				urlPath =  urlBase + geppettoModelData.getUrl();
+			}
 			// reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(urlPath));
 

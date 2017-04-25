@@ -84,7 +84,10 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				URL url = null;
 				if(type.getUrl() != null)
 				{
-					String urlPath = urlBase + type.getUrl();
+					String urlPath = type.getUrl();
+					if(!urlPath.startsWith("http")){
+						urlPath =  urlBase +type.getUrl();
+					}
 					url=URLReader.getURL(urlPath);
 				}
 				importedType = modelInterpreter.importType(url, type.getId(), library, geppettoModelAccess);

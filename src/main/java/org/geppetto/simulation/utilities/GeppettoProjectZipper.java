@@ -86,6 +86,13 @@ public class GeppettoProjectZipper {
 				Date timestamp = new Date(lastModified);
 				experiment.addProperty("lastModified", timestamp.getTime()/1000);
 			}
+			
+			if(experiment.has("creationDate")){
+				//full path to existing project lastModified
+				String lastModified =  experiment.getAsJsonPrimitive("creationDate").getAsString();
+				Date timestamp = new Date(lastModified);
+				experiment.addProperty("creationDate", timestamp.getTime()/1000);
+			}
 
 			//loop through simulation results to change relative path
 			if(experiment.has("simulationResults")){

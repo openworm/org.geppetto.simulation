@@ -4,22 +4,23 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.security.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
+import org.geppetto.core.data.model.IView;
+import org.geppetto.core.utilities.LocalViewSerializer;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.simulation.manager.GeppettoManager;
 
-import com.amazonaws.util.json.JSONArray;
 import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -53,7 +54,7 @@ public class GeppettoProjectZipper {
 		Gson gson = new Gson();
 		String message = gson.toJson(clonegeppettoProject);
 		JsonObject jObject  =new JsonParser().parse(message).getAsJsonObject();
-		
+	      
 		//replace URL for geppettomodel with relative path
 		JsonObject geppettoModel = jObject.getAsJsonObject("geppettoModel");
 		JsonPrimitive fullPath = geppettoModel.getAsJsonPrimitive("url");
@@ -61,6 +62,27 @@ public class GeppettoProjectZipper {
 
 		//keeps track of id, to be used to name location of .json 
 		String id = jObject.getAsJsonPrimitive("id").getAsString();
+		
+		if(jObject.has("view")){
+			JsonObject view =  jObject.getAsJsonObject("view");
+			if(view.has("viewStates")){
+				GsonBuilder gsonBuilder = new GsonBuilder();
+				gsonBuilder.registerTypeHierarchyAdapter(IView.class, new LocalViewSerializer());
+				IView iview = null;
+				for(IExperiment e : clonegeppettoProject.getExperiments()){
+					String idE =view.get("id").toString();
+					if(Integer.valueOf(idE)==e.getId()){
+						iview= e.getView();
+					}
+				}
+				if(iview != null){
+					String json= gsonBuilder.create().toJson(iview);
+					JsonParser parser = new JsonParser();
+					JsonObject jsonObject  = parser.parse(json).getAsJsonObject();
+					jObject.add("view", jsonObject);
+				}
+			}
+		}
 		
 		//keep track of scripts and results paths
 		List<String>  scripts = new ArrayList<String>();
@@ -92,6 +114,28 @@ public class GeppettoProjectZipper {
 				String lastModified =  experiment.getAsJsonPrimitive("creationDate").getAsString();
 				Date timestamp = new Date(lastModified);
 				experiment.addProperty("creationDate", timestamp.getTime()/1000);
+			}
+			
+			if(experiment.has("view")){
+				//full path to existing project lastModified
+				JsonObject view =  experiment.getAsJsonObject("view");
+				if(view.has("viewStates")){
+					GsonBuilder gsonBuilder = new GsonBuilder();
+					gsonBuilder.registerTypeHierarchyAdapter(IView.class, new LocalViewSerializer());
+					IView iview = null;
+					for(IExperiment e : clonegeppettoProject.getExperiments()){
+						String idE =experiment.get("id").toString();
+						if(Integer.valueOf(idE)==e.getId()){
+							iview= e.getView();
+						}
+					}
+					if(iview != null){
+						String json= gsonBuilder.create().toJson(iview);
+						JsonParser parser = new JsonParser();
+						JsonObject jsonObject  = parser.parse(json).getAsJsonObject();
+						experiment.add("view", jsonObject);
+					}
+				}
 			}
 
 			//loop through simulation results to change relative path

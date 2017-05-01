@@ -68,13 +68,7 @@ public class GeppettoProjectZipper {
 			if(view.has("viewStates")){
 				GsonBuilder gsonBuilder = new GsonBuilder();
 				gsonBuilder.registerTypeHierarchyAdapter(IView.class, new LocalViewSerializer());
-				IView iview = null;
-				for(IExperiment e : clonegeppettoProject.getExperiments()){
-					String idE =view.get("id").toString();
-					if(Integer.valueOf(idE)==e.getId()){
-						iview= e.getView();
-					}
-				}
+				IView iview = clonegeppettoProject.getView();
 				if(iview != null){
 					String json= gsonBuilder.create().toJson(iview);
 					JsonParser parser = new JsonParser();

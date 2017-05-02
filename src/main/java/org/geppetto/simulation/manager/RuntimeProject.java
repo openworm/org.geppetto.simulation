@@ -94,12 +94,6 @@ import org.geppetto.simulation.visitor.ImportTypesVisitor;
 
 import com.google.gson.JsonObject;
 
-import com.amazonaws.util.json.JSONArray;
-import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
-import com.google.gson.Gson;
-import com.rits.cloning.Cloner;
-
 /**
  * The Runtime project holds the runtime state for an open project.
  * 

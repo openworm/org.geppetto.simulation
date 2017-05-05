@@ -32,10 +32,8 @@
  *******************************************************************************/
 package org.geppetto.simulation.manager;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.geppetto.core.beans.PathConfiguration;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
@@ -53,11 +50,9 @@ import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IPersistedData;
 import org.geppetto.core.data.model.ISimulatorConfiguration;
-import org.geppetto.core.data.model.IView;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.manager.IGeppettoManager;
-import org.geppetto.core.manager.Scope;
 import org.geppetto.core.manager.SharedLibraryManager;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.GeppettoModelReader;
@@ -122,12 +117,11 @@ public class RuntimeProject
 
 	private String urlBase;
 
-
 	private static Log logger = LogFactory.getLog(RuntimeProject.class);
 
 	/**
 	 * @param project
-	 * @param urlBase 
+	 * @param urlBase
 	 * @param geppettoManagerCallbackListener
 	 * @throws MalformedURLException
 	 */
@@ -142,9 +136,10 @@ public class RuntimeProject
 		{
 			long start = System.currentTimeMillis();
 			this.urlBase = urlBase;
-			String urlPath =geppettoModelData.getUrl();
-			if(!urlPath.startsWith("http")){
-				urlPath =  urlBase + geppettoModelData.getUrl();
+			String urlPath = geppettoModelData.getUrl();
+			if(!urlPath.startsWith("http"))
+			{
+				urlPath = urlBase + geppettoModelData.getUrl();
 			}
 			// reading and parsing the model
 			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(urlPath));
@@ -159,23 +154,29 @@ public class RuntimeProject
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
 			start = System.currentTimeMillis();
 
-			boolean empty =  false;
-			if(geppettoProject.getView().getView()== null){
-				empty = true;
+			boolean gatherDefaultViews = false;
+			if(geppettoProject.getView().getView() == null)
+			{
+				//We gather the default views only if a view is not already set, i.e. default views were already gathered and modified
+				gatherDefaultViews = true;
 			}
 			// importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess,empty,urlBase);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, gatherDefaultViews, urlBase);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			
-			List<JsonObject> viewCustomisations = importTypesVisitor.getDefaultViewCustomisations();
-			if(!empty){
-				try {
+			if(gatherDefaultViews)
+			{
+				List<JsonObject> viewCustomisations = importTypesVisitor.getDefaultViewCustomisations();
+				try
+				{
 					geppettoProject.getView().setView(ViewProcessor.getView(viewCustomisations));
-				} catch (JsonObjectExtensionConflictException e) {
+				}
+				catch(JsonObjectExtensionConflictException e)
+				{
 					throw new GeppettoInitializationException(e.getMessage());
 				}
 			}
-			
+
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
 			// create time (puhrrrrr)
@@ -341,7 +342,7 @@ public class RuntimeProject
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
 
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, false,urlBase);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, false, urlBase);
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}
@@ -358,7 +359,8 @@ public class RuntimeProject
 		return geppettoModel;
 	}
 
-	private String getURLBase() {
+	private String getURLBase()
+	{
 		return this.urlBase;
 	}
 
@@ -548,9 +550,9 @@ public class RuntimeProject
 	{
 		return geppettoProject;
 	}
-	
 
-	public String getUrlBase() {
+	public String getUrlBase()
+	{
 		return urlBase;
 	}
 }

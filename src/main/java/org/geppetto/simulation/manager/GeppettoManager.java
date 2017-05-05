@@ -391,8 +391,15 @@ public class GeppettoManager implements IGeppettoManager
 					// since it's id based
 					DataManagerHelper.getDataManager().addGeppettoProject(project, getUser());
 
+					String urlBase = getRuntimeProject(project).getUrlBase();
+					
+					String urlPath = project.getGeppettoModel().getUrl();
+					if(!urlPath.startsWith("http"))
+					{
+						urlPath = urlBase + urlPath;
+					}
 					// save Geppetto Model
-					URL url = new URL(project.getGeppettoModel().getUrl());
+					URL url = new URL(urlPath);
 					Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,true).toURI());
 
 					// save each model inside GeppettoModel and save every file referenced inside every model
@@ -414,8 +421,14 @@ public class GeppettoManager implements IGeppettoManager
 					for(IExperiment experiment : project.getExperiments())
 					{
 						if(experiment.getScript() != null)
-						{
-							URL scriptURL = new URL(experiment.getScript());
+						{							
+							String scriptPath = experiment.getScript();
+							if(!scriptPath.startsWith("http"))
+							{
+								scriptPath = urlBase + scriptPath;
+							}
+							
+							URL scriptURL = new URL(scriptPath);
 							Path localScript = Paths.get(URLReader.createLocalCopy(scope, project.getId(), scriptURL,true).toURI());
 							String newScriptPath = "projects/" + Long.toString(project.getId()) + "/" + experiment.getId() + "/script.js";
 							S3Manager.getInstance().saveFileToS3(localScript.toFile(), newScriptPath);

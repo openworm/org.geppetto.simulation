@@ -885,7 +885,7 @@ public class GeppettoManager implements IGeppettoManager
 		try {
 			File dir = new File(PathConfiguration.getProjectTmpPath(scope,project.getId()));
 			dir.mkdirs();
-			Zipper zipper = new Zipper(dir.getAbsolutePath()+"/project.zip");
+			Zipper zipper = new Zipper(dir.getAbsolutePath()+"/project.zip","Project_"+project.getId());
 
 			GeppettoProjectZipper geppettoProjectZipper = new GeppettoProjectZipper();
 			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper);

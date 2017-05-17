@@ -119,6 +119,20 @@ public class GeppettoProjectZipper {
 				experiment.addProperty("creationDate", timestamp.getTime()/1000);
 			}
 			
+			if(experiment.has("startDate")){
+				//full path to existing project lastModified
+				String lastModified =  experiment.getAsJsonPrimitive("startDate").getAsString();
+				Date timestamp = new Date(lastModified);
+				experiment.addProperty("startDate", timestamp.getTime()/1000);
+			}
+			
+			if(experiment.has("endDate")){
+				//full path to existing project lastModified
+				String lastModified =  experiment.getAsJsonPrimitive("endDate").getAsString();
+				Date timestamp = new Date(lastModified);
+				experiment.addProperty("endDate", timestamp.getTime()/1000);
+			}
+			
 			if(experiment.has("view")){
 				//full path to existing project lastModified
 				JsonObject view =  experiment.getAsJsonObject("view");

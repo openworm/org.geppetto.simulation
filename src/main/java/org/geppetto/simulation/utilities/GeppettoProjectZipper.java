@@ -7,6 +7,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,6 +25,7 @@ import com.amazonaws.util.json.JSONException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
@@ -54,17 +58,21 @@ public class GeppettoProjectZipper {
 		Gson gson = new Gson();
 		String message = gson.toJson(clonegeppettoProject);
 		JsonObject jObject  =new JsonParser().parse(message).getAsJsonObject();
-	      
+		cleanJsonObject(jObject);
+		
 		//replace URL for geppettomodel with relative path
 		JsonObject geppettoModel = jObject.getAsJsonObject("geppettoModel");
 		JsonPrimitive fullPath = geppettoModel.getAsJsonPrimitive("url");
 		jObject.getAsJsonObject("geppettoModel").addProperty("url",this.getRelativePath(fullPath.getAsString()));
 
+		cleanJsonObject(geppettoModel);
+		
 		//keeps track of id, to be used to name location of .json 
 		String id = jObject.getAsJsonPrimitive("id").getAsString();
 		
 		if(jObject.has("view")){
 			JsonObject view =  jObject.getAsJsonObject("view");
+			cleanJsonObject(view);
 			if(view.has("viewStates")){
 				GsonBuilder gsonBuilder = new GsonBuilder();
 				gsonBuilder.registerTypeHierarchyAdapter(IView.class, new LocalViewSerializer());
@@ -85,6 +93,7 @@ public class GeppettoProjectZipper {
 		JsonArray experiments = (JsonArray) jObject.get("experiments");
 		for(int i =0; i<experiments.size();i++){
 			JsonObject experiment = (JsonObject) experiments.get(i);
+			cleanJsonObject(experiment);
 			if(experiment.has("script")){
 				//full path to existing project script
 				String scriptPath =  experiment.getAsJsonPrimitive("script").getAsString();
@@ -113,6 +122,7 @@ public class GeppettoProjectZipper {
 			if(experiment.has("view")){
 				//full path to existing project lastModified
 				JsonObject view =  experiment.getAsJsonObject("view");
+				cleanJsonObject(view);
 				if(view.has("viewStates")){
 					GsonBuilder gsonBuilder = new GsonBuilder();
 					gsonBuilder.registerTypeHierarchyAdapter(IView.class, new LocalViewSerializer());
@@ -137,7 +147,10 @@ public class GeppettoProjectZipper {
 				JsonArray simulationResults = (JsonArray) experiment.get("simulationResults");
 				for(int j =0; j<simulationResults.size();j++){
 					JsonObject simulationResult = (JsonObject) simulationResults.get(j);
+					cleanJsonObject(simulationResult);
 					if(simulationResult.has("result")){
+						JsonObject result = (JsonObject) simulationResult.get("result");
+						cleanJsonObject(result);
 						if(simulationResult.getAsJsonObject("result").has("url")){
 							//full path to simulations results file
 							String resultsPath = 
@@ -155,7 +168,27 @@ public class GeppettoProjectZipper {
 					}
 				}
 			}
+			
+			if(experiment.has("aspectConfigurations")){
+				JsonArray aspectConfigurations = (JsonArray) experiment.get("aspectConfigurations");
+				for(int j =0; j<aspectConfigurations.size();j++){
+					JsonObject aspectConfiguration = (JsonObject) aspectConfigurations.get(j);
+					cleanJsonObject(aspectConfiguration);
+					if(aspectConfiguration.has("simulatorConfiguration")){
+						JsonObject simConfiguration = (JsonObject) aspectConfiguration.get("simulatorConfiguration");
+						cleanJsonObject(simConfiguration);
+					}
+					if(aspectConfiguration.has("modelParameters")){
+						JsonArray modelParameters = (JsonArray) aspectConfiguration.get("modelParameters");
+						for(int k =0; k<modelParameters.size();k++){
+							JsonObject modelParameter = (JsonObject) modelParameters.get(k);
+							cleanJsonObject(modelParameter);
+						}
+					}
+				}
+			}
 		}
+				
 		//TODO: Remove before merging and when done testing
 		logger.info(jObject);
 		
@@ -170,6 +203,13 @@ public class GeppettoProjectZipper {
 		writer.close();
 
 		return jsonFile;
+	}
+	
+	//removes dnDetachedState property if it's on json
+	public void cleanJsonObject(JsonObject object){
+		if(object.has("dnDetachedState")){
+			object.remove("dnDetachedState");
+		}
 	}
 	
 	/**

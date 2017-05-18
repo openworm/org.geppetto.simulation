@@ -434,6 +434,25 @@ public class GeppettoManager implements IGeppettoManager
 							S3Manager.getInstance().saveFileToS3(localScript.toFile(), newScriptPath);
 							experiment.setScript(S3Manager.getInstance().getURL(newScriptPath).toString());
 						}
+						
+						if(experiment.getSimulationResults() != null)
+						{							
+							for(ISimulationResult simResult : experiment.getSimulationResults()){
+								if(simResult.getResult()!=null){
+									String resultPath = simResult.getResult().getUrl();
+									if(!resultPath.startsWith("http"))
+									{
+										resultPath = urlBase + resultPath;
+									}
+									URL resultURL = new URL(resultPath);
+									String resultFileName = URLReader.getFileName(resultURL);
+									Path localResult = Paths.get(URLReader.createLocalCopy(scope, project.getId(), resultURL,true).toURI());
+									String newResultPath = "projects/" + Long.toString(project.getId()) + "/" + experiment.getId() + "/" +resultFileName;
+									S3Manager.getInstance().saveFileToS3(localResult.toFile(), newResultPath);
+									simResult.getResult().setURL(S3Manager.getInstance().getURL(newResultPath).toString());
+								}
+							}
+						}
 					}
 					DataManagerHelper.getDataManager().saveEntity(project);
 

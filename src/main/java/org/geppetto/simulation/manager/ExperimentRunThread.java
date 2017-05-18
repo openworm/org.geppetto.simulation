@@ -68,6 +68,7 @@ import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.DomainModel;
 import org.geppetto.model.ExperimentState;
@@ -426,8 +427,9 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				{
 					case GEPPETTO_RECORDING:
 					{
-						String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
-						String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName);
+						String fileName = URLReader.getFileName(result.toURI().toURL());
+						String newPath = 
+								"projects/" + Long.toString(runtimeProject.getGeppettoProject().getId()) +"/experiment/" +experiment.getId()+"/" + fileName;
 						IPersistedData recording;
 						if(!DataManagerHelper.getDataManager().isDefault())
 						{
@@ -458,7 +460,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				zipper.addToZip(raw.toURI().toURL());
 			}
 			Path zipped = zipper.processAddedFilesAndZip();
-			String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName);
+			String newPath = "projects/" + Long.toString(runtimeProject.getGeppettoProject().getId()) +"/experiment/" +experiment.getId()+"/" + fileName;
 			if(!DataManagerHelper.getDataManager().isDefault())
 			{
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);

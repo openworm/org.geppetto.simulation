@@ -49,7 +49,7 @@ public class GeppettoProjectZipper {
 	 * @throws JSONException
 	 * @throws IOException
 	 */
-	public File writeIGeppettoProjectToJson(IGeppettoProject geppettoProject, File dir, Zipper zipper) throws JSONException, IOException{
+	public File writeIGeppettoProjectToJson(IGeppettoProject geppettoProject, File dir, Zipper zipper, String urlBase) throws JSONException, IOException{
 		//clone geppetto project
 		Cloner cloner = new Cloner();
 		IGeppettoProject clonegeppettoProject = cloner.deepClone(geppettoProject);
@@ -99,6 +99,10 @@ public class GeppettoProjectZipper {
 				String scriptPath =  experiment.getAsJsonPrimitive("script").getAsString();
 				if(!scripts.contains(scriptPath)){
 					scripts.add(scriptPath);
+					if(!scriptPath.startsWith("http"))
+					{
+						scriptPath = urlBase + scriptPath;
+					}
 					//add script to zip if it hasn't already
 					zipper.addToZip(URLReader.getURL(scriptPath));
 				}
@@ -171,13 +175,18 @@ public class GeppettoProjectZipper {
 									simulationResult.getAsJsonObject("result").getAsJsonPrimitive("url").getAsString();
 							if(!simulationResultsPaths.contains(resultsPath)){
 								simulationResultsPaths.add(resultsPath);
+								if(!resultsPath.startsWith("http"))
+								{
+									resultsPath = urlBase + resultsPath;
+								}
 								URL resultsLocation = URLReader.getURL(resultsPath);
 								//only add simulations results to zip if it hasn'e been already added
 								if(resultsLocation!=null){
-									zipper.addToZip(resultsLocation);
+									zipper.addToZip(resultsLocation, "experiment_"+experiment.get("id").getAsString()+"/");
 								}
 							}
-							simulationResult.getAsJsonObject("result").addProperty("url", this.getRelativePath(resultsPath));
+							simulationResult.getAsJsonObject("result").addProperty("url",
+									"/experiment_"+experiment.get("id").getAsString()+this.getRelativePath(resultsPath));
 						}
 					}
 				}

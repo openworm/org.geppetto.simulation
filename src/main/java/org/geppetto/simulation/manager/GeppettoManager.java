@@ -430,7 +430,7 @@ public class GeppettoManager implements IGeppettoManager
 							
 							URL scriptURL = new URL(scriptPath);
 							Path localScript = Paths.get(URLReader.createLocalCopy(scope, project.getId(), scriptURL,true).toURI());
-							String newScriptPath = "projects/" + Long.toString(project.getId()) + "/" + experiment.getId() + "/script.js";
+							String newScriptPath = "projects/" + Long.toString(project.getId()) + "/experiment/" + experiment.getId() + "/script.js";
 							S3Manager.getInstance().saveFileToS3(localScript.toFile(), newScriptPath);
 							experiment.setScript(S3Manager.getInstance().getURL(newScriptPath).toString());
 						}
@@ -447,7 +447,7 @@ public class GeppettoManager implements IGeppettoManager
 									URL resultURL = new URL(resultPath);
 									String resultFileName = URLReader.getFileName(resultURL);
 									Path localResult = Paths.get(URLReader.createLocalCopy(scope, project.getId(), resultURL,true).toURI());
-									String newResultPath = "projects/" + Long.toString(project.getId()) + "/" + experiment.getId() + "/" +resultFileName;
+									String newResultPath = "projects/" + Long.toString(project.getId()) + "/experiment/" + experiment.getId() + "/" +resultFileName;
 									S3Manager.getInstance().saveFileToS3(localResult.toFile(), newResultPath);
 									simResult.getResult().setURL(S3Manager.getInstance().getURL(newResultPath).toString());
 								}
@@ -912,13 +912,19 @@ public class GeppettoManager implements IGeppettoManager
 			dir.mkdirs();
 			Zipper zipper = new Zipper(dir.getAbsolutePath()+"/project.zip","Project_"+project.getId());
 
+			String urlBase = getRuntimeProject(project).getUrlBase();
+			
 			GeppettoProjectZipper geppettoProjectZipper = new GeppettoProjectZipper();
-			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper);
+			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper, urlBase);
 			zipper.addToZip(jsonFile.toURI().toURL());
 
 			GeppettoModel geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(project.getGeppettoModel().getUrl()));
-			
-			URL url = URLReader.getURL(project.getGeppettoModel().getUrl());
+			String modelPath =project.getGeppettoModel().getUrl();
+			if(!modelPath.startsWith("http"))
+			{
+				modelPath = urlBase + modelPath;
+			}
+			URL url = URLReader.getURL(modelPath);
 			Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,false).toURI());
 			
 			//Changes paths inside the .XMI

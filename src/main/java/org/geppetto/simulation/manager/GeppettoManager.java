@@ -737,7 +737,13 @@ public class GeppettoManager implements IGeppettoManager
 					try
 					{
 						IPersistedData resultObject = result.getResult();
+						String urlBase = getRuntimeProject(project).getUrlBase();
+						
 						String url = resultObject.getUrl();
+						if(!url.startsWith("http"))
+						{
+							url = urlBase + url;
+						}
 						return URLReader.getURL(url);
 					}
 					catch(Exception e)

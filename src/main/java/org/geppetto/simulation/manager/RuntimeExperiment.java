@@ -465,8 +465,6 @@ public class RuntimeExperiment
 					throw new GeppettoExecutionException("The model interpreter for the parameter " + parameter + " does not support the setParameter Feature");
 
 				}
-				Map<String, String> parameterValue = new HashMap<String, String>();
-				parameterValue.put(parameter, parameters.get(parameter));
 
 				Quantity value = ValuesFactory.eINSTANCE.createQuantity();
 				value.setValue(Double.valueOf(parameters.get(parameter)));

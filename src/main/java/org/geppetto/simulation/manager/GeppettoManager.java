@@ -914,16 +914,17 @@ public class GeppettoManager implements IGeppettoManager
 
 			String urlBase = getRuntimeProject(project).getUrlBase();
 			
-			GeppettoProjectZipper geppettoProjectZipper = new GeppettoProjectZipper();
-			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper, urlBase);
-			zipper.addToZip(jsonFile.toURI().toURL());
-
-			GeppettoModel geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(project.getGeppettoModel().getUrl()));
 			String modelPath =project.getGeppettoModel().getUrl();
 			if(!modelPath.startsWith("http"))
 			{
 				modelPath = urlBase + modelPath;
 			}
+			
+			GeppettoProjectZipper geppettoProjectZipper = new GeppettoProjectZipper();
+			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper, urlBase);
+			zipper.addToZip(jsonFile.toURI().toURL());
+
+			GeppettoModel geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(modelPath));
 			URL url = URLReader.getURL(modelPath);
 			Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,false).toURI());
 			

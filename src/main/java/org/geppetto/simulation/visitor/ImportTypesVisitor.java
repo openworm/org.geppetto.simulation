@@ -34,11 +34,15 @@ package org.geppetto.simulation.visitor;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import org.geppetto.core.features.IDefaultViewCustomiserFeature;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
+import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoPackage;
@@ -47,6 +51,8 @@ import org.geppetto.model.types.Type;
 import org.geppetto.model.types.util.TypesSwitch;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.VariablesPackage;
+
+import com.google.gson.JsonObject;
 
 /**
  * This visitor traverses the Geppetto Model and creates the variables and types delegating to the model interpreter creation of the domain specific types
@@ -58,8 +64,10 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 {
 
 	private Map<GeppettoLibrary, IModelInterpreter> modelInterpreters;
+	private List<JsonObject> viewCustomisations = new ArrayList<JsonObject>();
 	private GeppettoModelAccess geppettoModelAccess;
-
+	private boolean gatherDefaultView = false;
+	private String urlBase;
 
 	@Override
 	public Object caseImportType(ImportType type)
@@ -73,15 +81,24 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 				// this import type is inside a library
 				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
 				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
-				URL url=null;
-				if(type.getUrl()!=null)
+				URL url = null;
+				if(type.getUrl() != null)
 				{
-					url=URLReader.getURL(type.getUrl());
+					String urlPath = type.getUrl();
+					if(!urlPath.startsWith("http")){
+						urlPath =  urlBase +type.getUrl();
+					}
+					url=URLReader.getURL(urlPath);
 				}
 				importedType = modelInterpreter.importType(url, type.getId(), library, geppettoModelAccess);
-				
-				geppettoModelAccess.swapType(type,importedType, library);
-				
+
+				if(this.gatherDefaultView && modelInterpreter.isSupported(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE))
+				{
+					viewCustomisations.add(((IDefaultViewCustomiserFeature) modelInterpreter.getFeature(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE)).getDefaultViewCustomisation(importedType));
+				}
+
+				geppettoModelAccess.swapType(type, importedType, library);
+
 			}
 			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)
 			{
@@ -108,12 +125,21 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	 * @param commonLibraryAccess
 	 * @param libraryManager
 	 */
-	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess)
-	{
+	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess, boolean gatherDefaultView,String urlBase){
 		super();
 		this.modelInterpreters = modelInterpreters;
 		this.geppettoModelAccess = commonLibraryAccess;
+		this.gatherDefaultView = gatherDefaultView;
+		this.urlBase =urlBase;
+	}
 
+	/**
+	 * @return
+	 * 
+	 */
+	public List<JsonObject> getDefaultViewCustomisations()
+	{
+		return viewCustomisations;
 	}
 
 }

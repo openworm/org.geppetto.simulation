@@ -159,7 +159,7 @@ public class NoAccessGeppettoManagerTest
 		InputStreamReader inputStreamReader = new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 		exception.expect(GeppettoAccessException.class);
-		manager.loadProject("1", geppettoProject);
+		manager.loadProject("1", geppettoProject,null);
 
 	}
 
@@ -179,7 +179,7 @@ public class NoAccessGeppettoManagerTest
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
 		privileges.add(UserPrivileges.READ_PROJECT);
 		((LocalUser)manager.getUser()).getGeppettoProjects().add((LocalGeppettoProject)geppettoProject);
-		manager.loadProject("1", geppettoProject);
+		manager.loadProject("1", geppettoProject,"");
 
 	}
 

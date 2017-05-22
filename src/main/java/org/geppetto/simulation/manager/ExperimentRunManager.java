@@ -34,6 +34,7 @@ package org.geppetto.simulation.manager;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -77,6 +78,8 @@ public class ExperimentRunManager implements IExperimentListener
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
 	private static ExperimentRunManager instance = null;
+
+	private Map<IUser, IExperiment> runningExperiments = new HashMap<IUser, IExperiment>();
 
 	/**
 	 * @return
@@ -237,6 +240,12 @@ public class ExperimentRunManager implements IExperimentListener
 	@Override
 	public void experimentRunDone(ExperimentRunThread experimentRun, IExperiment experiment, RuntimeProject project) throws GeppettoExecutionException
 	{
+		for(IUser user : this.runningExperiments.keySet())
+		{
+			if(this.runningExperiments.get(user).getId() == experiment.getId()){
+				this.runningExperiments.remove(user);
+			}
+		}
 		// if we are using the default data manager it means there is no persistence bundle
 		// if we are running an experiment in this scenarios it is because of a test rather
 		// than any real deployment. In test scenarios some flows like upload results to
@@ -263,6 +272,11 @@ public class ExperimentRunManager implements IExperimentListener
 	public Map<IUser, BlockingQueue<IExperiment>> getQueuedExperiments()
 	{
 		return this.queue;
+	}
+	
+	public Map<IUser, IExperiment> getRunninExperiments()
+	{
+		return this.runningExperiments;
 	}
 
 	/**
@@ -306,6 +320,7 @@ class ExperimentRunChecker extends TimerTask
 {
 	private static Log logger = LogFactory.getLog(ExperimentRunChecker.class);
 	private Map<IUser, BlockingQueue<IExperiment>> queuedExperiments = ExperimentRunManager.getInstance().getQueuedExperiments();
+	private Map<IUser, IExperiment> runningExperiments =  ExperimentRunManager.getInstance().getRunninExperiments();
 
 	public synchronized void run()
 	{
@@ -318,9 +333,12 @@ class ExperimentRunChecker extends TimerTask
 				{
 					if(ExperimentRunManager.getInstance().checkExperiment(e))
 					{
-						logger.info("Experiment queued found " + e.getName());
-						ExperimentRunManager.getInstance().runExperiment(e);
-						ran.add(e);
+						if(!runningExperiments.containsKey(user)){
+							logger.info("Experiment queued found " + e.getName());
+							ExperimentRunManager.getInstance().runExperiment(e);
+							runningExperiments.put(user, e);
+							ran.add(e);
+						}
 					}
 
 				}

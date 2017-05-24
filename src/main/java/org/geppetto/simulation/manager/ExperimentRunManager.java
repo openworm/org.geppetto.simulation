@@ -79,8 +79,7 @@ public class ExperimentRunManager implements IExperimentListener
 
 	private static ExperimentRunManager instance = null;
 
-	private Map<IUser, IExperiment> runningExperiments = new HashMap<IUser, IExperiment>();
-
+	private boolean neuronExpermentInProgress = false;
 	/**
 	 * @return
 	 */
@@ -240,12 +239,6 @@ public class ExperimentRunManager implements IExperimentListener
 	@Override
 	public void experimentRunDone(ExperimentRunThread experimentRun, IExperiment experiment, RuntimeProject project) throws GeppettoExecutionException
 	{
-		for(IUser user : this.runningExperiments.keySet())
-		{
-			if(this.runningExperiments.get(user).getId() == experiment.getId()){
-				this.runningExperiments.remove(user);
-			}
-		}
 		// if we are using the default data manager it means there is no persistence bundle
 		// if we are running an experiment in this scenarios it is because of a test rather
 		// than any real deployment. In test scenarios some flows like upload results to
@@ -274,9 +267,9 @@ public class ExperimentRunManager implements IExperimentListener
 		return this.queue;
 	}
 	
-	public Map<IUser, IExperiment> getRunninExperiments()
+	public boolean isNeuronExperimentInProgress()
 	{
-		return this.runningExperiments;
+		return this.neuronExpermentInProgress;
 	}
 
 	/**
@@ -314,13 +307,16 @@ public class ExperimentRunManager implements IExperimentListener
 		this.geppettoManagerCallbackListener = listener;	
 	}
 
+	@Override
+	public void neuronSimulationInProgress(boolean mode) {
+		this.neuronExpermentInProgress  = mode;
+	}
 }
 
 class ExperimentRunChecker extends TimerTask
 {
 	private static Log logger = LogFactory.getLog(ExperimentRunChecker.class);
 	private Map<IUser, BlockingQueue<IExperiment>> queuedExperiments = ExperimentRunManager.getInstance().getQueuedExperiments();
-	private Map<IUser, IExperiment> runningExperiments =  ExperimentRunManager.getInstance().getRunninExperiments();
 
 	public synchronized void run()
 	{
@@ -331,13 +327,16 @@ class ExperimentRunChecker extends TimerTask
 				List<IExperiment> ran = new ArrayList<IExperiment>();
 				for(IExperiment e : queuedExperiments.get(user))
 				{
-					if(ExperimentRunManager.getInstance().checkExperiment(e))
-					{
-						if(!runningExperiments.containsKey(user)){
+					if(!ExperimentRunManager.getInstance().isNeuronExperimentInProgress()){
+						if(ExperimentRunManager.getInstance().checkExperiment(e))
+						{
 							logger.info("Experiment queued found " + e.getName());
 							ExperimentRunManager.getInstance().runExperiment(e);
-							runningExperiments.put(user, e);
 							ran.add(e);
+							//temporarily set flag to neuron simulation in progress to true, this has to be 
+							//done inmediately here otherwise next experiment in queue will get run before 
+							//giving the simulator a chance to initialize and know if it's a neuron simulator
+							ExperimentRunManager.getInstance().neuronSimulationInProgress(true);
 						}
 					}
 

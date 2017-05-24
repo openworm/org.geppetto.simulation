@@ -43,4 +43,6 @@ public interface IExperimentListener
 	void experimentRunDone(ExperimentRunThread experimentRun, IExperiment experiment, RuntimeProject project) throws GeppettoExecutionException;
 	
 	void experimentError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment);
+
+	void neuronSimulationInProgress(boolean mode);
 }

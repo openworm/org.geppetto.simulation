@@ -246,6 +246,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					if(iConvertedModel == null)
 					{
 						simulator.initialize(model, aspectConfig, experimentState, this, modelAccess);
+						listener.neuronSimulationInProgress(simulator.isNeuronSimulator());
 					}
 					else
 					{
@@ -413,6 +414,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	@Override
 	public void endOfSteps(IAspectConfiguration aspectConfiguration, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
+		listener.neuronSimulationInProgress(false);
 		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 

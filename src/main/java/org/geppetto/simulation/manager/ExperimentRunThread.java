@@ -246,7 +246,9 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					if(iConvertedModel == null)
 					{
 						simulator.initialize(model, aspectConfig, experimentState, this, modelAccess);
-						listener.neuronSimulationInProgress(simulator.isNeuronSimulator());
+						//Let now Experiment Run Manager if the simulator to be run is Neuron type to block others 
+						//from running
+						listener.neuronSimulationBlocked(simulator.isNeuronSimulator());
 					}
 					else
 					{
@@ -414,7 +416,9 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	@Override
 	public void endOfSteps(IAspectConfiguration aspectConfiguration, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
-		listener.neuronSimulationInProgress(false);
+		//last experiment has done executing, Experiment Run Manager can be notified that there's no blocking 
+		//experiment on the way now
+		listener.neuronSimulationBlocked(false);
 		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 

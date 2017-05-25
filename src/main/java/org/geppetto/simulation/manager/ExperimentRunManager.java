@@ -308,7 +308,7 @@ public class ExperimentRunManager implements IExperimentListener
 	}
 
 	@Override
-	public void neuronSimulationInProgress(boolean mode) {
+	public void neuronSimulationBlocked(boolean mode) {
 		this.neuronExpermentInProgress  = mode;
 	}
 }
@@ -336,7 +336,7 @@ class ExperimentRunChecker extends TimerTask
 							//temporarily set flag to neuron simulation in progress to true, this has to be 
 							//done inmediately here otherwise next experiment in queue will get run before 
 							//giving the simulator a chance to initialize and know if it's a neuron simulator
-							ExperimentRunManager.getInstance().neuronSimulationInProgress(true);
+							ExperimentRunManager.getInstance().neuronSimulationBlocked(true);
 						}
 					}
 

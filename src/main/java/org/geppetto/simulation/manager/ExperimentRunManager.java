@@ -79,7 +79,7 @@ public class ExperimentRunManager implements IExperimentListener
 
 	private static ExperimentRunManager instance = null;
 
-	private boolean neuronExpermentInProgress = false;
+	private boolean supportConcurrentRuns= false;
 	/**
 	 * @return
 	 */
@@ -267,9 +267,9 @@ public class ExperimentRunManager implements IExperimentListener
 		return this.queue;
 	}
 	
-	public boolean isNeuronExperimentInProgress()
+	public boolean supportConcurrentRuns()
 	{
-		return this.neuronExpermentInProgress;
+		return this.supportConcurrentRuns;
 	}
 
 	/**
@@ -308,8 +308,8 @@ public class ExperimentRunManager implements IExperimentListener
 	}
 
 	@Override
-	public void neuronSimulationBlocked(boolean mode) {
-		this.neuronExpermentInProgress  = mode;
+	public void supportConcurrentRuns(boolean mode) {
+		this.supportConcurrentRuns  = mode;
 	}
 }
 
@@ -327,7 +327,7 @@ class ExperimentRunChecker extends TimerTask
 				List<IExperiment> ran = new ArrayList<IExperiment>();
 				for(IExperiment e : queuedExperiments.get(user))
 				{
-					if(!ExperimentRunManager.getInstance().isNeuronExperimentInProgress()){
+					if(!ExperimentRunManager.getInstance().supportConcurrentRuns()){
 						if(ExperimentRunManager.getInstance().checkExperiment(e))
 						{
 							logger.info("Experiment queued found " + e.getName());
@@ -336,7 +336,7 @@ class ExperimentRunChecker extends TimerTask
 							//temporarily set flag to neuron simulation in progress to true, this has to be 
 							//done inmediately here otherwise next experiment in queue will get run before 
 							//giving the simulator a chance to initialize and know if it's a neuron simulator
-							ExperimentRunManager.getInstance().neuronSimulationBlocked(true);
+							ExperimentRunManager.getInstance().supportConcurrentRuns(true);
 						}
 					}
 

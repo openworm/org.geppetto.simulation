@@ -248,7 +248,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						simulator.initialize(model, aspectConfig, experimentState, this, modelAccess);
 						//Let now Experiment Run Manager if the simulator to be run is Neuron type to block others 
 						//from running
-						listener.neuronSimulationBlocked(simulator.isNeuronSimulator());
+						listener.supportConcurrentRuns(simulator.supportConcurrentRuns());
 					}
 					else
 					{
@@ -418,7 +418,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		//last experiment has done executing, Experiment Run Manager can be notified that there's no blocking 
 		//experiment on the way now
-		listener.neuronSimulationBlocked(false);
+		listener.supportConcurrentRuns(false);
 		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 

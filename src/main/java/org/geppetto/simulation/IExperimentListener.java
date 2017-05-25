@@ -44,5 +44,5 @@ public interface IExperimentListener
 	
 	void experimentError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment);
 
-	void neuronSimulationBlocked(boolean mode);
+	void supportConcurrentRuns(boolean mode);
 }

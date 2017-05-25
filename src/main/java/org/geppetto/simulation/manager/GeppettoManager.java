@@ -82,7 +82,6 @@ import org.geppetto.simulation.visitor.PersistModelVisitor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
-
 /**
  * GeppettoManager is the implementation of IGeppettoManager which represents the Java API entry point for Geppetto. This class is instantiated with a session scope, which means there is one
  * GeppettoManager per each session/connection therefore only one user is associated with a GeppettoManager. A GeppettoManager is also instantiated by the ExperimentRunManager to handle the queued
@@ -138,7 +137,7 @@ public class GeppettoManager implements IGeppettoManager
 	 * 
 	 * @see org.geppetto.core.manager.IProjectManager#loadProject(java.lang.String, org.geppetto.core.data.model.IGeppettoProject)
 	 */
-	public void loadProject(String requestId, IGeppettoProject project,String urlBase) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
+	public void loadProject(String requestId, IGeppettoProject project) throws MalformedURLException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
 		if(!getScope().equals(Scope.RUN))
 		{
@@ -162,7 +161,7 @@ public class GeppettoManager implements IGeppettoManager
 		}
 		if(!projects.containsKey(project))
 		{
-			RuntimeProject runtimeProject = new RuntimeProject(project, this,urlBase);
+			RuntimeProject runtimeProject = new RuntimeProject(project, this);
 			projects.put(project, runtimeProject);
 		}
 		else
@@ -174,7 +173,8 @@ public class GeppettoManager implements IGeppettoManager
 
 	public boolean isUserProject(long id)
 	{
-		if(user!=null){
+		if(user != null)
+		{
 			List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
 			for(IGeppettoProject p : userProjects)
 			{
@@ -237,7 +237,7 @@ public class GeppettoManager implements IGeppettoManager
 		{
 			try
 			{
-				loadProject(null, project,"");
+				loadProject(null, project);
 			}
 			catch(MalformedURLException e)
 			{
@@ -325,8 +325,8 @@ public class GeppettoManager implements IGeppettoManager
 
 		if(experiment.getStatus().equals(ExperimentStatus.COMPLETED))
 		{
-			String urlBase = getRuntimeProject(experiment.getParentProject()).getUrlBase();
-			return getRuntimeProject(experiment.getParentProject()).getRuntimeExperiment(experiment).getExperimentState(variables,urlBase);
+			String urlBase = experiment.getParentProject().getBaseURL();
+			return getRuntimeProject(experiment.getParentProject()).getRuntimeExperiment(experiment).getExperimentState(variables, urlBase);
 
 		}
 		else
@@ -391,16 +391,8 @@ public class GeppettoManager implements IGeppettoManager
 					// since it's id based
 					DataManagerHelper.getDataManager().addGeppettoProject(project, getUser());
 
-					String urlBase = getRuntimeProject(project).getUrlBase();
-					
-					String urlPath = project.getGeppettoModel().getUrl();
-					if(!urlPath.startsWith("http"))
-					{
-						urlPath = urlBase + urlPath;
-					}
-					// save Geppetto Model
-					URL url = new URL(urlPath);
-					Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,true).toURI());
+					URL url = URLReader.getURL(project.getGeppettoModel().getUrl(), project.getBaseURL());
+					Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url, true).toURI());
 
 					// save each model inside GeppettoModel and save every file referenced inside every model
 					PersistModelVisitor persistModelVisitor = new PersistModelVisitor(localGeppettoModelFile, getRuntimeProject(project), project);
@@ -421,39 +413,32 @@ public class GeppettoManager implements IGeppettoManager
 					for(IExperiment experiment : project.getExperiments())
 					{
 						if(experiment.getScript() != null)
-						{							
-							String scriptPath = experiment.getScript();
-							if(!scriptPath.startsWith("http"))
-							{
-								scriptPath = urlBase + scriptPath;
-							}
-							
-							URL scriptURL = new URL(scriptPath);
-							Path localScript = Paths.get(URLReader.createLocalCopy(scope, project.getId(), scriptURL,true).toURI());
+						{
+							URL scriptURL = URLReader.getURL(experiment.getScript(), project.getBaseURL());
+							Path localScript = Paths.get(URLReader.createLocalCopy(scope, project.getId(), scriptURL, true).toURI());
 							String newScriptPath = "projects/" + Long.toString(project.getId()) + "/experiment/" + experiment.getId() + "/script.js";
 							S3Manager.getInstance().saveFileToS3(localScript.toFile(), newScriptPath);
 							experiment.setScript(S3Manager.getInstance().getURL(newScriptPath).toString());
 						}
-						
+
 						if(experiment.getSimulationResults() != null)
-						{							
-							for(ISimulationResult simResult : experiment.getSimulationResults()){
-								if(simResult.getResult()!=null){
-									String resultPath = simResult.getResult().getUrl();
-									if(!resultPath.startsWith("http"))
-									{
-										resultPath = urlBase + resultPath;
-									}
-									URL resultURL = new URL(resultPath);
+						{
+							for(ISimulationResult simResult : experiment.getSimulationResults())
+							{
+								if(simResult.getResult() != null)
+								{
+									URL resultURL = URLReader.getURL(simResult.getResult().getUrl(), project.getBaseURL());
 									String resultFileName = URLReader.getFileName(resultURL);
-									Path localResult = Paths.get(URLReader.createLocalCopy(scope, project.getId(), resultURL,true).toURI());
-									String newResultPath = "projects/" + Long.toString(project.getId()) + "/experiment/" + experiment.getId() + "/" +resultFileName;
+									Path localResult = Paths.get(URLReader.createLocalCopy(scope, project.getId(), resultURL, true).toURI());
+									String newResultPath = "projects/" + Long.toString(project.getId()) + "/experiment/" + experiment.getId() + "/" + resultFileName;
 									S3Manager.getInstance().saveFileToS3(localResult.toFile(), newResultPath);
 									simResult.getResult().setURL(S3Manager.getInstance().getURL(newResultPath).toString());
 								}
 							}
 						}
 					}
+					//we call setVolatile only at the very end, there might be other things like setView trying to save the project
+					project.setVolatile(false);
 					DataManagerHelper.getDataManager().saveEntity(project);
 
 				}
@@ -645,18 +630,20 @@ public class GeppettoManager implements IGeppettoManager
 		DataManagerHelper.getDataManager().saveEntity(project);
 		return setParameters;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 */
 	@Override
 	public void setExperimentView(String view, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException
-	{	
+	{
 		IView v = null;
-		
-		if(experiment != null){
-			// save view at the experiment level 
-			if(experiment.getView() == null){
+
+		if(experiment != null)
+		{
+			// save view at the experiment level
+			if(experiment.getView() == null)
+			{
 				v = DataManagerHelper.getDataManager().newView(view, experiment);
 			}
 			else
@@ -668,8 +655,9 @@ public class GeppettoManager implements IGeppettoManager
 		else
 		{
 			// save view at the project level if experiment was not found
-			// save view at the experiment level 
-			if(project.getView() == null){
+			// save view at the experiment level
+			if(project.getView() == null)
+			{
 				v = DataManagerHelper.getDataManager().newView(view, project);
 			}
 			else
@@ -678,8 +666,11 @@ public class GeppettoManager implements IGeppettoManager
 				v.setView(view);
 			}
 		}
-		
-		DataManagerHelper.getDataManager().saveEntity(v);
+		if(!project.isVolatile())
+		{
+			DataManagerHelper.getDataManager().saveEntity(v);
+		}
+
 	}
 
 	/*
@@ -756,14 +747,7 @@ public class GeppettoManager implements IGeppettoManager
 					try
 					{
 						IPersistedData resultObject = result.getResult();
-						String urlBase = getRuntimeProject(project).getUrlBase();
-						
-						String url = resultObject.getUrl();
-						if(!url.startsWith("http"))
-						{
-							url = urlBase + url;
-						}
-						return URLReader.getURL(url);
+						return URLReader.getURL(resultObject.getUrl(), project.getBaseURL());
 					}
 					catch(Exception e)
 					{
@@ -905,41 +889,39 @@ public class GeppettoManager implements IGeppettoManager
 	}
 
 	@Override
-	public Path downloadProject(IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException {
+	public Path downloadProject(IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException
+	{
 		Path zip = null;
-		try {
-			File dir = new File(PathConfiguration.getProjectTmpPath(scope,project.getId()));
+		try
+		{
+			File dir = new File(PathConfiguration.getProjectTmpPath(scope, project.getId()));
 			dir.mkdirs();
-			Zipper zipper = new Zipper(dir.getAbsolutePath()+"/project.zip","Project_"+project.getId());
+			Zipper zipper = new Zipper(dir.getAbsolutePath() + "/project.zip", "Project_" + project.getId());
 
-			String urlBase = getRuntimeProject(project).getUrlBase();
-			
-			String modelPath =project.getGeppettoModel().getUrl();
-			if(!modelPath.startsWith("http"))
-			{
-				modelPath = urlBase + modelPath;
-			}
-			
+			String modelPath = project.getGeppettoModel().getUrl();
+
 			GeppettoProjectZipper geppettoProjectZipper = new GeppettoProjectZipper();
-			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper, urlBase);
+			File jsonFile = geppettoProjectZipper.writeIGeppettoProjectToJson(project, dir, zipper, project.getBaseURL());
 			zipper.addToZip(jsonFile.toURI().toURL());
 
-			GeppettoModel geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(modelPath));
-			URL url = URLReader.getURL(modelPath);
-			Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url,false).toURI());
-			
-			//Changes paths inside the .XMI
-			GeppettoModelTypesVisitor importTypesVisitor = 
-					new GeppettoModelTypesVisitor(localGeppettoModelFile,getRuntimeProject(project),zipper,this.getScope());
+			URL url = URLReader.getURL(modelPath, project.getBaseURL());
+
+			GeppettoModel geppettoModel = GeppettoModelReader.readGeppettoModel(url);
+			Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url, false).toURI());
+
+			// Changes paths inside the .XMI
+			GeppettoModelTypesVisitor importTypesVisitor = new GeppettoModelTypesVisitor(localGeppettoModelFile, getRuntimeProject(project), zipper, this.getScope());
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			zipper.addToZip(localGeppettoModelFile.toUri().toURL());
-			
+
 			zip = zipper.processAddedFilesAndZip();
-		} catch (Exception e) {
-			logger.error("Unable to download project"+e);
+		}
+		catch(Exception e)
+		{
+			logger.error("Unable to download project" + e);
 			throw new GeppettoExecutionException(e);
 		}
-		
+
 		return zip;
 	}
 }

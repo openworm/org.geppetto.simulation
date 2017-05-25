@@ -144,7 +144,7 @@ public class ExperimentRunManager implements IExperimentListener
 		{
 			IGeppettoProject project = experiment.getParentProject();
 			if(!geppettoManager.isProjectOpen(project)){
-				geppettoManager.loadProject(String.valueOf(this.getReqId()), project,"");
+				geppettoManager.loadProject(String.valueOf(this.getReqId()), project);
 			}
 			RuntimeProject runtimeProject = geppettoManager.getRuntimeProject(project);
 			runtimeProject.openExperiment(String.valueOf(this.getReqId()), experiment);

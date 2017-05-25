@@ -319,8 +319,7 @@ public class RuntimeExperiment
 					URL url;
 					try
 					{
-						String urlPath = urlBase + result.getResult().getUrl();
-						url = URLReader.getURL(urlPath);
+						url = URLReader.getURL(result.getResult().getUrl(), urlBase);
 					}
 					catch(IOException e)
 					{
@@ -537,7 +536,7 @@ public class RuntimeExperiment
 					URL url;
 					try
 					{
-						url = URLReader.getURL(result.getResult().getUrl());
+						url = URLReader.getURL(result.getResult().getUrl(), experiment.getParentProject().getBaseURL());
 						dropboxService.upload(new File(URLReader.createLocalCopy(Scope.CONNECTION, experiment.getParentProject().getId(), url,true).toURI()));
 					}
 					catch(Exception e)

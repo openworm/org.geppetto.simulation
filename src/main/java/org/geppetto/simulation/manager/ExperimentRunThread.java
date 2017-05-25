@@ -417,8 +417,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	public void endOfSteps(IAspectConfiguration aspectConfiguration, Map<File, ResultsFormat> results) throws GeppettoExecutionException
 	{
 		//last experiment has done executing, Experiment Run Manager can be notified that there's no blocking 
-		//experiment on the way now
-		listener.supportConcurrentRuns(false);
+		//experiment on the way now and that it supports concurrent runs agains
+		listener.supportConcurrentRuns(true);
 		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
 

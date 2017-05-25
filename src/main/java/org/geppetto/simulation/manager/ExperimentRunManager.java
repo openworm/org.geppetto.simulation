@@ -79,7 +79,7 @@ public class ExperimentRunManager implements IExperimentListener
 
 	private static ExperimentRunManager instance = null;
 
-	private boolean supportConcurrentRuns= false;
+	private boolean supportConcurrentRuns= true;
 	/**
 	 * @return
 	 */
@@ -327,16 +327,15 @@ class ExperimentRunChecker extends TimerTask
 				List<IExperiment> ran = new ArrayList<IExperiment>();
 				for(IExperiment e : queuedExperiments.get(user))
 				{
-					if(!ExperimentRunManager.getInstance().supportConcurrentRuns()){
+					if(ExperimentRunManager.getInstance().supportConcurrentRuns()){
 						if(ExperimentRunManager.getInstance().checkExperiment(e))
 						{
 							logger.info("Experiment queued found " + e.getName());
 							ExperimentRunManager.getInstance().runExperiment(e);
 							ran.add(e);
-							//temporarily set flag to neuron simulation in progress to true, this has to be 
-							//done inmediately here otherwise next experiment in queue will get run before 
-							//giving the simulator a chance to initialize and know if it's a neuron simulator
-							ExperimentRunManager.getInstance().supportConcurrentRuns(true);
+							//temporarily set flag to not support concurrent runs until experiment's simulator
+							//runs and sets the flag internally
+							ExperimentRunManager.getInstance().supportConcurrentRuns(false);
 						}
 					}
 

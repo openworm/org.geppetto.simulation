@@ -487,6 +487,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	@Override
 	public void externalProcessFailed(String message, Exception e) {
+		listener.supportConcurrentRuns(true);
 		String errorMessage ="Experiment with name: " + experiment.getName() + 
 							" and id: " + experiment.getId() + " has failed." + '\n';
 		

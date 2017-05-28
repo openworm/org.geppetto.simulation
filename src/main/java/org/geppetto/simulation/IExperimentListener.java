@@ -44,5 +44,4 @@ public interface IExperimentListener
 	
 	void experimentError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment);
 
-	void supportConcurrentRuns(boolean mode);
 }

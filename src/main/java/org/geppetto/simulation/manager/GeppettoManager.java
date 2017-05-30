@@ -122,7 +122,7 @@ public class GeppettoManager implements IGeppettoManager
 		{
 			GeppettoManager other = (GeppettoManager) manager;
 			this.projects.putAll(other.projects);
-			this.user = other.getUser();
+			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
 		}
 	}
 
@@ -437,7 +437,7 @@ public class GeppettoManager implements IGeppettoManager
 							}
 						}
 					}
-					//we call setVolatile only at the very end, there might be other things like setView trying to save the project
+					// we call setVolatile only at the very end, there might be other things like setView trying to save the project
 					project.setVolatile(false);
 					DataManagerHelper.getDataManager().saveEntity(project);
 

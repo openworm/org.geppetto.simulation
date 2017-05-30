@@ -34,8 +34,10 @@ package org.geppetto.simulation.manager;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -75,6 +77,10 @@ public class ExperimentRunManager implements IExperimentListener
 	private Timer timer;
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
+
+	private Map<IGeppettoProject, Integer> experimentsCounter = new ConcurrentHashMap<>();
+
+	private Set<IGeppettoProject> projectsRunning = new HashSet<IGeppettoProject>();
 
 	private static ExperimentRunManager instance = null;
 
@@ -127,10 +133,41 @@ public class ExperimentRunManager implements IExperimentListener
 	/**
 	 * @param experiment
 	 * @return
+	 * @throws GeppettoInitializationException
 	 */
-	public boolean checkExperiment(IExperiment experiment)
+	public boolean checkExperiment(IExperiment experiment) throws GeppettoInitializationException
 	{
-		return experiment.getStatus().equals(ExperimentStatus.QUEUED);
+		boolean experimentCanRun = experiment.getStatus().equals(ExperimentStatus.QUEUED);
+		if(experimentCanRun)
+		{
+			IGeppettoProject project = experiment.getParentProject();
+			if(projectsRunning.contains(project))
+			{
+				return false;
+			}
+		}
+		return experimentCanRun;
+	}
+
+	/**
+	 * @param experiment
+	 */
+	private void decreaseExperimentCounter(IExperiment experiment)
+	{
+		experimentsCounter.put(experiment.getParentProject(), experimentsCounter.get(experiment.getParentProject()) - 1);
+	}
+
+	/**
+	 * @param experimentAboutToRun
+	 */
+	private void increaseExperimentCounter(IExperiment experimentAboutToRun)
+	{
+		IGeppettoProject project = experimentAboutToRun.getParentProject();
+		if(!experimentsCounter.containsKey(project))
+		{
+			experimentsCounter.put(project, 0);
+		}
+		experimentsCounter.put(project, experimentsCounter.get(project) + 1);
 	}
 
 	/*
@@ -143,8 +180,10 @@ public class ExperimentRunManager implements IExperimentListener
 		try
 		{
 			IGeppettoProject project = experiment.getParentProject();
-			if(!geppettoManager.isProjectOpen(project)){
-				geppettoManager.loadProject(String.valueOf(this.getReqId()), project,"");
+			projectsRunning.add(project);
+			if(!geppettoManager.isProjectOpen(project))
+			{
+				geppettoManager.loadProject(String.valueOf(this.getReqId()), project);
 			}
 			RuntimeProject runtimeProject = geppettoManager.getRuntimeProject(project);
 			runtimeProject.openExperiment(String.valueOf(this.getReqId()), experiment);
@@ -161,7 +200,7 @@ public class ExperimentRunManager implements IExperimentListener
 			simulationError(experiment);
 			experiment.updateEndDate();
 			String errorMessage = "Error running experiment with name: " + experiment.getName() + " and id: " + experiment.getId();
-			this.experimentError(errorMessage,e.getMessage(), e, experiment);
+			this.experimentError(errorMessage, e.getMessage(), e, experiment);
 			throw new GeppettoExecutionException(e);
 		}
 	}
@@ -216,6 +255,7 @@ public class ExperimentRunManager implements IExperimentListener
 	 */
 	private synchronized void addExperimentToQueue(IUser user, IExperiment experiment, ExperimentStatus status)
 	{
+		increaseExperimentCounter(experiment);
 		BlockingQueue<IExperiment> userExperiments = queue.get(user);
 		if(userExperiments == null)
 		{
@@ -245,9 +285,12 @@ public class ExperimentRunManager implements IExperimentListener
 		// we can use them to check that the simulation was properly executed.
 		// This is not ideal or particularly elegant but harmless at the same time until we
 		// can think of a better way.
-		if(!DataManagerHelper.getDataManager().isDefault())
+		experimentRun.release();
+		decreaseExperimentCounter(experiment);
+		projectsRunning.remove(experiment.getParentProject());
+		if(!DataManagerHelper.getDataManager().isDefault() && experimentsCounter.get(experiment.getParentProject()) == 0)
 		{
-			experimentRun.release();
+			experimentsCounter.remove(experiment.getParentProject());
 			geppettoManager.closeProject("ERM" + getReqId(), project.getGeppettoProject());
 		}
 	}
@@ -290,14 +333,16 @@ public class ExperimentRunManager implements IExperimentListener
 		}
 
 	}
-	
+
 	@Override
-	public void experimentError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment) {
+	public void experimentError(String titleMessage, String errorMessage, Exception exception, IExperiment experiment)
+	{
 		this.geppettoManagerCallbackListener.experimentError(titleMessage, errorMessage, exception, experiment);
 	}
-	
-	public void setExperimentListener(IGeppettoManagerCallbackListener listener) {
-		this.geppettoManagerCallbackListener = listener;	
+
+	public void setExperimentListener(IGeppettoManagerCallbackListener listener)
+	{
+		this.geppettoManagerCallbackListener = listener;
 	}
 
 }
@@ -322,7 +367,6 @@ class ExperimentRunChecker extends TimerTask
 						ExperimentRunManager.getInstance().runExperiment(e);
 						ran.add(e);
 					}
-
 				}
 				for(IExperiment ranExperiment : ran)
 				{
@@ -330,7 +374,7 @@ class ExperimentRunChecker extends TimerTask
 				}
 			}
 		}
-		catch(GeppettoExecutionException e)
+		catch(GeppettoExecutionException | GeppettoInitializationException e)
 		{
 			logger.error(e);
 		}

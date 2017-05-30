@@ -79,9 +79,9 @@ public class TestZippingProject {
 		try
 		{
 			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/hhcell/GEPPETTO.json"));
-			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 			((LocalGeppettoProject)geppettoProject).setPublic(true);
-			manager.loadProject("1", geppettoProject,"");
+			manager.loadProject("1", geppettoProject);
 			
 			Path projectZipped = manager.downloadProject(geppettoProject);
 			assertNotNull(projectZipped);
@@ -99,9 +99,9 @@ public class TestZippingProject {
 		try
 		{
 			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project2/geppettoManagerTest2.json"));
-			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 			((LocalGeppettoProject)geppettoProject).setPublic(true);
-			manager.loadProject("1", geppettoProject,"");
+			manager.loadProject("1", geppettoProject);
 
 			Path projectZipped = manager.downloadProject(geppettoProject);
 			assertNotNull(projectZipped);
@@ -119,9 +119,9 @@ public class TestZippingProject {
 		try
 		{
 			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project3/geppettoManagerTest3.json"));
-			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 			((LocalGeppettoProject)geppettoProject).setPublic(true);
-			manager.loadProject("1", geppettoProject,"");
+			manager.loadProject("1", geppettoProject);
 
 			Path projectZipped = manager.downloadProject(geppettoProject);
 			
@@ -140,9 +140,9 @@ public class TestZippingProject {
 		try
 		{
 			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project4/geppettoManagerTest.json"));
-			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 			((LocalGeppettoProject)geppettoProject).setPublic(true);
-			manager.loadProject("1", geppettoProject,"");
+			manager.loadProject("1", geppettoProject);
 
 			Path projectZipped = manager.downloadProject(geppettoProject);
 			
@@ -161,9 +161,9 @@ public class TestZippingProject {
 		try
 		{
 			InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/project5/geppettoManagerTest.json"));
-			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+			geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 			((LocalGeppettoProject)geppettoProject).setPublic(true);
-			manager.loadProject("1", geppettoProject,"");
+			manager.loadProject("1", geppettoProject);
 
 			Path projectZipped = manager.downloadProject(geppettoProject);
 			

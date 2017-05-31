@@ -175,6 +175,7 @@ public class GeppettoManager implements IGeppettoManager
 	{
 		if(user != null)
 		{
+			user = DataManagerHelper.getDataManager().getUserByLogin(user.getLogin());
 			List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
 			for(IGeppettoProject p : userProjects)
 			{

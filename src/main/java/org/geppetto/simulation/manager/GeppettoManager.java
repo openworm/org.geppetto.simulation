@@ -173,19 +173,27 @@ public class GeppettoManager implements IGeppettoManager
 
 	public boolean isUserProject(long id)
 	{
-		if(user != null)
+		if(DataManagerHelper.getDataManager().isDefault())
 		{
-			List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
-			for(IGeppettoProject p : userProjects)
+			return true;
+		}
+		else
+		{
+			if(user != null)
 			{
-				if(p != null)
+				List<? extends IGeppettoProject> userProjects = user.getGeppettoProjects();
+				for(IGeppettoProject p : userProjects)
 				{
-					if(p.getId() == id)
+					if(p != null)
 					{
-						return true;
+						if(p.getId() == id)
+						{
+							return true;
+						}
 					}
 				}
 			}
+
 		}
 
 		return false;

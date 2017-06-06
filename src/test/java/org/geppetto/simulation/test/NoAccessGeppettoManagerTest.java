@@ -157,7 +157,7 @@ public class NoAccessGeppettoManagerTest
 	public void test02LoadProjectNegative() throws IOException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
 		InputStreamReader inputStreamReader = new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
-		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 		exception.expect(GeppettoAccessException.class);
 		manager.loadProject("1", geppettoProject);
 
@@ -176,7 +176,7 @@ public class NoAccessGeppettoManagerTest
 	{
 
 		InputStreamReader inputStreamReader = new InputStreamReader(NoAccessGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
-		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 		privileges.add(UserPrivileges.READ_PROJECT);
 		((LocalUser)manager.getUser()).getGeppettoProjects().add((LocalGeppettoProject)geppettoProject);
 		manager.loadProject("1", geppettoProject);

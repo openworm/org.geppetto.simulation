@@ -172,7 +172,7 @@ public class GeppettoManagerTest
 	public void test03LoadProject() throws IOException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
 		InputStreamReader inputStreamReader = new InputStreamReader(GeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerTest.json"));
-		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
+		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
 		((LocalGeppettoProject)geppettoProject).setPublic(true);
 		manager.loadProject("1", geppettoProject);
 
@@ -671,7 +671,7 @@ public class GeppettoManagerTest
 		URL rawRecording = manager.downloadResults("testVar(testType)", ResultsFormat.RAW, addedExperiment, geppettoProject);
 		rawRecording.openConnection().connect();
 		// unix and windows output paths differ, checks both
-		boolean rawRecPath = rawRecording.getPath().endsWith("testVar(testType)/rawRecording.zip") || rawRecording.getPath().endsWith("testVar(testType)\\rawRecording.zip");
+		boolean rawRecPath = rawRecording.getPath().endsWith("experiment/1/rawRecording.zip") || rawRecording.getPath().endsWith("experiment\\1\\rawRecording.zip");
 
 		Assert.assertTrue(rawRecPath);
 	}

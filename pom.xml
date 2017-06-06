@@ -4,7 +4,7 @@
 	<groupId>org.geppetto</groupId>
 	<artifactId>simulation</artifactId>
 	<name>Geppetto Simulation Bundle</name>
-	<version>0.3.5</version>
+	<version>0.3.6</version>
 	<packaging>bundle</packaging>
 	<properties>
 		<spring.version>3.1.3.RELEASE</spring.version>
@@ -56,6 +56,11 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
+		</dependency>
+		<dependency>
+			<groupId>uk.com.robust-it</groupId>
+			<artifactId>cloning</artifactId>
+			<version>1.9.3</version>
 		</dependency>
 	</dependencies>
 	<repositories>

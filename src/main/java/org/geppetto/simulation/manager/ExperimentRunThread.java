@@ -68,6 +68,7 @@ import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.core.utilities.Zipper;
 import org.geppetto.model.DomainModel;
 import org.geppetto.model.ExperimentState;
@@ -147,10 +148,12 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					AConversion conversionService = (AConversion) ServiceCreator.getNewServiceInstance(simConfig.getConversionServiceId());
 					conversionService.setScope(Scope.RUN);
 					conversionService.setProjectId(experiment.getParentProject().getId());
+					conversionService.setExperiment(experiment);
 					conversionServices.put(instancePath, conversionService);
 				}
 				ASimulator simulator = (ASimulator) ServiceCreator.getNewServiceInstance(simulatorId);
 				simulator.setProjectId(experiment.getParentProject().getId());
+				simulator.setExperiment(experiment);
 				simulatorServices.put(instancePath, simulator);
 				simulatorRuntimes.put(instancePath, new SimulatorRuntime());
 
@@ -227,6 +230,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 									{
 										((AConversion) entry.getValue().get(0)).setScope(Scope.RUN);
 										((AConversion) entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());
+										((AConversion) entry.getValue().get(0)).setExperiment(experiment);
 										iConvertedModel = entry.getValue().get(0).convert(model, conversionServiceKey.getOutputModelFormat(), aspectConfig, modelAccess);
 										break;
 									}
@@ -317,7 +321,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		catch(GeppettoInitializationException | GeppettoModelException e)
 		{
 			// TODO How to make the error surface in some description?
-			externalProcessFailed("",e);
+			externalProcessFailed("", e);
 			logger.error(e);
 		}
 		try
@@ -327,7 +331,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		catch(InterruptedException e)
 		{
 			String errorMessage = "Error running experiment with name: (" + experiment.getName() + ") and id: " + experiment.getId();
-			externalProcessFailed(errorMessage,e);
+			externalProcessFailed(errorMessage, e);
 			throw new RuntimeException(e);
 
 		}
@@ -341,7 +345,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		catch(GeppettoExecutionException e)
 		{
 			String errorMessage = "Error running experiment with name: (" + experiment.getName() + ") and id: " + experiment.getId();
-			externalProcessFailed(errorMessage,e);
+			externalProcessFailed(errorMessage, e);
 			throw new RuntimeException("Post run experiment error", e);
 		}
 
@@ -401,7 +405,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		simulatorServices.clear();
 		conversionServices.clear();
 		simulatorRuntimes.clear();
-		//listener = null;
+		// listener = null;
 	}
 
 	/*
@@ -426,8 +430,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				{
 					case GEPPETTO_RECORDING:
 					{
-						String fileName = result.getPath().substring(result.getPath().lastIndexOf("/") + 1);
-						String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName);
+						String fileName = URLReader.getFileName(result.toURI().toURL());
+						String newPath = "projects/" + Long.toString(runtimeProject.getGeppettoProject().getId()) + "/experiment/" + experiment.getId() + "/" + fileName;
 						IPersistedData recording;
 						if(!DataManagerHelper.getDataManager().isDefault())
 						{
@@ -458,7 +462,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 				zipper.addToZip(raw.toURI().toURL());
 			}
 			Path zipped = zipper.processAddedFilesAndZip();
-			String newPath = PathConfiguration.getExperimentPath(Scope.RUN, runtimeProject.getGeppettoProject().getId(), experiment.getId(), instancePath, fileName);
+			String newPath = "projects/" + Long.toString(runtimeProject.getGeppettoProject().getId()) + "/experiment/" + experiment.getId() + "/" + fileName;
 			if(!DataManagerHelper.getDataManager().isDefault())
 			{
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
@@ -478,12 +482,12 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	}
 
 	@Override
-	public void externalProcessFailed(String message, Exception e) {
-		String errorMessage ="Experiment with name: " + experiment.getName() + 
-							" and id: " + experiment.getId() + " has failed." + '\n';
-		
+	public void externalProcessFailed(String message, Exception e)
+	{
+		String errorMessage = "Experiment with name: " + experiment.getName() + " and id: " + experiment.getId() + " has failed." + '\n';
+
 		experiment.setStatus(ExperimentStatus.ERROR);
-		this.listener.experimentError(errorMessage, message+e.getMessage(), e, experiment);		
+		this.listener.experimentError(errorMessage, message + e.getMessage(), e, experiment);
 		DataManagerHelper.getDataManager().saveEntity(experiment);
 	}
 }

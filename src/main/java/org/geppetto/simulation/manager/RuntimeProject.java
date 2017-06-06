@@ -83,8 +83,11 @@ import org.geppetto.model.values.Value;
 import org.geppetto.model.values.ValuesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
+import org.geppetto.simulation.manager.ViewProcessor.JsonObjectExtensionConflictException;
 import org.geppetto.simulation.visitor.CreateModelInterpreterServicesVisitor;
 import org.geppetto.simulation.visitor.ImportTypesVisitor;
+
+import com.google.gson.JsonObject;
 
 /**
  * The Runtime project holds the runtime state for an open project.
@@ -129,8 +132,9 @@ public class RuntimeProject
 		try
 		{
 			long start = System.currentTimeMillis();
+
 			// reading and parsing the model
-			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl()));
+			geppettoModel = GeppettoModelReader.readGeppettoModel(URLReader.getURL(geppettoModelData.getUrl(), project.getBaseURL()));
 
 			// loading the Geppetto common library, we create a clone of what's loaded in the shared common library
 			// since every geppetto model will have his
@@ -142,9 +146,29 @@ public class RuntimeProject
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
 			start = System.currentTimeMillis();
 
+			boolean gatherDefaultViews = false;
+			if(geppettoProject.getView().getView() == null)
+			{
+				//We gather the default views only if a view is not already set, i.e. default views were already gathered and modified
+				gatherDefaultViews = true;
+			}
 			// importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, gatherDefaultViews, geppettoProject.getBaseURL());
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
+			
+			if(gatherDefaultViews)
+			{
+				List<JsonObject> viewCustomisations = importTypesVisitor.getDefaultViewCustomisations();
+				try
+				{
+					geppettoProject.getView().setView(ViewProcessor.getView(viewCustomisations));
+				}
+				catch(JsonObjectExtensionConflictException e)
+				{
+					throw new GeppettoInitializationException(e.getMessage());
+				}
+			}
+
 			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
 			// create time (puhrrrrr)
@@ -310,7 +334,7 @@ public class RuntimeProject
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
 
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess);
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, false, geppettoProject.getBaseURL());
 			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
 
 		}

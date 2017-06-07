@@ -153,7 +153,7 @@ public class RuntimeProject
 				gatherDefaultViews = true;
 			}
 			// importing the types defined in the geppetto model using the model interpreters
-			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, gatherDefaultViews, geppettoProject.getBaseURL());
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, gatherDefaultViews, geppettoProject.getBaseURL(), false);
 			GeppettoModelTraversal.apply(geppettoModel, importTypesVisitor);
 			
 			if(gatherDefaultViews)

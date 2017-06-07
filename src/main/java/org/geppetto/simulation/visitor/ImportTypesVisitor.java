@@ -68,50 +68,55 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	private GeppettoModelAccess geppettoModelAccess;
 	private boolean gatherDefaultView = false;
 	private String baseURL;
+	private boolean forceResolve = true;
 
 	@Override
 	public Object caseImportType(ImportType type)
 	{
-		try
+		if(type.isAutoresolve() || this.forceResolve)
 		{
-
-			Type importedType = null;
-			if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
+			try
 			{
-				// this import type is inside a library
-				GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
-				IModelInterpreter modelInterpreter = modelInterpreters.get(library);
-				URL url = null;
-				if(type.getUrl() != null)
+
+				Type importedType = null;
+				if(type.eContainingFeature().getFeatureID() == GeppettoPackage.GEPPETTO_LIBRARY__TYPES)
 				{
-					url=URLReader.getURL(type.getUrl(), baseURL);
-				}
-				importedType = modelInterpreter.importType(url, type.getId(), library, geppettoModelAccess);
+					// this import type is inside a library
+					GeppettoLibrary library = (GeppettoLibrary) type.eContainer();
+					IModelInterpreter modelInterpreter = modelInterpreters.get(library);
+					URL url = null;
+					if(type.getUrl() != null)
+					{
+						url = URLReader.getURL(type.getUrl(), baseURL);
+					}
+					importedType = modelInterpreter.importType(url, type.getId(), library, geppettoModelAccess);
 
-				if(this.gatherDefaultView && modelInterpreter.isSupported(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE))
+					if(this.gatherDefaultView && modelInterpreter.isSupported(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE))
+					{
+						viewCustomisations
+								.add(((IDefaultViewCustomiserFeature) modelInterpreter.getFeature(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE)).getDefaultViewCustomisation(importedType));
+					}
+
+					geppettoModelAccess.swapType(type, importedType, library);
+
+				}
+				else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)
 				{
-					viewCustomisations.add(((IDefaultViewCustomiserFeature) modelInterpreter.getFeature(GeppettoFeature.DEFAULT_VIEW_CUSTOMISER_FEATURE)).getDefaultViewCustomisation(importedType));
+					// this import is inside a variable as anonymous type
+					// importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library);
+					// ((Variable) type.eContainer()).getAnonymousTypes().remove(type);
+					// ((Variable) type.eContainer()).getAnonymousTypes().add(importedType);
+					return new GeppettoVisitingException("Anonymous types at the root level initially not supported");
 				}
-
-				geppettoModelAccess.swapType(type, importedType, library);
-
 			}
-			else if(type.eContainingFeature().getFeatureID() == VariablesPackage.VARIABLE__ANONYMOUS_TYPES)
+			catch(IOException e)
 			{
-				// this import is inside a variable as anonymous type
-				// importedType = modelInterpreter.importType(URLReader.getURL(type.getUrl()), type.getName(), library);
-				// ((Variable) type.eContainer()).getAnonymousTypes().remove(type);
-				// ((Variable) type.eContainer()).getAnonymousTypes().add(importedType);
-				return new GeppettoVisitingException("Anonymous types at the root level initially not supported");
+				return new GeppettoVisitingException(e);
 			}
-		}
-		catch(IOException e)
-		{
-			return new GeppettoVisitingException(e);
-		}
-		catch(ModelInterpreterException e)
-		{
-			return new GeppettoVisitingException(e);
+			catch(ModelInterpreterException e)
+			{
+				return new GeppettoVisitingException(e);
+			}
 		}
 		return super.caseImportType(type);
 	}
@@ -121,14 +126,42 @@ public class ImportTypesVisitor extends TypesSwitch<Object>
 	 * @param commonLibraryAccess
 	 * @param libraryManager
 	 */
-	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess, boolean gatherDefaultView,String urlBase){
+	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess, boolean gatherDefaultView, String urlBase)
+	{
 		super();
 		this.modelInterpreters = modelInterpreters;
 		this.geppettoModelAccess = commonLibraryAccess;
 		this.gatherDefaultView = gatherDefaultView;
-		this.baseURL =urlBase;
+		this.baseURL = urlBase;
 	}
 
+	/**
+	 * @param modelInterpreters
+	 * @param commonLibraryAccess
+	 * @param libraryManager
+	 */
+	public ImportTypesVisitor(Map<GeppettoLibrary, IModelInterpreter> modelInterpreters, GeppettoModelAccess commonLibraryAccess, boolean gatherDefaultView, String urlBase, Boolean resolve)
+	{
+		this(modelInterpreters, commonLibraryAccess, gatherDefaultView, urlBase);
+		this.setForceResolve(resolve);
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean isForceResolve()
+	{
+		return forceResolve;
+	}
+
+	/**
+	 * @param forceResolve
+	 */
+	public void setForceResolve(boolean forceResolve)
+	{
+		this.forceResolve = forceResolve;
+	}
+	
 	/**
 	 * @return
 	 * 

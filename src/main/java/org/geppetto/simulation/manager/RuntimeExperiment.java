@@ -306,6 +306,8 @@ public class RuntimeExperiment
 		ExperimentState experimentStateTransfer = GeppettoFactory.eINSTANCE.createExperimentState();
 		experimentStateTransfer.setExperimentId(experiment.getId());
 		experimentStateTransfer.setProjectId(experiment.getParentProject().getId());
+                experimentState.setExperimentId(experiment.getId());
+                experimentState.setProjectId(experiment.getParentProject().getId());
 
 		for(ISimulationResult result : experiment.getSimulationResults())
 		{

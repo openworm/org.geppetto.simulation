@@ -226,7 +226,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 								for(ModelFormat supportedModelFormat : entry.getValue().get(0).getSupportedOutputs(model))
 								{
 									// Verify supported outputs for this model
-									if(supportedModelFormat.equals(conversionServiceKey.getOutputModelFormat()))
+									if(supportedModelFormat.getModelFormat().equalsIgnoreCase(conversionServiceKey.getOutputModelFormat().getModelFormat()))
 									{
 										((AConversion) entry.getValue().get(0)).setScope(Scope.RUN);
 										((AConversion) entry.getValue().get(0)).setProjectId(experiment.getParentProject().getId());

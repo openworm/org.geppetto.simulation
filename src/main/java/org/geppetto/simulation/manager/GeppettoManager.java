@@ -614,6 +614,12 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public void setExperimentView(String view, IExperiment experiment, IGeppettoProject project) throws GeppettoExecutionException, GeppettoAccessException
 	{
+
+		if(!user.getUserGroup().getPrivileges().contains(UserPrivileges.WRITE_PROJECT))
+		{
+			throw new GeppettoAccessException("Insufficient access rights to set experiment view.");
+		}
+
 		IView v = null;
 
 		if(experiment != null)

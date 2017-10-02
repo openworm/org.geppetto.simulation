@@ -368,6 +368,14 @@ public class GeppettoManager implements IGeppettoManager
 					// since it's id based
 					DataManagerHelper.getDataManager().addGeppettoProject(project, getUser());
 
+                                        // update the ids of ExperimentState objects
+                                        RuntimeProject runtimeProject = getRuntimeProject(project);
+                                        for (IExperiment experiment : project.getExperiments()) {
+                                            ExperimentState experimentState = runtimeProject.getRuntimeExperiment(experiment).getExperimentState();
+                                            experimentState.setExperimentId(experiment.getId());
+                                            experimentState.setProjectId(project.getId());
+                                        }
+
 					URL url = URLReader.getURL(project.getGeppettoModel().getUrl(), project.getBaseURL());
 					Path localGeppettoModelFile = Paths.get(URLReader.createLocalCopy(scope, project.getId(), url, true).toURI());
 

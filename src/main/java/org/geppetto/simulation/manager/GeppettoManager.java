@@ -547,6 +547,13 @@ public class GeppettoManager implements IGeppettoManager
 		dropboxService.unlink(key);
 	}
 
+    public String getDropboxToken() throws Exception {
+        if (getUser().getDropboxToken() != null)
+            return user.getDropboxToken();
+        else
+            return null;
+    }
+
 	/*
 	 * (non-Javadoc)
 	 * 

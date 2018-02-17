@@ -324,7 +324,7 @@ public class RuntimeExperiment
 						{
 							if(PointerUtility.equals(filteredVariable, watchedVariableValue.getPointer()) || watchedVariable.equals("time(StateVariable)"))
 							{
-								if(watchedVariableValue.getValue() == null)
+								if(watchedVariableValue.getValue() == null && (watchedVariable.startsWith(result.getSimulatedInstance()) || watchedVariable.equals("time(StateVariable)")))
 								{
 									recordingReader.readRecording(watchedVariable, experimentState, true);
 									logger.info("Finished reading results for " + watchedVariable);
@@ -337,7 +337,7 @@ public class RuntimeExperiment
 					}
 					else
 					{
-						if(watchedVariableValue.getValue() == null)
+						if(watchedVariableValue.getValue() == null && (watchedVariable.startsWith(result.getSimulatedInstance()) || watchedVariable.equals("time(StateVariable)")))
 						{
 							recordingReader.readRecording(watchedVariable, experimentState, true);
 							logger.info("Finished reading results for " + watchedVariable);

@@ -226,11 +226,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 					long end = System.currentTimeMillis();
 					logger.info("Finished initializing simulator, took " + (end - start) + " ms ");
 				}
-				else
-				{
-					throw new GeppettoInitializationException("A simulator for " + instancePath + " already exists, something did not get cleared");
-				}
-
 			}
 		}
 		catch(Exception e)

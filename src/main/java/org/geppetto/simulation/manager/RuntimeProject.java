@@ -319,6 +319,39 @@ public class RuntimeProject
 
 		return geppettoModel;
 	}
+    
+        /**
+	 * @param typePaths
+	 * @return
+	 * @throws GeppettoModelException
+	 */
+	public GeppettoModel resolveImportType(String typePath) throws GeppettoExecutionException
+	{
+		try
+		{
+			// let's find the importType
+			EList<Type> importTypes = new BasicEList<Type>();
+                        importTypes.add(PointerUtility.getType(geppettoModel, typePath));
+
+			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, geppettoProject.getId(), geppettoManager.getScope());
+			GeppettoModelTraversal.apply(importTypes, createServicesVisitor);
+
+			ImportTypesVisitor importTypesVisitor = new ImportTypesVisitor(modelInterpreters, geppettoModelAccess, false, geppettoProject.getBaseURL());
+			GeppettoModelTraversal.apply(importTypes, importTypesVisitor);
+
+		}
+
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+		catch(GeppettoModelException e)
+		{
+			throw new GeppettoExecutionException(e);
+		}
+
+		return geppettoModel;
+	}
 
 	/**
 	 * @param path

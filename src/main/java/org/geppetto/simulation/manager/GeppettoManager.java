@@ -836,6 +836,13 @@ public class GeppettoManager implements IGeppettoManager
 		return getRuntimeProject(geppettoProject).resolveImportType(typePaths);
 	}
 
+        
+	public GeppettoModel resolveImportType(String typePath, IGeppettoProject geppettoProject) throws GeppettoExecutionException
+	{
+		return getRuntimeProject(geppettoProject).resolveImportType(typePath);
+	}
+
+
 	@Override
 	public void setSimulationListener(IGeppettoManagerCallbackListener listener)
 	{

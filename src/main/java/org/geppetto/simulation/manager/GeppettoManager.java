@@ -49,6 +49,7 @@ import org.geppetto.simulation.utilities.GeppettoProjectZipper;
 import org.geppetto.simulation.visitor.GeppettoModelTypesVisitor;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 /**
@@ -60,7 +61,7 @@ import org.springframework.web.context.support.SpringBeanAutowiringSupport;
  * @author matteocantarelli
  * 
  */
-@Component
+@SessionScope
 public class GeppettoManager implements IGeppettoManager
 {
 

@@ -62,6 +62,7 @@ import org.springframework.web.context.support.SpringBeanAutowiringSupport;
  * 
  */
 @SessionScope
+@Component
 public class GeppettoManager implements IGeppettoManager
 {
 

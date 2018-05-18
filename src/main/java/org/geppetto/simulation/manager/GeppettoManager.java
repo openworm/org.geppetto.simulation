@@ -19,6 +19,7 @@ import org.geppetto.core.common.GeppettoAccessException;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
+import org.geppetto.core.data.DefaultGeppettoDataManager;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
@@ -92,8 +93,12 @@ public class GeppettoManager implements IGeppettoManager
 		if(manager instanceof GeppettoManager)
 		{
 			GeppettoManager other = (GeppettoManager) manager;
-			this.projects.putAll(other.projects);
-			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
+			if(other.projects!=null) {
+				this.projects.putAll(other.projects);
+				this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
+			}else {
+				this.user = DefaultGeppettoDataManager.getGuestUser();
+			}
 		}
 	}
 

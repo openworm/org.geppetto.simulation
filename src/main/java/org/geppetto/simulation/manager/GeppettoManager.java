@@ -19,7 +19,6 @@ import org.geppetto.core.common.GeppettoAccessException;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
-import org.geppetto.core.data.DefaultGeppettoDataManager;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
@@ -50,7 +49,6 @@ import org.geppetto.simulation.utilities.GeppettoProjectZipper;
 import org.geppetto.simulation.visitor.GeppettoModelTypesVisitor;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 /**
@@ -62,7 +60,6 @@ import org.springframework.web.context.support.SpringBeanAutowiringSupport;
  * @author matteocantarelli
  * 
  */
-@SessionScope
 @Component
 public class GeppettoManager implements IGeppettoManager
 {
@@ -92,13 +89,15 @@ public class GeppettoManager implements IGeppettoManager
 		super();
 		if(manager instanceof GeppettoManager)
 		{
+			IUser u = manager.getUser();
+			System.out.println(u.getLogin());
 			GeppettoManager other = (GeppettoManager) manager;
+			u = other.getUser();
+			System.out.println(u.getLogin());
 			if(other.projects!=null) {
 				this.projects.putAll(other.projects);
-				this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
-			}else {
-				this.user = DefaultGeppettoDataManager.getGuestUser();
 			}
+			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
 		}
 	}
 

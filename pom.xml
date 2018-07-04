@@ -61,11 +61,6 @@
     		<artifactId>javax.servlet-api</artifactId>
     		<version>3.0.1</version>
 		</dependency>
-		<dependency>
-		<groupId>javax.inject</groupId>
-		<artifactId>javax.inject</artifactId>
-		<version>1</version>
-	</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
@@ -156,10 +151,8 @@
 							{maven-resources},META-INF/spring=src/main/java/META-INF/spring,src/main/resources
 						</Include-Resource>
 						<Import-Package>
-							org.geppetto.core.simulation,org.geppetto.core.data,org.springframework.beans.factory.config,org.aopalliance.aop,org.springframework.aop,org.springframework.aop.scope,org.springframework.aop.framework,org.springframework.core,*
+							org.geppetto.core.simulation,org.geppetto.core.data,org.springframework.beans.factory.config,org.aopalliance.aop,org.springframework.aop,,org.springframework.aop.scope,org.springframework.aop.framework,*
 						</Import-Package>
-						<Import-Library>org.springframework.spring;version="${spring.version}"</Import-Library>
-						<Import-Bundle>org.springframework.aop;version="${spring.version}"</Import-Bundle>
 					</instructions>
 				</configuration>
 			</plugin>

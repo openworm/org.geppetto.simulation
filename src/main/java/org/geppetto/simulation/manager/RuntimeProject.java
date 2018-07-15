@@ -385,12 +385,14 @@ public class RuntimeProject
 	 * @throws GeppettoModelException
 	 * @throws GeppettoDataSourceException
 	 */
-	public GeppettoModel fetchVariable(String dataSourceId, String variableId) throws GeppettoModelException, GeppettoDataSourceException
+	public GeppettoModel fetchVariable(String dataSourceId, String[] variableId) throws GeppettoModelException, GeppettoDataSourceException
 	{
 		// the data source service has already been initialized with the GeppettoModelAccess
 		// the variable will be added to the GeppettoModel
 		IDataSourceService dataSourceService = getDataSourceService(dataSourceId);
-		dataSourceService.fetchVariable(variableId);
+		for (String singleId: variableId) {
+			dataSourceService.fetchVariable(singleId);
+		}
 		return geppettoModel;
 	}
 

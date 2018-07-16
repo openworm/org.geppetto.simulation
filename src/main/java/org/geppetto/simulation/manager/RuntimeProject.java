@@ -3,6 +3,7 @@ package org.geppetto.simulation.manager;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -390,8 +391,15 @@ public class RuntimeProject
 		// the data source service has already been initialized with the GeppettoModelAccess
 		// the variable will be added to the GeppettoModel
 		IDataSourceService dataSourceService = getDataSourceService(dataSourceId);
-		for (String singleId: variableId) {
-			dataSourceService.fetchVariable(singleId);
+		
+		for (int i = 0; i < variableId.length ; i++) {
+			List<String> idsList = new ArrayList<String>();
+			for (Variable idSingle : geppettoModel.getVariables()) {
+				System.out.println("print the variable "+idSingle.getId());
+				idsList.add(idSingle.getId());
+			}
+			if(!(idsList.contains(variableId[i])))
+				dataSourceService.fetchVariable(variableId[i]);
 		}
 		return geppettoModel;
 	}

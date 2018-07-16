@@ -395,7 +395,6 @@ public class RuntimeProject
 		for (int i = 0; i < variableId.length ; i++) {
 			List<String> idsList = new ArrayList<String>();
 			for (Variable idSingle : geppettoModel.getVariables()) {
-				System.out.println("print the variable "+idSingle.getId());
 				idsList.add(idSingle.getId());
 			}
 			if(!(idsList.contains(variableId[i])))

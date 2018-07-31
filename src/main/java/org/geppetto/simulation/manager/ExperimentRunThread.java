@@ -3,6 +3,7 @@ package org.geppetto.simulation.manager;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
+import org.geppetto.core.simulation.ISimulationRunExternalListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
@@ -78,6 +80,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	private RuntimeProject runtimeProject;
 
+	private ISimulationRunExternalListener simulationRunExternalListener = null;
+
 	/**
 	 * @param experiment
 	 * @param runtimeExperiment
@@ -85,11 +89,13 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @param geppettoCallbackListener
 	 * @param listener
 	 */
-	public ExperimentRunThread(IExperiment experiment, RuntimeProject runtimeProject, IExperimentListener listener)
+	public ExperimentRunThread(IExperiment experiment, RuntimeProject runtimeProject, IExperimentListener listener,
+														ISimulationRunExternalListener simulationRunExternalListener)
 	{
 		this.experiment = experiment;
 		this.runtimeProject = runtimeProject;
 		this.listener = listener;
+		this.simulationRunExternalListener = simulationRunExternalListener;
 	}
 
 	/**
@@ -382,7 +388,8 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-
+		List<URL> resultsPaths = new ArrayList<URL>();
+		
 		try
 		{
 			List<File> rawToZip = new ArrayList<File>();
@@ -416,6 +423,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						break;
 					}
 				}
+				resultsPaths.add(result.toURI().toURL());
 			}
 
 			String fileName = "rawRecording.zip";
@@ -427,15 +435,28 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			}
 			Path zipped = zipper.processAddedFilesAndZip();
 			String newPath = "projects/" + Long.toString(runtimeProject.getGeppettoProject().getId()) + "/experiment/" + experiment.getId() + "/" + fileName;
+			
+			ISimulationResult simulationResults;
+			IPersistedData rawResults;
 			if(!DataManagerHelper.getDataManager().isDefault())
 			{
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
+				rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
+			}else {
+				rawResults = DataManagerHelper.getDataManager().newPersistedData(zipped.toUri().toURL(), PersistedDataType.RECORDING);
 			}
-			IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
-			ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(instancePath, rawResults, ResultsFormat.RAW);
+
+			simulationResults = DataManagerHelper.getDataManager().newSimulationResult(instancePath, rawResults, ResultsFormat.RAW);
 			experiment.addSimulationResult(simulationResults);
 
 			DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
+			
+			//external listener gets notify about simulation done
+			if(simulationRunExternalListener != null)
+			{
+				resultsPaths.add(zipped.toUri().toURL());
+				this.simulationRunExternalListener.simulationDone(experiment,resultsPaths);
+			}
 		}
 		catch(IOException e)
 		{
@@ -453,5 +474,10 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		experiment.setStatus(ExperimentStatus.ERROR);
 		this.listener.experimentError(errorMessage, message + e.getMessage(), e, experiment);
 		DataManagerHelper.getDataManager().saveEntity(experiment);
+		//external listener gets notify about simulation done
+		if(simulationRunExternalListener != null)
+		{
+			this.simulationRunExternalListener.simulationFailed(errorMessage, e,experiment);
+		}
 	}
 }

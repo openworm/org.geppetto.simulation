@@ -111,7 +111,7 @@ public class NoAccessGeppettoManagerTest
 		long value = 1000l * 1000 * 1000;
 		privileges = new ArrayList<UserPrivileges>();
 		IUserGroup userGroup = DataManagerHelper.getDataManager().newUserGroup("guest", privileges, value, value * 2);
-		manager.setUser(DataManagerHelper.getDataManager().newUser("nonna", "passauord", true, userGroup));		
+		manager.setUser(DataManagerHelper.getDataManager().newUser("geppettonoaccessuser", "passauord", true, userGroup));		
 	}
 
 	/**

@@ -310,6 +310,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		try
 		{
 			listener.experimentRunDone(this, experiment, runtimeProject);
+			//external listener gets notify about simulation done
+			if(simulationRunExternalListener != null)
+			{
+				this.simulationRunExternalListener.simulationDone(experiment);
+			}
 
 		}
 		catch(GeppettoExecutionException e)
@@ -455,7 +460,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			if(simulationRunExternalListener != null)
 			{
 				resultsPaths.add(zipped.toUri().toURL());
-				this.simulationRunExternalListener.simulationDone(experiment,resultsPaths);
+				this.simulationRunExternalListener.simulationResultsReady(experiment,resultsPaths);
 			}
 		}
 		catch(IOException e)

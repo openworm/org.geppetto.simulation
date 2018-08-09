@@ -35,7 +35,6 @@ import org.geppetto.core.s3.S3Manager;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.core.services.registry.ServicesRegistry.ConversionServiceKey;
-import org.geppetto.core.simulation.ISimulationRunExternalListener;
 import org.geppetto.core.simulation.ISimulatorCallbackListener;
 import org.geppetto.core.simulator.ASimulator;
 import org.geppetto.core.simulator.ISimulator;
@@ -80,8 +79,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 
 	private RuntimeProject runtimeProject;
 
-	private ISimulationRunExternalListener simulationRunExternalListener = null;
-
 	/**
 	 * @param experiment
 	 * @param runtimeExperiment
@@ -89,13 +86,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	 * @param geppettoCallbackListener
 	 * @param listener
 	 */
-	public ExperimentRunThread(IExperiment experiment, RuntimeProject runtimeProject, IExperimentListener listener,
-														ISimulationRunExternalListener simulationRunExternalListener)
+	public ExperimentRunThread(IExperiment experiment, RuntimeProject runtimeProject, IExperimentListener listener)
 	{
 		this.experiment = experiment;
 		this.runtimeProject = runtimeProject;
 		this.listener = listener;
-		this.simulationRunExternalListener = simulationRunExternalListener;
 	}
 
 	/**
@@ -310,11 +305,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		try
 		{
 			listener.experimentRunDone(this, experiment, runtimeProject);
-			//external listener gets notify about simulation done
-			if(simulationRunExternalListener != null)
-			{
-				this.simulationRunExternalListener.simulationDone(experiment);
-			}
 
 		}
 		catch(GeppettoExecutionException e)
@@ -455,13 +445,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			experiment.addSimulationResult(simulationResults);
 
 			DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());
-			
-			//external listener gets notify about simulation done
-			if(simulationRunExternalListener != null)
-			{
-				resultsPaths.add(zipped.toUri().toURL());
-				this.simulationRunExternalListener.simulationResultsReady(experiment,resultsPaths);
-			}
 		}
 		catch(IOException e)
 		{
@@ -479,10 +462,5 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 		experiment.setStatus(ExperimentStatus.ERROR);
 		this.listener.experimentError(errorMessage, message + e.getMessage(), e, experiment);
 		DataManagerHelper.getDataManager().saveEntity(experiment);
-		//external listener gets notify about simulation done
-		if(simulationRunExternalListener != null)
-		{
-			this.simulationRunExternalListener.simulationFailed(errorMessage, e,experiment);
-		}
 	}
 }

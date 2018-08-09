@@ -25,7 +25,6 @@ import org.geppetto.core.data.model.IGeppettoProject;
 import org.geppetto.core.data.model.IUser;
 import org.geppetto.core.manager.Scope;
 import org.geppetto.core.simulation.IGeppettoManagerCallbackListener;
-import org.geppetto.core.simulation.ISimulationRunExternalListener;
 import org.geppetto.simulation.IExperimentListener;
 
 /**
@@ -54,7 +53,6 @@ public class ExperimentRunManager implements IExperimentListener
 
 	private static ExperimentRunManager instance = null;
 
-	private ISimulationRunExternalListener simulationRunExternalListener = null;
 	/**
 	 * @return
 	 */
@@ -159,7 +157,7 @@ public class ExperimentRunManager implements IExperimentListener
 			RuntimeProject runtimeProject = geppettoManager.getRuntimeProject(project);
 			runtimeProject.openExperiment(String.valueOf(this.getReqId()), experiment);
 
-			ExperimentRunThread experimentRun = new ExperimentRunThread(experiment, runtimeProject, this,simulationRunExternalListener);
+			ExperimentRunThread experimentRun = new ExperimentRunThread(experiment, runtimeProject, this);
 			experimentRun.start();
 			experiment.setStatus(ExperimentStatus.RUNNING);
 			experiment.updateStartDate();
@@ -316,11 +314,6 @@ public class ExperimentRunManager implements IExperimentListener
 		this.geppettoManagerCallbackListener = listener;
 	}
 	
-	public void setExternalExperimentListener(ISimulationRunExternalListener listener)
-	{
-		this.simulationRunExternalListener = listener;
-	}
-
 }
 
 class ExperimentRunChecker extends TimerTask

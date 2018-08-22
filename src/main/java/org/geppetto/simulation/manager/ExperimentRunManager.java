@@ -261,7 +261,7 @@ public class ExperimentRunManager implements IExperimentListener
 		{
 			experimentsCounter.remove(experiment.getParentProject());
 			geppettoManager.closeProject("ERM" + getReqId(), project.getGeppettoProject());
-		}		
+		}
 	}
 
 	/**
@@ -313,7 +313,7 @@ public class ExperimentRunManager implements IExperimentListener
 	{
 		this.geppettoManagerCallbackListener = listener;
 	}
-	
+
 }
 
 class ExperimentRunChecker extends TimerTask

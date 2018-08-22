@@ -383,7 +383,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-		List<URL> resultsPaths = new ArrayList<URL>();
 		
 		try
 		{
@@ -418,7 +417,6 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 						break;
 					}
 				}
-				resultsPaths.add(result.toURI().toURL());
 			}
 
 			String fileName = "rawRecording.zip";
@@ -435,9 +433,11 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			IPersistedData rawResults;
 			if(!DataManagerHelper.getDataManager().isDefault())
 			{
+				//save results to amazon instance server
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
 				rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
 			}else {
+				//create persisted data object, but don't save it to a server, just locally
 				rawResults = DataManagerHelper.getDataManager().newPersistedData(zipped.toUri().toURL(), PersistedDataType.RECORDING);
 			}
 

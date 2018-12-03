@@ -382,7 +382,7 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 	{
 		String instancePath = aspectConfiguration.getInstance();
 		SimulatorRuntime simulatorRuntime = simulatorRuntimes.get(instancePath);
-
+		
 		try
 		{
 			List<File> rawToZip = new ArrayList<File>();
@@ -427,12 +427,20 @@ public class ExperimentRunThread extends Thread implements ISimulatorCallbackLis
 			}
 			Path zipped = zipper.processAddedFilesAndZip();
 			String newPath = "projects/" + Long.toString(runtimeProject.getGeppettoProject().getId()) + "/experiment/" + experiment.getId() + "/" + fileName;
+			
+			ISimulationResult simulationResults;
+			IPersistedData rawResults;
 			if(!DataManagerHelper.getDataManager().isDefault())
 			{
+				//save results to amazon instance server
 				S3Manager.getInstance().saveFileToS3(zipped.toFile(), newPath);
+				rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
+			}else {
+				//create persisted data object, but don't save it to a server, just locally
+				rawResults = DataManagerHelper.getDataManager().newPersistedData(zipped.toUri().toURL(), PersistedDataType.RECORDING);
 			}
-			IPersistedData rawResults = DataManagerHelper.getDataManager().newPersistedData(S3Manager.getInstance().getURL(newPath), PersistedDataType.RECORDING);
-			ISimulationResult simulationResults = DataManagerHelper.getDataManager().newSimulationResult(instancePath, rawResults, ResultsFormat.RAW);
+
+			simulationResults = DataManagerHelper.getDataManager().newSimulationResult(instancePath, rawResults, ResultsFormat.RAW);
 			experiment.addSimulationResult(simulationResults);
 
 			DataManagerHelper.getDataManager().saveEntity(experiment.getParentProject());

@@ -89,11 +89,7 @@ public class GeppettoManager implements IGeppettoManager
 		super();
 		if(manager instanceof GeppettoManager)
 		{
-			IUser u = manager.getUser();
-			System.out.println(u.getLogin());
 			GeppettoManager other = (GeppettoManager) manager;
-			u = other.getUser();
-			System.out.println(u.getLogin());
 			if(other.projects!=null) {
 				this.projects.putAll(other.projects);
 			}

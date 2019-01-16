@@ -90,7 +90,9 @@ public class GeppettoManager implements IGeppettoManager
 		if(manager instanceof GeppettoManager)
 		{
 			GeppettoManager other = (GeppettoManager) manager;
-			this.projects.putAll(other.projects);
+			if(other.projects!=null) {
+				this.projects.putAll(other.projects);
+			}
 			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
 		}
 	}

@@ -640,7 +640,7 @@ public class GeppettoManagerTest
 		URL rawRecording = manager.downloadResults("testVar(testType)", ResultsFormat.RAW, addedExperiment, geppettoProject);
 		rawRecording.openConnection().connect();
 		// unix and windows output paths differ, checks both
-		boolean rawRecPath = rawRecording.getPath().endsWith("experiment/1/rawRecording.zip") || rawRecording.getPath().endsWith("experiment\\1\\rawRecording.zip");
+		boolean rawRecPath = rawRecording.getPath().endsWith("1/testVar(testType)/rawRecording.zip") || rawRecording.getPath().endsWith("1\\testVar(testType)\\rawRecording.zip");
 
 		Assert.assertTrue(rawRecPath);
 	}

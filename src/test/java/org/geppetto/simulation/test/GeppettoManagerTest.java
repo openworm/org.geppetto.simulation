@@ -98,6 +98,7 @@ public class GeppettoManagerTest
 		Assert.assertTrue(retrievedContext.getBean("scopedTarget.testSimulator") instanceof TestSimulatorService);
 		DataManagerHelper.setDataManager(new DefaultGeppettoDataManager());
 		Assert.assertNotNull(ExperimentRunManager.getInstance());
+		manager.setAllowVolatileProjectsSimulation(true);
 	}
 
 	/**
@@ -409,7 +410,7 @@ public class GeppettoManagerTest
 		IAspectConfiguration ac = addedExperiment.getAspectConfigurations().get(0);
 		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
-		manager.runExperiment("1", addedExperiment);
+		manager.runExperiment("1", geppettoProject, addedExperiment);
 		Assert.assertEquals(3, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 	}
 
@@ -463,7 +464,7 @@ public class GeppettoManagerTest
 		IAspectConfiguration ac = addedExperiment.getAspectConfigurations().get(0);
 		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
-		manager.runExperiment("1", addedExperiment);
+		manager.runExperiment("1",geppettoProject, addedExperiment);
 		Assert.assertEquals(3, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 		Thread.sleep(3000);
 	}

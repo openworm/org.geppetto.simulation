@@ -48,6 +48,7 @@ import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.simulation.utilities.GeppettoProjectZipper;
 import org.geppetto.simulation.visitor.GeppettoModelTypesVisitor;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
@@ -78,6 +79,8 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
+	private boolean allowVolatileProjectsSimulation = false;
+	
 	public GeppettoManager()
 	{
 		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
@@ -272,8 +275,13 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IExperimentManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public void runExperiment(String requestId, IExperiment experiment) throws GeppettoExecutionException, GeppettoAccessException
+	public void runExperiment(String requestId, IGeppettoProject geppettoProject, IExperiment experiment) throws GeppettoExecutionException, GeppettoAccessException
 	{
+		if(geppettoProject.isVolatile() && !this.getAllowVolatileProjectsSimulation())
+		{
+			throw new GeppettoAccessException("Insufficient access rights to run experiment, project is not persisted.");
+		}
+		
 		if(!getScope().equals(Scope.RUN) && !user.getUserGroup().getPrivileges().contains(UserPrivileges.RUN_EXPERIMENT))
 		{
 			throw new GeppettoAccessException("Insufficient access rights to run experiment.");
@@ -918,4 +926,13 @@ public class GeppettoManager implements IGeppettoManager
 
 		return zip;
 	}
+	
+	public boolean getAllowVolatileProjectsSimulation() {
+		return allowVolatileProjectsSimulation;
+	}
+
+	public void setAllowVolatileProjectsSimulation(boolean allowVolatileProjectsSimulation) {
+		this.allowVolatileProjectsSimulation = allowVolatileProjectsSimulation;
+	}
+
 }

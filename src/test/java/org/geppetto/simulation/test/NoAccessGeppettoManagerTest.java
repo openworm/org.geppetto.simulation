@@ -97,7 +97,8 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testSimulator"));
 		Assert.assertTrue(retrievedContext.getBean("scopedTarget.testSimulator") instanceof TestSimulatorService);
 		DataManagerHelper.setDataManager(new DefaultGeppettoDataManager());
-		Assert.assertNotNull(ExperimentRunManager.getInstance());		
+		Assert.assertNotNull(ExperimentRunManager.getInstance());
+		manager.setAllowVolatileProjectsSimulation(true);
 	}
 
 	/**
@@ -338,7 +339,7 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
 		exception.expect(GeppettoAccessException.class);
-		manager.runExperiment("1", existingExperiment);
+		manager.runExperiment("1", geppettoProject,existingExperiment);
 		Assert.assertEquals(3, existingExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 	}
 

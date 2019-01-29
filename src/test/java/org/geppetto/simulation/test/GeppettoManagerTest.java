@@ -410,7 +410,7 @@ public class GeppettoManagerTest
 		IAspectConfiguration ac = addedExperiment.getAspectConfigurations().get(0);
 		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
-		manager.runExperiment("1", geppettoProject, addedExperiment);
+		manager.runExperiment("1", addedExperiment);
 		Assert.assertEquals(3, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 	}
 
@@ -464,7 +464,7 @@ public class GeppettoManagerTest
 		IAspectConfiguration ac = addedExperiment.getAspectConfigurations().get(0);
 		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
-		manager.runExperiment("1",geppettoProject, addedExperiment);
+		manager.runExperiment("1", addedExperiment);
 		Assert.assertEquals(3, addedExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 		Thread.sleep(3000);
 	}

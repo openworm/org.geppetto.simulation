@@ -339,7 +339,7 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
 		exception.expect(GeppettoAccessException.class);
-		manager.runExperiment("1", geppettoProject,existingExperiment);
+		manager.runExperiment("1",existingExperiment);
 		Assert.assertEquals(3, existingExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 	}
 

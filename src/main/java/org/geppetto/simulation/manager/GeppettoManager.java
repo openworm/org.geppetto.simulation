@@ -274,9 +274,9 @@ public class GeppettoManager implements IGeppettoManager
 	 * @see org.geppetto.core.manager.IExperimentManager#runExperiment(java.lang.String, org.geppetto.core.data.model.IExperiment, org.geppetto.core.data.model.IGeppettoProject)
 	 */
 	@Override
-	public void runExperiment(String requestId, IGeppettoProject geppettoProject, IExperiment experiment) throws GeppettoExecutionException, GeppettoAccessException
+	public void runExperiment(String requestId, IExperiment experiment) throws GeppettoExecutionException, GeppettoAccessException
 	{
-		if(geppettoProject.isVolatile() && !this.getAllowVolatileProjectsSimulation())
+		if(experiment.getParentProject().isVolatile() && !this.getAllowVolatileProjectsSimulation())
 		{
 			throw new GeppettoAccessException("Insufficient access rights to run experiment, project is not persisted.");
 		}

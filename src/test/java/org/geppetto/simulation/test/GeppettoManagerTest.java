@@ -36,6 +36,7 @@ import org.geppetto.model.VariableValue;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.values.Quantity;
 import org.geppetto.model.values.TimeSeries;
+import org.geppetto.simulation.GeppettoManagerConfiguration;
 import org.geppetto.simulation.manager.ExperimentRunManager;
 import org.geppetto.simulation.manager.GeppettoManager;
 import org.geppetto.simulation.manager.RuntimeExperiment;
@@ -68,7 +69,7 @@ public class GeppettoManagerTest
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
-	private static GeppettoManager manager = new GeppettoManager(Scope.CONNECTION);
+	private static GeppettoManager manager;
 	private static IGeppettoProject geppettoProject;
 	private static RuntimeProject runtimeProject;
 	private static IExperiment addedExperiment;
@@ -98,6 +99,11 @@ public class GeppettoManagerTest
 		Assert.assertTrue(retrievedContext.getBean("scopedTarget.testSimulator") instanceof TestSimulatorService);
 		DataManagerHelper.setDataManager(new DefaultGeppettoDataManager());
 		Assert.assertNotNull(ExperimentRunManager.getInstance());
+		
+		GeppettoManagerConfiguration geppettoManagerConfiguration = new GeppettoManagerConfiguration();
+		geppettoManagerConfiguration.setAllowVolatileProjectsSimulation(true);
+		manager = new GeppettoManager(Scope.CONNECTION, geppettoManagerConfiguration);
+		
 	}
 
 	/**

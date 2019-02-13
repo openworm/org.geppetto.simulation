@@ -79,7 +79,7 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
-	private GeppettoManagerConfiguration GeppettoManagerConfiguration = new GeppettoManagerConfiguration();
+	private GeppettoManagerConfiguration geppettoManagerConfiguration = new GeppettoManagerConfiguration();
 	
 	public GeppettoManager()
 	{
@@ -98,7 +98,7 @@ public class GeppettoManager implements IGeppettoManager
 			}
 			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
 		}
-		this.GeppettoManagerConfiguration = geppettoManagerConfiguration;
+		this.geppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
 
 	public GeppettoManager(Scope scope)
@@ -112,7 +112,7 @@ public class GeppettoManager implements IGeppettoManager
 	{
 		super();
 		this.scope = scope;
-		this.GeppettoManagerConfiguration = geppettoManagerConfiguration;
+		this.geppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
 
 	/*
@@ -286,7 +286,7 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public void runExperiment(String requestId, IExperiment experiment) throws GeppettoExecutionException, GeppettoAccessException
 	{
-		if(experiment.getParentProject().isVolatile() && !this.GeppettoManagerConfiguration.getAllowVolatileProjectsSimulation())
+		if(experiment.getParentProject().isVolatile() && !this.geppettoManagerConfiguration.getAllowVolatileProjectsSimulation())
 		{
 			throw new GeppettoAccessException("Insufficient access rights to run experiment, project is not persisted.");
 		}

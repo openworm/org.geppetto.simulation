@@ -8,7 +8,7 @@ package org.geppetto.simulation;
  */
 public class GeppettoManagerConfiguration {
 	
-	private boolean allowVolatileProjectsSimulation;
+	private boolean allowVolatileProjectsSimulation = false;
 	
 	public boolean getAllowVolatileProjectsSimulation() {
 		return allowVolatileProjectsSimulation;

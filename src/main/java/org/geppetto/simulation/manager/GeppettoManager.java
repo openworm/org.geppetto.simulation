@@ -45,6 +45,7 @@ import org.geppetto.model.datasources.RunnableQuery;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.simulation.GeppettoManagerConfiguration;
 import org.geppetto.simulation.utilities.GeppettoProjectZipper;
 import org.geppetto.simulation.visitor.GeppettoModelTypesVisitor;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
@@ -78,7 +79,7 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
-	private boolean allowVolatileProjectsSimulation = false;
+	private GeppettoManagerConfiguration GeppettoManagerConfiguration = new GeppettoManagerConfiguration();
 	
 	public GeppettoManager()
 	{
@@ -86,7 +87,7 @@ public class GeppettoManager implements IGeppettoManager
 		logger.info("New Geppetto Manager class");
 	}
 
-	public GeppettoManager(IGeppettoManager manager)
+	public GeppettoManager(IGeppettoManager manager, GeppettoManagerConfiguration geppettoManagerConfiguration)
 	{
 		super();
 		if(manager instanceof GeppettoManager)
@@ -97,12 +98,21 @@ public class GeppettoManager implements IGeppettoManager
 			}
 			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
 		}
+		this.GeppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
 
 	public GeppettoManager(Scope scope)
 	{
 		super();
 		this.scope = scope;
+	}
+	
+	//For tests purposes only
+	public GeppettoManager(Scope scope, GeppettoManagerConfiguration geppettoManagerConfiguration)
+	{
+		super();
+		this.scope = scope;
+		this.GeppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
 
 	/*
@@ -276,7 +286,7 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public void runExperiment(String requestId, IExperiment experiment) throws GeppettoExecutionException, GeppettoAccessException
 	{
-		if(experiment.getParentProject().isVolatile() && !this.getAllowVolatileProjectsSimulation())
+		if(experiment.getParentProject().isVolatile() && !this.GeppettoManagerConfiguration.getAllowVolatileProjectsSimulation())
 		{
 			throw new GeppettoAccessException("Insufficient access rights to run experiment, project is not persisted.");
 		}
@@ -925,13 +935,4 @@ public class GeppettoManager implements IGeppettoManager
 
 		return zip;
 	}
-	
-	public boolean getAllowVolatileProjectsSimulation() {
-		return allowVolatileProjectsSimulation;
-	}
-
-	public void setAllowVolatileProjectsSimulation(boolean allowVolatileProjectsSimulation) {
-		this.allowVolatileProjectsSimulation = allowVolatileProjectsSimulation;
-	}
-
 }

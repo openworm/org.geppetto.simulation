@@ -35,6 +35,7 @@ import org.geppetto.model.ModelFormat;
 import org.geppetto.model.VariableValue;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.values.Quantity;
+import org.geppetto.simulation.GeppettoManagerConfiguration;
 import org.geppetto.simulation.manager.ExperimentRunManager;
 import org.geppetto.simulation.manager.GeppettoManager;
 import org.geppetto.simulation.manager.RuntimeExperiment;
@@ -69,7 +70,7 @@ public class NoAccessGeppettoManagerTest
 
 	private static ArrayList<UserPrivileges> privileges;
 	private static IExperiment existingExperiment;
-	private static GeppettoManager manager = new GeppettoManager(Scope.CONNECTION);
+	private static GeppettoManager manager;
 	private static IGeppettoProject geppettoProject;
 	private static RuntimeProject runtimeProject;
 
@@ -97,7 +98,11 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.testSimulator"));
 		Assert.assertTrue(retrievedContext.getBean("scopedTarget.testSimulator") instanceof TestSimulatorService);
 		DataManagerHelper.setDataManager(new DefaultGeppettoDataManager());
-		Assert.assertNotNull(ExperimentRunManager.getInstance());		
+		Assert.assertNotNull(ExperimentRunManager.getInstance());
+		
+		GeppettoManagerConfiguration geppettoManagerConfiguration = new GeppettoManagerConfiguration();
+		geppettoManagerConfiguration.setAllowVolatileProjectsSimulation(true);
+		manager = new GeppettoManager(Scope.CONNECTION, geppettoManagerConfiguration);
 	}
 
 	/**
@@ -338,7 +343,7 @@ public class NoAccessGeppettoManagerTest
 		Assert.assertEquals("testVar(testType)", ac.getInstance());
 		Assert.assertNotNull(ac.getSimulatorConfiguration());
 		exception.expect(GeppettoAccessException.class);
-		manager.runExperiment("1", existingExperiment);
+		manager.runExperiment("1",existingExperiment);
 		Assert.assertEquals(3, existingExperiment.getAspectConfigurations().get(0).getWatchedVariables().size());
 	}
 

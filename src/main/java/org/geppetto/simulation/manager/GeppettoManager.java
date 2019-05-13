@@ -45,6 +45,7 @@ import org.geppetto.model.datasources.RunnableQuery;
 import org.geppetto.model.util.GeppettoModelException;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.simulation.GeppettoManagerConfiguration;
 import org.geppetto.simulation.utilities.GeppettoProjectZipper;
 import org.geppetto.simulation.visitor.GeppettoModelTypesVisitor;
 import org.geppetto.simulation.visitor.PersistModelVisitor;
@@ -78,13 +79,15 @@ public class GeppettoManager implements IGeppettoManager
 
 	private IGeppettoManagerCallbackListener geppettoManagerCallbackListener;
 
+	private GeppettoManagerConfiguration geppettoManagerConfiguration = new GeppettoManagerConfiguration();
+	
 	public GeppettoManager()
 	{
 		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
 		logger.info("New Geppetto Manager class");
 	}
 
-	public GeppettoManager(IGeppettoManager manager)
+	public GeppettoManager(IGeppettoManager manager, GeppettoManagerConfiguration geppettoManagerConfiguration)
 	{
 		super();
 		if(manager instanceof GeppettoManager)
@@ -95,12 +98,21 @@ public class GeppettoManager implements IGeppettoManager
 			}
 			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
 		}
+		this.geppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
 
 	public GeppettoManager(Scope scope)
 	{
 		super();
 		this.scope = scope;
+	}
+	
+	//For tests purposes only
+	public GeppettoManager(Scope scope, GeppettoManagerConfiguration geppettoManagerConfiguration)
+	{
+		super();
+		this.scope = scope;
+		this.geppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
 
 	/*
@@ -274,6 +286,11 @@ public class GeppettoManager implements IGeppettoManager
 	@Override
 	public void runExperiment(String requestId, IExperiment experiment) throws GeppettoExecutionException, GeppettoAccessException
 	{
+		if(experiment.getParentProject().isVolatile() && !this.geppettoManagerConfiguration.getAllowVolatileProjectsSimulation())
+		{
+			throw new GeppettoAccessException("Insufficient access rights to run experiment, project is not persisted.");
+		}
+		
 		if(!getScope().equals(Scope.RUN) && !user.getUserGroup().getPrivileges().contains(UserPrivileges.RUN_EXPERIMENT))
 		{
 			throw new GeppettoAccessException("Insufficient access rights to run experiment.");

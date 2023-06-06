@@ -89,17 +89,40 @@ public class GeppettoManager implements IGeppettoManager
 
 	public GeppettoManager(IGeppettoManager manager, GeppettoManagerConfiguration geppettoManagerConfiguration)
 	{
-		super();
-		if(manager instanceof GeppettoManager)
-		{
-			GeppettoManager other = (GeppettoManager) manager;
-			if(other.projects!=null) {
-				this.projects.putAll(other.projects);
-			}
-			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
+	    super();
+	    if(manager instanceof GeppettoManager)
+	    {
+		GeppettoManager other = (GeppettoManager) manager;
+		if(other.projects != null) {
+		    this.projects.putAll(other.projects);
 		}
-		this.geppettoManagerConfiguration = geppettoManagerConfiguration;
+		IDataManager dataManager = DataManagerHelper.getDataManager();
+		if (dataManager == null) {
+		    // Handle null dataManager here
+		    logger.error("DataManagerHelper.getDataManager() returned null.");
+		} else {
+		    IUser user = other.getUser();
+		    if (user == null) {
+			// Handle null user here
+			logger.error("other.getUser() returned null.");
+		    } else {
+			String login = user.getLogin();
+			if (login == null) {
+			    // Handle null login here
+			    logger.error("user.getLogin() returned null.");
+			} else {
+			    this.user = dataManager.getUserByLogin(login);
+			    if(this.user == null) {
+				// Handle case where getUserByLogin returns null
+				logger.error("dataManager.getUserByLogin(login) returned null for login: " + login);
+			    }
+			}
+		    }
+		}
+	    }
+	    this.geppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
+
 
 	public GeppettoManager(Scope scope)
 	{

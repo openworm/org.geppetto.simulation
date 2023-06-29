@@ -19,6 +19,7 @@ import org.geppetto.core.common.GeppettoAccessException;
 import org.geppetto.core.common.GeppettoExecutionException;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.data.DataManagerHelper;
+import org.geppetto.core.data.IGeppettoDataManager;
 import org.geppetto.core.data.model.ExperimentStatus;
 import org.geppetto.core.data.model.IExperiment;
 import org.geppetto.core.data.model.IGeppettoProject;
@@ -96,7 +97,7 @@ public class GeppettoManager implements IGeppettoManager
 		if(other.projects != null) {
 		    this.projects.putAll(other.projects);
 		}
-		IDataManager dataManager = DataManagerHelper.getDataManager();
+		IGeppettoDataManager dataManager = DataManagerHelper.getDataManager();
 		if (dataManager == null) {
 		    // Handle null dataManager here
 		    logger.error("DataManagerHelper.getDataManager() returned null.");

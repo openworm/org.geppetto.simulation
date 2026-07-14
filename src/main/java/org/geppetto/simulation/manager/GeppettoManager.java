@@ -85,7 +85,7 @@ public class GeppettoManager implements IGeppettoManager
 	public GeppettoManager()
 	{
 		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
-		logger.info("New Geppetto Manager class");
+		logger.debug("New Geppetto Manager class");
 	}
 
 	public GeppettoManager(IGeppettoManager manager, GeppettoManagerConfiguration geppettoManagerConfiguration)

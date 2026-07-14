@@ -110,7 +110,7 @@ public class RuntimeProject
 			// since every geppetto model will have his
 			geppettoModel.getLibraries().add(EcoreUtil.copy(SharedLibraryManager.getSharedCommonLibrary()));
 			geppettoModelAccess = new GeppettoModelAccess(geppettoModel);
-			logger.info("Model reading took " + (System.currentTimeMillis() - start) + "ms");
+			logger.debug("Model reading took " + (System.currentTimeMillis() - start) + "ms");
 			// create model interpreters
 			CreateModelInterpreterServicesVisitor createServicesVisitor = new CreateModelInterpreterServicesVisitor(modelInterpreters, project.getId(), geppettoManager.getScope());
 			GeppettoModelTraversal.apply(geppettoModel, createServicesVisitor);
@@ -139,7 +139,7 @@ public class RuntimeProject
 				}
 			}
 
-			logger.info("Importing types took " + (System.currentTimeMillis() - start) + "ms");
+			logger.debug("Importing types took " + (System.currentTimeMillis() - start) + "ms");
 
 			// create time (puhrrrrr)
 			Variable time = VariablesFactory.eINSTANCE.createVariable();

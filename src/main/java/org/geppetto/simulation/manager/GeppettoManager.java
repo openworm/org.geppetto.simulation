@@ -96,7 +96,13 @@ public class GeppettoManager implements IGeppettoManager
 			if(other.projects!=null) {
 				this.projects.putAll(other.projects);
 			}
-			this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
+			// Anonymous connections (the common case for VFB, which has no login wall)
+			// have no user on the manager being copied. Without this guard every such
+			// connection throws a NullPointerException here on other.getUser().getLogin().
+			if(other.getUser() != null)
+			{
+				this.user = DataManagerHelper.getDataManager().getUserByLogin(other.getUser().getLogin());
+			}
 		}
 		this.geppettoManagerConfiguration = geppettoManagerConfiguration;
 	}
